@@ -3,6 +3,7 @@
 use strict;
 BEGIN { unshift @INC, "."; }
 
+use DateTime;
 use Disketo_Utils;
 #######################################
 sub INTERSECT_RATIO { 5 }
@@ -17,16 +18,16 @@ sub find_duplicities($@) {
 	my $pattern = shift @_;
 	my @roots = @_;
 	
-	print STDERR "Listing directories in ". join(", ", @roots) . " ...\n";	
+	print STDERR DateTime->now->hms . " # Listing directories in ". join(", ", @roots) . " ...\n";	
 	my @dirs = list(@roots);
 	
-	print STDERR "Found totally " . scalar @dirs . ", filtering them against $pattern ...\n";
+	print STDERR DateTime->now->hms . " # Found totally " . scalar @dirs . ", filtering them against $pattern ...\n";
 	@dirs = filter($pattern, @dirs);
 	
-	print STDERR "Filtered, currently " . scalar @dirs . ", matching duplicities ...\n";
+	print STDERR DateTime->now->hms . " # Filtered, currently " . scalar @dirs . ", matching duplicities ...\n";
 	my %dirs = match_duplicities(@dirs);
 
-	print STDERR "Matched  " . scalar %dirs . " directories.\n";
+	print STDERR DateTime->now->hms . " # Matched  " . scalar %dirs . " directories. Printing them:\n";
 	print ($_ . "\n") for each (%dirs);
 
 }
@@ -55,7 +56,10 @@ sub filter($@) {
 	my @result = ();
 
 	for my $dir (@dirs) {
-		opendir(my $dh, $dir) || die "Can't open $dir: $!";
+		opendir(my $dh, $dir) || do {
+			print STDERR "Can't open $dir: $! !";
+			next;
+		};
 		my @children = readdir $dh;
 		closedir $dh;
 
@@ -75,7 +79,10 @@ sub match_duplicities(@) {
 
 	my %results = ();
 	for my $left_dir (@dirs) {
-		opendir(my $ldh, $left_dir) || die "Can't open $left_dir: $!";
+		opendir(my $ldh, $left_dir) || do {
+			print STDERR "Can't open $left_dir: $! !!";
+			next;
+		};
 		my @left_children = readdir $ldh;
 		closedir $ldh;
 
@@ -84,7 +91,10 @@ sub match_duplicities(@) {
 				next;
 			}
 
-			opendir(my $rdh, $right_dir) || die "Can't open $right_dir: $!";
+			opendir(my $rdh, $right_dir) || do {
+				print STDERR "Can't open $right_dir: $! !!!";
+				next;
+			};
 			my @right_children = readdir $rdh;
 			closedir $rdh;
 	

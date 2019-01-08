@@ -16,13 +16,17 @@ sub go_recursivelly($&) {
 	
 	$visitor->($dir);
 
-	opendir(my $dh, $dir) || die "Can't open $dir: $!";
+	my $dh;
+	unless (opendir($dh, $dir)) {
+		print STDERR "Can't open $dir: $!";
+		return(1);
+	}
 
 	while (my $child = readdir $dh) {
-			if ($child eq "." || $child eq "..") {
+			if (substr($child, 0, 1) eq ".") {
 				next;
 			}
-	
+			
 			my $subpath = "$dir/$child";
 			if (!(-d $subpath)) {
 				next;
