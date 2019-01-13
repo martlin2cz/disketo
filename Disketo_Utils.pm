@@ -43,17 +43,3 @@ sub go_recursivelly($&) {
 	closedir $dh;
 }
 
-# Prints the directory tree
-sub print_tree($) {
-	my $dir = shift @_;
-
-	go_recursivelly($dir, sub {
-		my $dir = shift @_;
-
-		my @parts = split(/\//, $dir);
-		my $name = pop @parts;
-		my $count = scalar @parts;
-		print "|   " x $count;
-		print "+ $name\n";
-	});
-}

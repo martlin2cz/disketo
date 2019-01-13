@@ -25,10 +25,11 @@ sub find_duplicities($@) {
 	@dirs = filter($pattern, @dirs);
 	
 	print STDERR DateTime->now->hms . " # Filtered, currently " . scalar @dirs . ", matching duplicities ...\n";
-	my %dirs = match_duplicities(@dirs);
+	#my %dirs = match_duplicities(@dirs);
+	print "$_\n" for @dirs;
 
-	print STDERR DateTime->now->hms . " # Matched  " . scalar %dirs . " directories. Printing them:\n";
-	print ($_ . "\n") for each (%dirs);
+	##print STDERR DateTime->now->hms . " # Matched  " . scalar %dirs . " directories. Printing them:\n";
+	##print ($_ . "\n") for each (%dirs);
 
 }
 
