@@ -14,7 +14,10 @@ sub go_recursivelly($&) {
 	my $dir = shift @_;
 	my $visitor = shift @_;
 	
-	$visitor->($dir);
+	my $continue = $visitor->($dir);
+	if (!$continue) {
+		return;
+	}
 
 	my $dh;
 	unless (opendir($dh, $dir)) {

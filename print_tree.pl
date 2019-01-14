@@ -21,5 +21,7 @@ sub print_tree($) {
 		my $count = scalar @parts;
 		print "|   " x $count;
 		print "+ $name\n";
+
+		return 1;
 	});
 }

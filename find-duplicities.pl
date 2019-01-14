@@ -41,6 +41,7 @@ sub list(@) {
 		Disketo_Utils::go_recursivelly($root, sub() {
 			my $dir = @_[0];
 			push @results, $dir;
+			return 1;
 		});
 	}
 	
