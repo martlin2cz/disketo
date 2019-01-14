@@ -22,15 +22,13 @@ sub find_duplicities($@) {
 	my @dirs = list(@roots);
 	
 	print STDERR DateTime->now->hms . " # Found totally " . scalar @dirs . ", filtering them against $pattern ...\n";
-	@dirs = filter($pattern, @dirs);
+	my %dirs = filter($pattern, @dirs);
 	
-	print STDERR DateTime->now->hms . " # Filtered, currently " . scalar @dirs . ", matching duplicities ...\n";
-	#my %dirs = match_duplicities(@dirs);
-	print "$_\n" for @dirs;
+	print STDERR DateTime->now->hms . " # Filtered, currently " . (scalar keys %dirs) . ", matching duplicities ...\n";
+	%dirs = match_duplicities(%dirs);
 
-	##print STDERR DateTime->now->hms . " # Matched  " . scalar %dirs . " directories. Printing them:\n";
-	##print ($_ . "\n") for each (%dirs);
-
+	print STDERR DateTime->now->hms . " # Matched  " . scalar %dirs . " directories. Printing them:\n";
+	print "$_ \t  $dirs{$_}\n" for (keys %dirs);  
 }
 
 #######################################
@@ -54,7 +52,7 @@ sub list(@) {
 sub filter($@) {
 	my $pattern = shift @_;
 	my @dirs = @_;
-	my @result = ();
+	my %result = ();
 
 	for my $dir (@dirs) {
 		opendir(my $dh, $dir) || do {
@@ -66,40 +64,30 @@ sub filter($@) {
 
 		my @matching = grep(/$pattern/, @children);
 		if (@matching) {
-			push @result, $dir;
+			push @{ $result{$dir} }, @children;
 		}
 	}
 
-	return @result;
+	return %result;
 }
 
 #######################################
 
-sub match_duplicities(@) {
-  my @dirs = @_;
+sub match_duplicities(%) {
+  my %dirs = @_;
 
 	my %results = ();
-	for my $left_dir (@dirs) {
-		opendir(my $ldh, $left_dir) || do {
-			print STDERR "Can't open $left_dir: $! !!";
-			next;
-		};
-		my @left_children = readdir $ldh;
-		closedir $ldh;
+	for my $left_dir (keys %dirs) {
+		my @left_children = @{ $dirs{$left_dir} };
 
-		for my $right_dir (@dirs) {
+		for my $right_dir (keys %dirs) {
 			if ($left_dir eq $right_dir) {
 				next;
 			}
-
-			opendir(my $rdh, $right_dir) || do {
-				print STDERR "Can't open $right_dir: $! !!!";
-				next;
-			};
-			my @right_children = readdir $rdh;
-			closedir $rdh;
+			my @right_children = @{ $dirs{$right_dir} };
 	
 			my @intersect = intersect(\@left_children, \@right_children);
+			## print "$left_dir X $right_dir -> @intersect\n";
 			if (scalar @intersect > INTERSECT_RATIO) {
 				$results{$left_dir} = $right_dir;
 			}
@@ -118,13 +106,20 @@ sub intersect(\@\@) {
 	my @left = @{ $left_ref };
 	my @right = @{ $right_ref };
 
-	my %intersects = ();
-	## https://stackoverflow.com/questions/7842114/get-the-intersection-of-two-lists-of-strings-in-perl
-	foreach my $item (@left, @right) {
-		$intersects{$item}++
-	}
+	##my %intersects = ();
+	#### https://stackoverflow.com/questions/7842114/get-the-intersection-of-two-lists-of-strings-in-perl
+	##foreach my $item (@left, @right) {
+	##	$intersects{$item}++;
+	##}
 
-	my @intersects = keys %intersects;
+	##my @intersects = keys %intersects;
+	
+	## http://www.chovy.com/perl/finding-an-intersection-between-arrays-in-perl/
+	my %original;
+	map { $original{$_} = 1 } @left;
+	my @intersects = grep { $original{$_} } @right;
+	
+	## print "A: @left \t B: @right \t AND: @intersects\n\n";
 	return @intersects;
 }
 
