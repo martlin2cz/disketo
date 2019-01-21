@@ -4,6 +4,7 @@ use strict;
 BEGIN { unshift @INC, "."; }
 
 use DateTime;
+use Data::Dumper;
 use Disketo_Utils;
 #######################################
 sub INTERSECT_RATIO { 5 }
@@ -28,7 +29,12 @@ sub find_duplicities($@) {
 	%dirs = match_duplicities(%dirs);
 
 	print STDERR DateTime->now->hms . " # Matched  " . scalar %dirs . " directories. Printing them:\n";
-	print "$_ \t  $dirs{$_}\n" for (keys %dirs);  
+		print "$_ \t ~ \t $dirs{$_}{'right_dir'} \t"
+			. " " . (scalar @{$dirs{$_}{'left_children'}}) . " / " . (scalar @{$dirs{$_}{'left_children'}}) . " \t"
+			. " $dirs{$_}{'left_ratio'}% / $dirs{$_}{'right_ratio'}% \t \t"
+			. " @{$dirs{$_}{'intersection'}} \n" for (keys %dirs);  
+
+	##print Dumper(%dirs);
 }
 
 #######################################
@@ -90,7 +96,15 @@ sub match_duplicities(%) {
 			my @intersect = intersect(\@left_children, \@right_children);
 			## print "$left_dir X $right_dir -> @intersect\n";
 			if (scalar @intersect > INTERSECT_RATIO) {
-				$results{$left_dir} = $right_dir;
+				$results{$left_dir} = {
+					"left_dir" => $left_dir,
+					"right_dir" => $right_dir,
+					"left_children" => \@left_children,
+					"right_children" =>\ @right_children,
+					"intersection" => \@intersect,
+					"left_ratio" => (scalar @intersect) / (scalar @left_children) * 100,
+					"right_ratio" => (scalar @intersect) / (scalar @right_children) * 100
+				}
 			}
 		}
 	}
