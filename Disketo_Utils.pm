@@ -106,3 +106,15 @@ sub list_children($) {
 	return @result;
 }
 
+
+
+
+# Prints the list (ref to hash) of files (with stats), 
+# with given formatter function
+sub print_them($$) {                                                                                                                   
+	my %files = %{shift @_};
+	my $printer = shift @_;
+
+	print $printer->(\%files{$_}, $_) . "\n" for (keys %files);
+}
+
