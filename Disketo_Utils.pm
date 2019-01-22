@@ -81,6 +81,7 @@ sub list($) {
 	return %result;		
 }	
 
+## Returns array containing all (non-hidden) child resources in given directory
 sub list_children($) {
 	my $dir = shift @_;
 
@@ -88,7 +89,7 @@ sub list_children($) {
 
 	my $dh;
 	unless (opendir($dh, $dir)) {
-		print STDERR "Can't open $dir: $!";
+		print STDERR "Can't open $dir: $!\n";
 		return @result;
 	}
 

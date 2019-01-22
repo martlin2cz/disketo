@@ -30,14 +30,13 @@ sub list_files(@) {
 
 sub list_all(@) {
 	my @roots = @_;
-
 	my %result = ();
 
 	for my $root (@roots) {
 		my %sub_result = Disketo_Utils::list($root);
 		%result = (%result, %sub_result);
 	}
-
+	
 	return %result;
 }
 
