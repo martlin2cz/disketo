@@ -4,7 +4,7 @@ use strict;
 package Disketo_Framework; 
 my $VERSION=0.1;
 
-use DateTime;
+use File::Basename;
 use File::stat;
 use Data::Dumper;
 
@@ -77,8 +77,115 @@ sub children_of($) {
 
 ##############################################################
 #############################################################
-# PROCESS DIRECTORIES
+# SIMPLE, LINEAR FILTERING
 #############################################################
+# Filters given reference to hash of directories
+# against the given predicate
+sub filter_directories($$) {
+	my %dirs = %{shift @_};
+	
+	my $predicate = shift @_;
 
-## TODO
+	my %result = ();
+	for my $dir (keys %dirs) {
+		my @children = @{%dirs{$dir}};
 
+		my $okay = $predicate->($dir, \@children);
+		if ($okay) {
+			$result{$dir} = \@children;
+		}
+	}
+
+	return %result;
+}
+
+#############################################################
+# Filters given reference to hash of directories
+# against the given pattern
+sub filter_directories_by_pattern($$) {
+	my %dirs = %{shift @_};
+	my $pattern = shift @_;
+
+	my $predicate = sub {
+		my $dir = shift @_;
+		return $dir =~ /$pattern/;
+	};
+	
+	return filter_directories(\%dirs, $predicate);
+}
+
+
+#############################################################
+# Filters given reference to hash of directories
+# by matching at least given number of child resources
+# against the given filename pattern
+sub filter_directories_by_files_pattern($$$) {
+	my %dirs = %{shift @_};
+	my $pattern = shift @_;
+	my $threshold = shift @_;
+
+	my $predicate = sub {
+		my $dir = shift @_;
+		my @children = @{ shift @_ };
+		
+		my @matching = grep(/$pattern/, @children);
+		return scalar @matching >= $threshold;
+	};
+	
+	return filter_directories(\%dirs, $predicate);
+}
+
+##############################################################
+#############################################################
+# CROSS AND MORE COMPLEX FILTERING
+#############################################################
+# Filters given reference to hash of directories
+# matched each-to-each by given matcher function
+sub filter_directories_matching($$) {
+	my %dirs = %{shift @_};
+	my $matcher = shift @_;
+
+	my %result = ();
+	for my $left_dir (keys %dirs) {
+		my @left_children = @{ %dirs{$left_dir} };
+
+		for my $right_dir (keys %dirs) {
+			if ($left_dir eq $right_dir) {
+				next;
+			}
+
+			my @right_children = @{ %dirs{$right_dir} };
+			
+			my $match = $matcher->($left_dir, \@left_children, $right_dir, \@right_children);
+			if ($match) {
+				$result{$left_dir} = \@left_children;
+			}
+		}
+	}
+
+	return %result;
+}
+
+#############################################################
+# Filters given reference to hash of directories
+# leaving only the directories of the same name
+sub filter_directories_of_same_name($) {
+	my %dirs = %{shift @_};
+	
+	my $matcher = sub {
+		my $left_dir = shift @_;
+		my @left_children = @{ shift @_ };
+		my $right_dir = shift @_;
+		my @right_children = @{ shift @_ };
+
+		my $left_name = basename($left_dir);
+		my $right_name = basename($right_dir);
+
+		return $left_name eq $right_name;
+	};
+
+	return filter_directories_matching(\%dirs, $matcher);	
+}
+
+
+## TODO here
