@@ -18,37 +18,38 @@ sub list_all_directories(@) {
 
 	my %result = ();
 	for my $root (@roots) {
-		my %sub_result = list_directory($root);
+		my %sub_result = %{ list_directory($root) };
 		%result = (%result, %sub_result);
 	}
 
-	return %result;
+	return \%result;
 }
 
 
 #############################################################
 # Lists recursivelly all the subdirectories of given directory 
-# returns hash mapping for each path the directory children
+# returns ref to hash mapping for each path the directory children
 sub list_directory($) {
 	my ($dir) = @_;
 	my %result = ();
 
-	my @children = children_of($dir);
-	
-	$result{$dir} = \@children;
+	my $children_ref = children_of($dir);
+	my @children = @{ $children_ref };
+	$result{$dir} = $children_ref;
 
 	foreach my $child (@children) {
 		if (-d $child) {
-			my %sub_result = list_directory($child);
+			my %sub_result = %{ list_directory($child) };
 			%result = (%result, %sub_result);
 		}
 	}
 
-	return %result;		
+	return \%result;		
 }	
 
 #############################################################
-# Returns array containing all (non-hidden) child resources in given directory
+# Returns ref to array containing all (non-hidden) child resources 
+# in given directory
 # Note: internal function
 sub children_of($) {
 	my ($dir) = @_;
@@ -72,7 +73,23 @@ sub children_of($) {
 
 	closedir $dh;
 
-	return @result;
+	return \@result;
+}
+
+#############################################################
+# For given input dirs ref loads their stats
+# Returns both (ref to %dirs and ref to %stats)
+sub load_stats($) {
+	my %dirs = %{ shift @_ };
+
+	my %stats = ();
+	for my $dir (keys %dirs) {
+		my @children = @{%dirs{$dir}};
+		my %stat = map { $_ => stat($_) } @children;
+		$stats{$dir} = \%stat;
+	}
+
+	return (\%dirs, \%stats);
 }
 
 ##############################################################

@@ -10,27 +10,38 @@ use Disketo_Framework;
 #######################################
 
 my $input_1 = "test/";
-my @dirs_1 = Disketo_Framework::children_of($input_1);
+my $dirs_1_ref = Disketo_Framework::children_of($input_1);
 
-##print "children_of:\n";
-##print Dumper(\@dirs_1);
+print "children_of:\n";
+print Dumper($dirs_1_ref);
 
 #######################################
 
 my $input_2 = "test/";
-my %dirs_2 = Disketo_Framework::list_directory($input_2);
+my $dirs_2_ref = Disketo_Framework::list_directory($input_2);
 
-##print "list_directory:\n";
-##print Dumper(\%dirs_2);
+print "list_directory:\n";
+print Dumper($dirs_2_ref);
 
 
 #######################################
 
 my @input_3 = ("test/ipsum", "test/lorem/");
-my %dirs_3 = Disketo_Framework::list_all_directories(@input_3);
+my $dirs_3_ref = Disketo_Framework::list_all_directories(@input_3);
 
-##print "list_all_directories:\n";
-##print Dumper(\%dirs_3);
+print "list_all_directories:\n";
+print Dumper($dirs_3_ref);
+
+#######################################
+
+my ($dirs_3a_ref, $stats_3a_ref) = Disketo_Framework::load_stats($dirs_3_ref);
+
+print "load_stats: dirs\n";
+print Dumper($dirs_3a_ref);
+
+print "load_stats: stats\n";
+print Dumper($stats_3a_ref);
+
 
 #######################################
 
@@ -67,10 +78,10 @@ my %dirs_3 = Disketo_Framework::list_all_directories(@input_3);
 
 #######################################
 
-my %dirs_8 = Disketo_Framework::filter_directories_of_same_name(\%dirs_3);
+#my %dirs_8 = Disketo_Framework::filter_directories_of_same_name(\%dirs_3);
 
-print "filter_directories_of_same_name:\n";
-print Dumper(\%dirs_8);
+#print "filter_directories_of_same_name:\n";
+#print Dumper(\%dirs_8);
 
 
 
