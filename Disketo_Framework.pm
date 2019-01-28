@@ -7,6 +7,7 @@ my $VERSION=0.1;
 use File::Basename;
 use File::stat;
 use Data::Dumper;
+use Disketo_Utils; 
 
 ##############################################################
 #############################################################
@@ -99,7 +100,7 @@ sub load_stats($) {
 # Filters given reference to hash of directories
 # against the given predicate
 sub filter_directories($$) {
-	my %dirs = %{shift @_};
+	my %dirs = %{ shift @_ };
 	
 	my $predicate = shift @_;
 
@@ -113,14 +114,14 @@ sub filter_directories($$) {
 		}
 	}
 
-	return %result;
+	return \%result;
 }
 
 #############################################################
 # Filters given reference to hash of directories
 # against the given pattern
 sub filter_directories_by_pattern($$) {
-	my %dirs = %{shift @_};
+	my $dirs_ref = shift @_;
 	my $pattern = shift @_;
 
 	my $predicate = sub {
@@ -128,7 +129,7 @@ sub filter_directories_by_pattern($$) {
 		return $dir =~ /$pattern/;
 	};
 	
-	return filter_directories(\%dirs, $predicate);
+	return filter_directories($dirs_ref, $predicate);
 }
 
 
@@ -137,7 +138,7 @@ sub filter_directories_by_pattern($$) {
 # by matching at least given number of child resources
 # against the given filename pattern
 sub filter_directories_by_files_pattern($$$) {
-	my %dirs = %{shift @_};
+	my $dirs_ref = shift @_;
 	my $pattern = shift @_;
 	my $threshold = shift @_;
 
@@ -149,7 +150,7 @@ sub filter_directories_by_files_pattern($$$) {
 		return scalar @matching >= $threshold;
 	};
 	
-	return filter_directories(\%dirs, $predicate);
+	return filter_directories($dirs_ref, $predicate);
 }
 
 ##############################################################
@@ -158,36 +159,39 @@ sub filter_directories_by_files_pattern($$$) {
 #############################################################
 # Filters given reference to hash of directories
 # matched each-to-each by given matcher function
+# returning filtered dirs and hash of matching pairs
 sub filter_directories_matching($$) {
-	my %dirs = %{shift @_};
+	my %dirs = %{ shift @_ };
 	my $matcher = shift @_;
 
-	my %result = ();
+	my %filtered = ();
+	my %pairs = ();
 	for my $left_dir (keys %dirs) {
-		my @left_children = @{ %dirs{$left_dir} };
+		my $left_children_ref = %dirs{$left_dir};
 
 		for my $right_dir (keys %dirs) {
 			if ($left_dir eq $right_dir) {
 				next;
 			}
 
-			my @right_children = @{ %dirs{$right_dir} };
+			my $right_children_ref = %dirs{$right_dir};
 			
-			my $match = $matcher->($left_dir, \@left_children, $right_dir, \@right_children);
+			my $match = $matcher->($left_dir, $left_children_ref, $right_dir, $right_children_ref);
 			if ($match) {
-				$result{$left_dir} = \@left_children;
+				$filtered{$left_dir} = $left_children_ref;
+				push (@{ $pairs{$left_dir} }, $right_dir);
 			}
 		}
 	}
 
-	return %result;
+	return (\%filtered, \%pairs);
 }
 
 #############################################################
 # Filters given reference to hash of directories
 # leaving only the directories of the same name
 sub filter_directories_of_same_name($) {
-	my %dirs = %{shift @_};
+	my $dirs_ref = shift @_;
 	
 	my $matcher = sub {
 		my $left_dir = shift @_;
@@ -201,8 +205,38 @@ sub filter_directories_of_same_name($) {
 		return $left_name eq $right_name;
 	};
 
-	return filter_directories_matching(\%dirs, $matcher);	
+	return filter_directories_matching($dirs_ref, $matcher);	
 }
 
+
+#############################################################
+# Filters given reference to hash of directories
+# having at least given number of common children
+# by matching by given matcher function
+sub filter_directories_with_common_files($$$) {
+	my $dirs_ref = shift @_;
+	my $min_count = shift @_;
+	my $files_matcher = shift @_;
+	
+	my %intersects = ();
+
+	my $dirs_matcher = sub {
+		my $left_dir = shift @_;
+		my $left_children_ref = shift @_;
+		my $right_dir = shift @_;
+		my $right_children_ref = shift @_;
+
+		my $intersect_ref = Disketo_Utils::intersect($left_children_ref, $right_children_ref, $files_matcher);
+		if (scalar keys %{ $intersect_ref } >= $min_count) {
+			$intersects{$left_dir}{$right_dir} = $intersect_ref;
+			return 1;
+		} else {
+			return 0;
+		}
+	};
+
+	my ($filtered_ref, $pairs_ref) = filter_directories_matching($dirs_ref, $dirs_matcher);	
+	return ($filtered_ref, \%intersects);
+}
 
 ## TODO here
