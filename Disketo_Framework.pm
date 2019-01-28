@@ -87,7 +87,7 @@ sub load_stats($) {
 	for my $dir (keys %dirs) {
 		my @children = @{%dirs{$dir}};
 		my %stat = map { $_ => stat($_) } @children;
-		$stats{$dir} = \%stat;
+		%stats = (%stats, %stat);
 	}
 
 	return (\%dirs, \%stats);
@@ -238,5 +238,63 @@ sub filter_directories_with_common_files($$$) {
 	my ($filtered_ref, $pairs_ref) = filter_directories_matching($dirs_ref, $dirs_matcher);	
 	return ($filtered_ref, \%intersects);
 }
+
+#############################################################
+# Filters given reference to hash of directories
+# leaving only the directories with at least given number
+# of common files of the same name
+sub filter_directories_with_common_file_names($$) {
+	my $dirs_ref = shift @_;
+	my $min_count = shift @_;
+
+	my $files_matcher = sub {
+		my $left = shift @_;
+		my $right = shift @_;
+
+		my $left_name = basename($left);
+		my $right_name = basename($right);
+
+		return $left_name eq $right_name;
+	};
+
+	return filter_directories_with_common_files($dirs_ref, $min_count, $files_matcher);	
+}
+
+#############################################################
+# Filters given reference to hash of directories
+# with given stats
+# leaving only the directories with at least given number
+# of common files of the same name and size
+sub filter_directories_with_common_file_names_with_size($$$) {
+	my $dirs_ref = shift @_;
+	my $stats_ref = shift @_;
+	my $min_count = shift @_;
+
+	my %stats = %{ $stats_ref };
+
+	my $files_matcher = sub {
+		my $left = shift @_;
+		my $right = shift @_;
+
+		my $left_name = basename($left);
+		my $right_name = basename($right);
+		
+		my $same_name = ($left_name eq $right_name);
+		if (!$same_name) {
+			return 0;
+		}
+		
+		my $left_size = %stats{$left}->size;
+		my $right_size = %stats{$right}->size;
+
+		my $same_size = ($left_size == $right_size);
+		return $same_size;
+	};
+
+	return filter_directories_with_common_files($dirs_ref, $min_count, $files_matcher);	
+}
+
+
+
 
 ## TODO here
