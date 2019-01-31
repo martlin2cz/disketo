@@ -9,7 +9,7 @@ use File::stat;
 use Data::Dumper;
 use Disketo_Utils; 
 
-##############################################################
+
 #############################################################
 # LIST DIRECTORIES
 #############################################################
@@ -294,6 +294,40 @@ sub filter_directories_with_common_file_names_with_size($$$) {
 	return filter_directories_with_common_files($dirs_ref, $min_count, $files_matcher);	
 }
 
+
+##############################################################
+#############################################################
+# PRINTING
+#############################################################
+# Prints given reference to hash of directories
+# by given printer function
+sub print_directories($$) {
+	my %dirs = %{ shift @_ };
+	my $printer = shift @_;
+
+	my @dirs = keys %dirs;
+	@dirs = sort @dirs;
+
+	for my $dir (@dirs) {
+		my $printed = $printer->($dir);
+		print "$printed\n";
+	}
+
+}
+
+#############################################################
+# Prints given reference to hash of directories
+# simply as a list
+sub print_directories_simply($) {
+	my $dirs_ref = shift @_;
+	
+	my $printer = sub {
+		my $dir = shift @_;
+		return $dir;
+	};
+
+	print_directories($dirs_ref, $printer);
+}
 
 
 

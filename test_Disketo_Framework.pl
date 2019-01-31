@@ -4,6 +4,7 @@ use strict;
 BEGIN { unshift @INC, "."; }
 
 use Data::Dumper;
+use List::Util;
 use Disketo_Utils;
 use Disketo_Framework;
 
@@ -132,6 +133,24 @@ print Dumper($dirs_11_ref);
 Disketo_Utils::logit("filter_directories_with_common_file_names_with_size: pairs");
 print Dumper($pairs_11_ref);
 
+#######################################
+
+my $printer_12 = sub () {
+	my $dir = shift @_;
+	my @children = @{ %{$dirs_3_ref}{$dir} };
+	my $child_count = scalar @children;
+	my $child_size = List::Util::sum (map { %{ $stats_3a_ref }{$_}->size } @children);
+
+	return "$dir \t ($child_count children, total $child_size Bytes)";
+};
+
+Disketo_Utils::logit("print_directories");
+Disketo_Framework::print_directories($dirs_3_ref, $printer_12);
+
+#######################################
+
+Disketo_Utils::logit("print_directories_simply");
+Disketo_Framework::print_directories_simply($dirs_3_ref);
 
 
 
