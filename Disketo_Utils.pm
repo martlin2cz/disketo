@@ -16,6 +16,37 @@ sub logit($) {
 	print STDERR DateTime->now->hms . " # " . $message . "\n";
 }
 
+#############################################################
+# The currrent entered level
+my $entereds = 0;
+
+#############################################################
+# Prints the given message to stderr
+# if not yet any other entered 
+# but not-existed printed
+sub log_entry($) {
+	my $message = shift @_;
+	
+	if ($entereds < 1) {
+		logit($message);
+	}
+
+	$entereds++;
+}
+
+#############################################################
+# Prints the given message to stderr
+# if no more than one others entered
+# in format TIMESTAMP # MESSAGE
+sub log_exit($) {
+	my $message = shift @_;
+	
+	$entereds--;
+	if ($entereds < 1) {
+		logit($message);
+	}
+}
+
 
 #############################################################
 #############################################################
@@ -39,3 +70,6 @@ sub intersect($$$) {
 
 	return \%result;
 }
+
+
+return 1;

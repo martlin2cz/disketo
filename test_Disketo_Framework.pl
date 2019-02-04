@@ -153,6 +153,18 @@ Disketo_Extras::print_directories($dirs_3_ref, $printer_12);
 Disketo_Utils::logit("print_directories_simply");
 Disketo_Extras::print_directories_simply($dirs_3_ref);
 
+#######################################
 
+my $printer_14 = sub () {
+	my $file = shift @_;
+	my $size = %{ $stats_3a_ref }{$file}->size;
+
+	return "$file \t $size B";
+};
+
+Disketo_Utils::logit("print_files");
+Disketo_Extras::print_files($dirs_3_ref, $printer_14);
+
+#
 
 #TODO

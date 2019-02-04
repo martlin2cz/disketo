@@ -18,11 +18,15 @@ use Disketo_Utils;
 sub list_all_directories(@) {
 	my @roots = @_;
 
+	Disketo_Utils::log_entry("Listing all directories in " . join(", ", @roots));
+
 	my %result = ();
 	for my $root (@roots) {
 		my %sub_result = %{ Disketo_Core::list_directory($root) };
 		%result = (%result, %sub_result);
 	}
+
+	Disketo_Utils::log_exit("Got " . (scalar keys %result) . " of them");
 
 	return \%result;
 }
@@ -33,7 +37,11 @@ sub list_all_directories(@) {
 sub load_stats($) {
 	my $dirs_ref = shift @_;
 
-	return Disketo_Core::load_stats($dirs_ref);
+	Disketo_Utils::log_entry("Loading stats of directories");
+	my ($filtered_ref, $stats_ref) = Disketo_Core::load_stats($dirs_ref);
+	
+	Disketo_Utils::log_exit("Got " . (scalar keys %{ $stats_ref }) . " of them");
+	return ($filtered_ref, $stats_ref);
 }
 
 ##############################################################
@@ -46,7 +54,11 @@ sub filter_directories_custom($$) {
 	my $dirs_ref = shift @_ ;
 	my $predicate = shift @_;
 
-	return Disketo_Core::filter_directories($dirs_ref, $predicate);
+	Disketo_Utils::log_entry("Filtering directories against predicate");
+	my $filtered_ref = Disketo_Core::filter_directories($dirs_ref, $predicate);
+	
+	Disketo_Utils::log_exit("Got " . (scalar keys %{ $filtered_ref }) . " of them");
+	return $filtered_ref;
 }
 
 #############################################################
@@ -56,12 +68,17 @@ sub filter_directories_by_pattern($$) {
 	my $dirs_ref = shift @_;
 	my $pattern = shift @_;
 
+	Disketo_Utils::log_entry("Filtering directories matching $pattern");
+
 	my $predicate = sub {
 		my $dir = shift @_;
 		return $dir =~ /$pattern/;
 	};
 	
-	return Disketo_Core::filter_directories($dirs_ref, $predicate);
+	my $filtered_ref = Disketo_Core::filter_directories($dirs_ref, $predicate);
+
+	Disketo_Utils::log_exit("Got " . (scalar keys %{ $filtered_ref }) . " of them");
+	return $filtered_ref;
 }
 
 
@@ -74,6 +91,8 @@ sub filter_directories_by_files_pattern($$$) {
 	my $pattern = shift @_;
 	my $threshold = shift @_;
 
+	Disketo_Utils::log_entry("Filtering directories matching files pattern $pattern w/ at least $threshold");
+
 	my $predicate = sub {
 		my $dir = shift @_;
 		my @children = @{ shift @_ };
@@ -82,7 +101,10 @@ sub filter_directories_by_files_pattern($$$) {
 		return scalar @matching >= $threshold;
 	};
 	
-	return Disketo_Core::filter_directories($dirs_ref, $predicate);
+	my $filtered_ref = Disketo_Core::filter_directories($dirs_ref, $predicate);
+
+	Disketo_Utils::log_exit("Got " . (scalar keys %{ $filtered_ref }) . " of them");
+	return $filtered_ref;
 }
 
 ##############################################################
@@ -96,7 +118,11 @@ sub filter_directories_matching($$) {
 	my $dirs_ref = shift @_;
 	my $matcher = shift @_;
 
-	return Disketo_Core::filter_directories_matching($dirs_ref, $matcher);
+	Disketo_Utils::log_entry("Filtering directories matching predicate");
+	my ($filtered_ref, $pairs_ref) = Disketo_Core::filter_directories_matching($dirs_ref, $matcher);
+
+	Disketo_Utils::log_exit("Got " . (scalar keys %{ $filtered_ref }) . " of them");
+	return ($filtered_ref, $pairs_ref);
 }
 
 #############################################################
@@ -105,6 +131,8 @@ sub filter_directories_matching($$) {
 sub filter_directories_of_same_name($) {
 	my $dirs_ref = shift @_;
 	
+	Disketo_Utils::log_entry("Filtering directories of same name");
+
 	my $matcher = sub {
 		my $left_dir = shift @_;
 		my @left_children = @{ shift @_ };
@@ -117,7 +145,10 @@ sub filter_directories_of_same_name($) {
 		return $left_name eq $right_name;
 	};
 
-	return Disketo_Core::filter_directories_matching($dirs_ref, $matcher);
+	my ($filtered_ref, $pairs_ref) = Disketo_Core::filter_directories_matching($dirs_ref, $matcher);
+
+	Disketo_Utils::log_exit("Got " . (scalar keys %{ $filtered_ref }) . " of them");
+	return ($filtered_ref, $pairs_ref);
 }
 
 
@@ -130,6 +161,8 @@ sub filter_directories_with_common_files($$$) {
 	my $min_count = shift @_;
 	my $files_matcher = shift @_;
 	
+	Disketo_Utils::log_entry("Filtering directories with at least $min_count common files");
+
 	my %intersects = ();
 
 	my $dirs_matcher = sub {
@@ -148,6 +181,8 @@ sub filter_directories_with_common_files($$$) {
 	};
 
 	my ($filtered_ref, $pairs_ref) = Disketo_Core::filter_directories_matching($dirs_ref, $dirs_matcher);
+
+	Disketo_Utils::log_exit("Got " . (scalar keys %{ $filtered_ref }) . " of them");
 	return ($filtered_ref, \%intersects);
 }
 
@@ -159,6 +194,8 @@ sub filter_directories_with_common_file_names($$) {
 	my $dirs_ref = shift @_;
 	my $min_count = shift @_;
 
+	Disketo_Utils::log_entry("Filtering directories with at least $min_count common file names");
+
 	my $files_matcher = sub {
 		my $left = shift @_;
 		my $right = shift @_;
@@ -169,7 +206,9 @@ sub filter_directories_with_common_file_names($$) {
 		return $left_name eq $right_name;
 	};
 
-	return filter_directories_with_common_files($dirs_ref, $min_count, $files_matcher);	
+	my ($filtered_ref, $intersects_ref) = filter_directories_with_common_files($dirs_ref, $min_count, $files_matcher);	
+	Disketo_Utils::log_exit("Got " . (scalar keys %{ $filtered_ref }) . " of them");
+  return ($filtered_ref, $intersects_ref);
 }
 
 #############################################################
@@ -181,6 +220,8 @@ sub filter_directories_with_common_file_names_with_size($$$) {
 	my $dirs_ref = shift @_;
 	my $stats_ref = shift @_;
 	my $min_count = shift @_;
+
+	Disketo_Utils::log_entry("Filtering directories with at least $min_count common files (name+size)");
 
 	my %stats = %{ $stats_ref };
 
@@ -203,7 +244,10 @@ sub filter_directories_with_common_file_names_with_size($$$) {
 		return $same_size;
 	};
 
-	return filter_directories_with_common_files($dirs_ref, $min_count, $files_matcher);	
+	my ($filtered_ref, $intersects_ref) = filter_directories_with_common_files($dirs_ref, $min_count, $files_matcher);	
+	
+	Disketo_Utils::log_exit("Got " . (scalar keys %{ $filtered_ref }) . " of them");
+  return ($filtered_ref, $intersects_ref);
 }
 
 
@@ -215,13 +259,17 @@ sub filter_directories_with_common_file_names_with_size($$$) {
 # simply as a list
 sub print_directories_simply($) {
 	my $dirs_ref = shift @_;
-	
+
+	Disketo_Utils::log_entry("Printing directories simply");
+
 	my $printer = sub {
 		my $dir = shift @_;
 		return $dir;
 	};
 
 	Disketo_Core::print_directories($dirs_ref, $printer);
+
+	Disketo_Utils::log_exit("Printed " . (scalar keys %{ $dirs_ref }) . " of them");
 }
 
 
@@ -232,6 +280,24 @@ sub print_directories($$) {
 	my $dirs_ref = shift @_;
 	my $printer = shift @_;
 
+	Disketo_Utils::log_entry("Printing directories by printer");
+
 	Disketo_Core::print_directories($dirs_ref, $printer);
+
+	Disketo_Utils::log_exit("Printed " . (scalar keys %{ $dirs_ref }) . " of them");
+}
+
+############################################################
+# Prints given reference to hash of directories
+# listing their files
+sub print_files($$) {
+	my $dirs_ref = shift @_;
+	my $printer = shift @_;
+
+	Disketo_Utils::log_entry("Printing files by printer");
+
+	Disketo_Core::print_files($dirs_ref, $printer);
+
+	Disketo_Utils::log_exit("Printed " . (scalar keys %{ $dirs_ref }) . " of them");
 }
 	

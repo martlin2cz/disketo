@@ -174,6 +174,26 @@ sub print_directories($$) {
 		my $printed = $printer->($dir);
 		print "$printed\n";
 	}
+}
 
+############################################################
+# Prints given reference to hash of directories
+# by given printer function
+sub print_files($$) {
+	my %dirs = %{ shift @_ };
+	my $printer = shift @_;
+
+	my @files = ();
+	for my $dir (keys %dirs) {
+		my @subfiles = @{ %dirs{$dir} };
+		@files = (@files, @subfiles);
+	}
+
+	@files = sort @files;
+
+	for my $file (@files) {
+		my $printed = $printer->($file);
+		print "$printed\n";
+	}
 }
 
