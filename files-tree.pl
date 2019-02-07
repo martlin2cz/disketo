@@ -8,6 +8,7 @@ use Disketo_Utils;
 use Disketo_Extras;
 
 #######################################
+Disketo_Utils::usage(\@ARGV, "<DIRECTORIES...>");
 
 my @roots = @ARGV;
 

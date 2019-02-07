@@ -7,6 +7,24 @@ my $VERSION=0.1;
 use DateTime;
 use Data::Dumper;
 
+
+#############################################################
+# Prints specified info about app arguments
+# if no args given
+# and dies
+sub usage($$) {
+	my $ARGV_ref = shift @_;
+	my $info = shift @_;
+
+	if (scalar @{ $ARGV_ref } == 0) {
+		my $cmd = $0;
+
+		die("Usage: $cmd $info\n");
+	}
+}
+
+
+
 #############################################################
 # Prints the given message to stderr
 # in format TIMESTAMP # MESSAGE

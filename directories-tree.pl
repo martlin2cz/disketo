@@ -8,7 +8,7 @@ use Disketo_Utils;
 use Disketo_Extras;
 
 #######################################
-
+Disketo_Utils::usage(\@ARGV, "<DIRECTORIES...>");
 my @roots = @ARGV;
 
 my $dirs_ref = Disketo_Extras::list_all_directories(@roots);
