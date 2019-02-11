@@ -54,24 +54,56 @@ sub load_file($) {
 sub parse_simply($) {
 	my ($content) = @_;
 
-	my @pseudotokens = pseudotokenize($content);
-	my @result = ();
-	for my $pt (@pseudotokens) {
-		#TODO
+	my @tokens = tokenize($content);
+	my @result = ([]);
+	for my $token (@tokens) {
+		if ($token =~ /^\n$/) {
+			push @result, [];
+		} else {
+			push @{ @result[-1] }, $token;
+		}
 	}
 
+	return \@result;
 }
 
-sub pseudotokenize($) {
+sub tokenize($) {
 	my ($content) = @_;
 
-	my @lines = split(/(\n)/, $content);
-	my @result = ();
-	for my $line (@lines) {
-		my @parts = split(/(?<=(\t))/, $line);
+	my @parts = $content =~ / 
+		(?# wrapped in curly backets, to use subs)
+		(\{ (?: [^{}]* | (?0) )* \} ) | 
+		(?# wrapped in double-quotes)
+		(\" [^\"]* \") | 
+		(?# regular text)
+		( [\w]+ ) | 
+		(?# pass newlines too)
+		( \n ) /gx;
 		
-		@result = (@result, @parts);
-	}
+	#TODO if  "sub", "{...}" then replace with "sub {...}"
+	my @filtered = grep /(.+)|(\n)/, @parts;
 
-	return @result;
+	return @filtered;
 }
+
+#######################################
+
+sub validate() {
+	#TODO for each line:
+	#TODO  check whether the function exists
+	#TODO  check whether requires loaded roots/stats
+	#TODO  check argc in both terms (@ARGV and caller/callee match)
+	#TODO  evaluate args?
+	#TODO  extract @ARGV values, put into instead of $$s
+}
+
+sub print() {
+	#TODO for each line:
+	#TODO  print it somehow
+}
+
+sub evalueate() {
+	#TODO for each line:
+	#TODO  evaluate it somehow
+}
+
