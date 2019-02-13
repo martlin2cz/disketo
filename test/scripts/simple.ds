@@ -1,0 +1,8 @@
+# simple script
+filter_directories_by_pattern "(text)|(doc)" 
+filter_directories_by_files_pattern "(\.xlsx?)|(\.docx?)" $$ 
+filter_directories_with_common_files $$ sub {
+	return (shift @_) < (shift @_);
+}
+
+print_files sub { return shift @_ }
