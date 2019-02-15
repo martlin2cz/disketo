@@ -65,19 +65,28 @@ my @statement6a_mod = ("42", "karel", "\$\$", "\"boo\"", "sub { 99; }");
 my @program_args_6a = ("foo", "bar", "baz");
 my %function6 = ( "method" => &Disketo_Utils::logit, "params" => ["first", "second", "third", "fourth", "fifth"] );
 
-my ($resolved_args6, $program_args_mod_6) = Disketo_Evaluator::validate_params(\@statement6a_mod, \@program_args_6a, $fnname5a, \%function6);
-print Dumper($resolved_args6, $program_args_mod_6);
+my ($resolved_args6, $sub_params6_ref) = Disketo_Evaluator::validate_params(\@statement6a_mod, $fnname5a, \%function6);
+print Dumper($resolved_args6, $sub_params6_ref);
 
 my @statement6b_mod = ("foo", "bar", "baz", "42");
-### Disketo_Evaluator::validate_params(\@statement6b_mod, \@program_args_6a, $fnname5a, \%function6);
+### Disketo_Evaluator::validate_params(\@statement6b_mod, $fnname5a, \%function6);
 
 my @statement6b_mod = ("\$\$", "\$\$", "\$\$", "\$\$", "\$\$");
-### Disketo_Evaluator::validate_params(\@statement6b_mod, \@program_args_6a, $fnname5a, \%function6);
+### Disketo_Evaluator::validate_params(\@statement6b_mod, $fnname5a, \%function6);
 
 #######################################
 Disketo_Utils::logit("parse");
 my $script7a = "test/scripts/simple.ds";
-my @program_args_7a = ("42", "99", "foo", "bar");
-my ($program7a_ref, $program_args_mod7a_ref) = Disketo_Evaluator::parse($script7a, \@program_args_7a);
-print Dumper($program7a_ref, $program_args_mod7a_ref);
+my ($program7a_ref, $parameters7a_ref) = Disketo_Evaluator::parse($script7a);
+print Dumper($program7a_ref, $parameters7a_ref);
+
+#######################################
+Disketo_Utils::logit("print_usage");
+my @arguments8a = ("foo");
+#Disketo_Evaluator::print_usage($script7a, $parameters7a_ref, \@arguments8a);
+
+#######################################
+Disketo_Utils::logit("printit");
+Disketo_Evaluator::printit($program7a_ref, \@program_args_6a);
+
 
