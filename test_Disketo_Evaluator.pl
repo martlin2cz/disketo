@@ -77,16 +77,22 @@ my @statement6b_mod = ("\$\$", "\$\$", "\$\$", "\$\$", "\$\$");
 #######################################
 Disketo_Utils::logit("parse");
 my $script7a = "test/scripts/simple.ds";
-my ($program7a_ref, $parameters7a_ref) = Disketo_Evaluator::parse($script7a);
-print Dumper($program7a_ref, $parameters7a_ref);
+my ($program7a_ref) = Disketo_Evaluator::parse($script7a);
+print Dumper($program7a_ref);
 
 #######################################
 Disketo_Utils::logit("print_usage");
 my @arguments8a = ("foo");
-#Disketo_Evaluator::print_usage($script7a, $parameters7a_ref, \@arguments8a);
+### Disketo_Evaluator::print_usage($script7a, $program7a_ref, \@arguments8a);
 
 #######################################
 Disketo_Utils::logit("printit");
 Disketo_Evaluator::printit($program7a_ref, \@program_args_6a);
+
+#######################################
+Disketo_Utils::logit("prepare");
+my ($prepared10_ref) = Disketo_Evaluator::prepare($program7a_ref, \@program_args_6a);
+print Dumper($prepared10_ref);
+
 
 

@@ -14,25 +14,20 @@ use Disketo_Extras;
 #######################################
 
 
-sub run(@) {
-	my $dry_run = 0;
-	if ((scalar @_ > 0) and ((@_[0] eq "--dry") or (@_[0] eq "--dry-run"))) {
-		$dry_run = 1;
-		shift @_;
-	}
-
-	my $script = shift @_;
-	my @args = @_;
-
-	my ($program_ref, $params_ref) = parse($script);
+sub run($$$) {
+	my ($dry_run, $script, $args_ref) = @_;
 	
-	if (scalar @{ $params_ref } >= scalar @args) {
-		print_usage($script, $params_ref, \@args);
+	my ($program_ref) = parse($script);
+	my $params_count = count_params($program_ref);
+
+	if (scalar @{ $args_ref } < $params_count) {
+		print_usage($script, $program_ref, $args_ref);
 	} else {
+		my $prepared_ref = prepare($program_ref, $args_ref);	
 		if ($dry_run) {
-			printit($program_ref, \@args);
+			printit($prepared_ref, $args_ref);
 		} else {
-			evaluate($program_ref, \@args);
+			evaluate($prepared_ref, $args_ref);
 		}
 	}
 }
@@ -178,7 +173,7 @@ sub validate_params($$$) {
 
 	if ((scalar @params) ne (scalar @arguments)) {
 		die("$fnname expects " . (scalar @params) . " params (" . join(", ", @params) . "), "
-				. "given " . (scalar @arguments) . "(". join(", ", @arguments) . ")");
+				. "given " . (scalar @arguments) . " (". join(", ", @arguments) . ")");
 	}
 
 	my $index = 0;
@@ -203,35 +198,146 @@ sub validate_params($$$) {
 }
 
 #######################################
+sub count_params($) {
+	my ($program_ref) = @_;
+
+	my $count = 0;
+	walk_program($program_ref, sub {
+		my ($instruction_ref,$function_name,$function_method,$requires_list,$requires_stats,$params_ref,$args_ref)	= @_;
+
+		for my $arg (@{ $args_ref }) {
+			if ($arg eq "\$\$") {
+				$count++;
+			}
+		}
+	});
+}
+
 
 sub print_usage($$$) {
-	my ($script_name, $params_ref, $args_ref) = @_;
-	my @params = @{ $params_ref };
+	my ($script_name, $program_ref, $program_args_ref) = @_;
+	my @args = @{ $program_args_ref };
 	
-	my $usage = $script_name . " " . 
-		join(" ", 
-			map({
-				my $param_ref = $_;
-				my %param = %{ $param_ref };
-				my $param_name = %param{"name"};
-				my $param_function = %{ %param{"function"} }{"name"};
-				
-				"<$param_name of $param_function>";
-			} @params)) . " <DIRECTORIES...>";
+	my $usage = "$script_name ";
+	my $count = 0;
+	walk_program($program_ref, sub {
+		my ($instruction_ref,$function_name,$function_method,$requires_list,$requires_stats,$params_ref,$args_ref)	= @_;
+
+		for (my $i = 0; $i < scalar @{ $params_ref }; $i++) {
+			my $param = $params_ref->[$i];
+			my $arg = $args_ref->[$i];
+
+			if ($arg eq "\$\$") {
+				$usage = $usage . "<$param of $function_name> ";
+				$count++;
+			}
+		}
+	});
+	$usage = $usage . "<DIRECTORY...>";
 	
-	print STDERR "Expected " . (scalar @params) . " arguments, given " . (scalar @{ $args_ref }) . "\n";
+	print STDERR "Expected $count arguments, given " . (scalar @{ $program_args_ref }) . "\n";
 	Disketo_Utils::usage([], $usage);
+}
+
+#######################################
+
+sub prepare($$) {
+	my ($program_ref, $program_args_ref) = @_;
+
+	$program_ref = push_args_values($program_ref, $program_args_ref);
+	$program_ref = insert_loads($program_ref);
+	
+	return $program_ref;
+}
+
+sub push_args_values($$) {
+	my ($program_ref, $program_args_ref) = @_;
+
+	my @program_args = @{ $program_args_ref };
+	
+	walk_program($program_ref, sub {
+		my ($instruction_ref,$function_name,$function_method,$requires_list,$requires_stats,$params_ref,$args_ref)	= @_;
+
+	for (my $i = 0; $i < scalar @{ $args_ref }; $i++) {
+		if ($args_ref->[$i] eq "\$\$") {
+				my $value = shift @program_args;
+				$args_ref->[$i] = $value;
+			}
+		}
+	});
+
+	return $program_ref;
+}
+
+sub insert_loads($) {
+	my ($program_ref) = @_;
+	
+	my $functions_ref = functions_table();
+	
+	my @program_mod = ();
+	my $listed = 0;
+	my $stats_loaded = 0;
+
+	walk_program($program_ref, sub {
+		my ($instruction_ref,$function_name,$function_method,$requires_list,$requires_stats,$params_ref,$args_ref)	= @_;
+
+		if ($function_name eq "list_all_directories") {
+			$listed = 1;
+		}
+		if ($function_name eq "load_stats") {
+			$stats_loaded = 1;
+		}
+		
+		if ($requires_list and not $listed) {
+			my $list_function = $functions_ref->{"list_all_directories"};
+			my %list_instruction = ("function" => $list_function, "arguments" => []);
+			push @program_mod, \%list_instruction;
+			$listed = 1;
+		}
+		if ($requires_stats and not $stats_loaded) {
+			my $stats_function = $functions_ref->{"load_stats"};
+			my %stats_instruction = ("function" => $stats_function, "arguments" => []);
+			push @program_mod, \%stats_instruction;
+			$stats_loaded = 1;
+		}
+
+		push @program_mod, $instruction_ref;
+	});
+
+	return \@program_mod;
+}
+
+
+#######################################
+
+
+
+sub walk_program($$) {
+	my ($program_ref, $instruction_runner) = @_;
+
+	for my $instruction (@{ $program_ref }) {
+		my $function_ref = $instruction->{"function"};
+		
+		my $function_name = $function_ref->{"name"};
+		my $function_method = $function_ref->{"method"};
+		my $requires_list = $function_ref->{"requires_list"};
+		my $requires_stats = $function_ref->{"requires_stats"};
+		my $params_ref = $function_ref->{"params"};
+
+		my $args_ref = $instruction->{"arguments"};
+	
+		$instruction_runner->
+			($instruction, $function_name, $function_method, $requires_list, $requires_stats, $params_ref, $args_ref);
+	}
 }
 
 sub printit($$) {
 	my ($program_ref, $program_args_ref) = @_;
 	my @program_args = @{ $program_args_ref };
 
-	for my $instruction (@{ $program_ref }) {
-		my $function_name = $instruction->{"function"}->{"name"};
-		my $params_ref = $instruction->{"function"}->{"params"};
-		my $args_ref = $instruction->{"arguments"};
-	
+	walk_program($program_ref, sub {
+		my ($instruction_ref,$function_name,$function_method,$requires_list,$requires_stats,$params_ref,$args_ref) = @_;
+
 		print STDERR "Will invoke $function_name:\n";
 		my $index;
 
@@ -248,7 +354,7 @@ sub printit($$) {
 				print STDERR "\t$param := $arg\n";
 			}
 		}
-	}
+	});
 	
 	print STDERR "The remaining arguments (" . join(", ", @program_args) . ") will be used as a list of directories\n";
 }
@@ -256,37 +362,44 @@ sub printit($$) {
 
 sub evaluate() {
 	my ($program_ref, $program_args_ref) = @_;
+	
 	my ($use_args_ref, $dirs_to_list) = extract_dirs_to_list($program_ref, $program_args_ref);
-	
-	my ($dirs_ref, $stats_ref) = (undef, undef);
-	for my $instruction (@{ $program_ref }) {
-		my $function_name = $instruction->{"function"}->{"method"};
-		my $requires_dirs = $instruction->{"function"}->{"requires_dirs"};
-		my $requires_stats = $instruction->{"function"}->{"requires_dirs"};
-		
-		if ($requires_dirs and is_undef($dirs_ref)) {
-			my %dirs = Disketo_Extra::load_dirs(	); #FOOOO
-			$dirs_ref = \%dirs;
-		}
-		if ($requires_stats and is_undef($stats_ref)) {
-			my %stats = Disketo_Extra::load_stats(	); #FOOOO
-			$dirs_ref = \%stats;
-		}
-		my $args_ref = $instruction->{"arguments"};
 
-		for my $arg (@{ $args_ref }) {
-			if ($arg eq "\$\$") {
-				my $value = shift @{ $use_args_ref }; #FIXME make it @var
-				#TODO use the value
-			} else {
-				#TODO use the value
-			}
-		}
-		#TODO invoke the method
-	}
+	my ($dirs_ref, $stats_ref, $previous_ref) = (42, 99);
 	
-	#TODO for each line:
-	#TODO  evaluate it somehow
+	walk_program($program_ref, sub {
+		my ($instruction_ref,$function_name,$function_method,$requires_list,$requires_stats,$params_ref,$args_ref) = @_;
+		
+		my @arguments;
+		if ($function_name ne "list_all_directories") {
+			@arguments = @{ $args_ref };
+			@arguments = map {
+				if ($_ =~ "sub ?\{") {
+					eval($_);
+				} else {
+					$_;
+				}
+			} @arguments;
+		
+			if ($requires_stats) {
+				unshift @arguments, $stats_ref;
+			}
+			if ($requires_list) {
+				unshift @arguments, $dirs_ref;
+			}
+		} else {
+			@arguments = @{ $dirs_to_list };
+		}
+		
+		print "Will invoke $function_name with " . join(", ", @arguments) . "\n\n";
+		my @result = (44, "the-result"); #TODO replace by method call
+		
+		$previous_ref = \@result;
+		$dirs_ref = @result[0];
+		if ($function_name eq "load_stats") {
+			$stats_ref = @result[1];
+		}
+	});
 }
 
 sub extract_dirs_to_list($$) {
@@ -314,9 +427,9 @@ sub extract_dirs_to_list($$) {
 sub functions_table() {
 	my %table = (
 		"list_all_directories" => { "name" => "list_all_directories", 
-			"requires_list" => 0, "requires_stats" => 0, "params" => [""]},
+			"requires_list" => 0, "requires_stats" => 0, "params" => []},
 		"load_stats" => { "name" => "load_stats", 
-			"requires_list" => 1, "requires_stats" => 0, "params" => [""]},
+			"requires_list" => 1, "requires_stats" => 0, "params" => []},
 		"filter_directories_custom" => { "name" => "filter_directories_custom", 
 			"requires_list" => 1, "requires_stats" => 0, "params" => ["predicate"]},
 		"filter_directories_by_pattern" => { "name" => "filter_directories_by_pattern", 
