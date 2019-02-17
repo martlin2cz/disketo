@@ -4,7 +4,7 @@ use strict;
 BEGIN { unshift @INC, "."; }
 
 package Disketo_Evaluator;
-my $VERSION=0.1;
+my $VERSION=1.0;
 
 use Data::Dumper;
 use Disketo_Utils;
