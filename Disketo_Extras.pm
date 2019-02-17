@@ -298,6 +298,6 @@ sub print_files($$) {
 
 	Disketo_Core::print_files($dirs_ref, $printer);
 
-	Disketo_Utils::log_exit("Printed " . (scalar keys %{ $dirs_ref }) . " of them");
+	Disketo_Utils::log_exit("Printed them of " . (scalar keys %{ $dirs_ref }) . " directories");
 }
 	

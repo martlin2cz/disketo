@@ -13,37 +13,40 @@ use Disketo_Extras;
 #######################################
 #######################################
 
-
+# Runs the interpreation
+# input: boolean flag dry_run, script file name, reference to array of arguments
 sub run($$$) {
 	my ($dry_run, $script, $args_ref) = @_;
 	
 	my ($program_ref) = parse($script);
 	my $params_count = count_params($program_ref);
 	
-	if (scalar @{ $args_ref } < $params_count) {
+	if (scalar @{ $args_ref } < $params_count + 1) {
 		print_usage($script, $program_ref, $args_ref);
 	} else {
 		my $prepared_ref = prepare($program_ref, $args_ref);	
 		if ($dry_run) {
-			printit($prepared_ref, $args_ref);
+			print_program($prepared_ref, $args_ref);
 		} else {
-			evaluate($prepared_ref, $args_ref);
+			run_program($prepared_ref, $args_ref);
 		}
 	}
 }
 
 #######################################
 
+# Parses given file
 sub parse($) {
 	my ($script_file) = @_;
 	
 	my $content = load_file($script_file);
 	my $parsed_ref = parse_content($content);
-	my ($program_ref, $parameters_ref) = validate($parsed_ref);
+	my $program_ref = validate($parsed_ref);
 
-	return ($program_ref, $parameters_ref); #XXX parameters_ref is useless
+	return $program_ref;
 }
 
+# Loads contents of given file into string
 sub load_file($) {
 	my ($file) = @_;
 	
@@ -60,6 +63,7 @@ sub load_file($) {
 
 #######################################
 
+# Parses given content into "statements"
 sub parse_content($) {
 	my ($content) = @_;
 
@@ -86,6 +90,7 @@ sub parse_content($) {
 	return \@result;
 }
 
+# Tokenizes given input string to tokens
 sub tokenize($) {
 	my ($content) = @_;
 
@@ -110,6 +115,7 @@ sub tokenize($) {
 	return @collapsed;
 }
 
+# All pairs of tokens "sub" and "{ ... }" joins them into one token.
 sub collapse_subs(@) {
 	my @tokens = @_;
 	my @result = ();
@@ -129,28 +135,26 @@ sub collapse_subs(@) {
 
 #######################################
 
+# Runs the validation, in fuckt semantic analysis (converts "statements" into "program")
 sub validate($) {
 	my ($parsed_ref) = @_;
 
 	my $functions_ref = functions_table();
 	my @program = ();
-	my @parameters = ();
 
 	for my $statement_ref (@{ $parsed_ref }) {
 		my ($statement_mod_ref, $fnname, $function_ref) = validate_function($statement_ref, $functions_ref);
 		
-		my ($resolved_args_ref, $sub_params_ref);
-		($resolved_args_ref, $sub_params_ref) = validate_params($statement_mod_ref, $fnname, $function_ref);
+		my $resolved_args_ref = validate_params($statement_mod_ref, $fnname, $function_ref);
 
 		my %instruction = ( "function" => $function_ref, "arguments" => $resolved_args_ref );
 		push @program, \%instruction;
-
-		@parameters = (@parameters, @{ $sub_params_ref });
 	}
 
-	return (\@program, \@parameters);
+	return \@program;
 }
 
+# Validates given function (checks her existence agains given functions table)
 sub validate_function($$) {
 	my ($statement_ref, $functions_ref) = @_;
 
@@ -165,51 +169,24 @@ sub validate_function($$) {
 	return (\@statement, $fnname, $function_ref);
 }
 
+# Validates params of given function (checks the number of them)
 sub validate_params($$$) {
 	my ($statement_ref, $fnname, $function_ref) = @_;
 	my %function = %{ $function_ref };
 	my @params = @{ $function{"params"} };
 	my @arguments = @{ $statement_ref };
-	my @statement_params = ();
 
 	if ((scalar @params) ne (scalar @arguments)) {
 		die("$fnname expects " . (scalar @params) . " params (" . join(", ", @params) . "), "
 				. "given " . (scalar @arguments) . " (". join(", ", @arguments) . ")");
 	}
 
-	my $index = 0;
-	for my $arg (@arguments) {
-		if ($arg eq '$$') {
-			my $param_name = $params[$index];
-			my %param = ("name" => $param_name, "function" => $function_ref);
-			push @statement_params, \%param;
-		}
-
-		$index++;
-	}
-
-	return (\@arguments, \@statement_params);
+	return \@arguments;
 }
 
 #######################################
-sub count_params($) {
-	my ($program_ref) = @_;
 
-	my $count = 0;
-	walk_program($program_ref, sub {
-		my ($instruction_ref,$function_name,$function_method,$requires_list,$requires_stats,$params_ref,$args_ref)	= @_;
-
-		for my $arg (@{ $args_ref }) {
-			if ($arg eq "\$\$") {
-				$count++;
-			}
-		}
-	});
-
-	return $count;
-}
-
-
+# Prints usage of the app with script specified
 sub print_usage($$$) {
 	my ($script_name, $program_ref, $program_args_ref) = @_;
 	my @args = @{ $program_args_ref };
@@ -235,37 +212,37 @@ sub print_usage($$$) {
 	Disketo_Utils::usage([], $usage);
 }
 
+# Goes throught given program and counts number of "$$" occurences
+sub count_params($) {
+	my ($program_ref) = @_;
+
+	my $count = 0;
+	walk_program($program_ref, sub {
+		my ($instruction_ref,$function_name,$function_method,$requires_list,$requires_stats,$params_ref,$args_ref)	= @_;
+
+		for my $arg (@{ $args_ref }) {
+			if ($arg eq "\$\$") {
+				$count++;
+			}
+		}
+	});
+
+	return $count;
+}
+
+
 #######################################
 
+# Prepares the program to print/execute (inserts load_* instructions where needed)
 sub prepare($$) {
 	my ($program_ref, $program_args_ref) = @_;
 
-	#	$program_ref = push_args_values($program_ref, $program_args_ref);
 	$program_ref = insert_loads($program_ref);
 	
 	return $program_ref;
 }
 
-#XXX
-sub push_args_values($$) {
-	my ($program_ref, $program_args_ref) = @_;
-
-	my @program_args = @{ $program_args_ref };
-	
-	walk_program($program_ref, sub {
-		my ($instruction_ref,$function_name,$function_method,$requires_list,$requires_stats,$params_ref,$args_ref)	= @_;
-
-	for (my $i = 0; $i < scalar @{ $args_ref }; $i++) {
-		if ($args_ref->[$i] eq "\$\$") {
-				my $value = shift @program_args;
-				$args_ref->[$i] = $value;
-			}
-		}
-	});
-
-	return $program_ref;
-}
-
+# Inserts load_* instructions where needed
 sub insert_loads($) {
 	my ($program_ref) = @_;
 	
@@ -307,28 +284,8 @@ sub insert_loads($) {
 
 #######################################
 
-
-
-sub walk_program($$) {
-	my ($program_ref, $instruction_runner) = @_;
-
-	for my $instruction (@{ $program_ref }) {
-		my $function_ref = $instruction->{"function"};
-		
-		my $function_name = $function_ref->{"name"};
-		my $function_method = $function_ref->{"method"};
-		my $requires_list = $function_ref->{"requires_list"};
-		my $requires_stats = $function_ref->{"requires_stats"};
-		my $params_ref = $function_ref->{"params"};
-
-		my $args_ref = $instruction->{"arguments"};
-	
-		$instruction_runner->
-			($instruction, $function_name, $function_method, $requires_list, $requires_stats, $params_ref, $args_ref);
-	}
-}
-
-sub printit($$) {
+# Prints the program (with arguments)
+sub print_program($$) {
 	my ($program_ref, $program_args_ref) = @_;
 	my @program_args = @{ $program_args_ref };
 
@@ -355,48 +312,34 @@ sub printit($$) {
 					print STDERR "\t$param := $arg, which is currently $value\n";
 				} else {
 					print STDERR "\t$param := $arg\n";
+					if ($arg =~ "sub ?\{") {
+						eval($arg);
+						if ($@) {
+							print STDERR "\tWarning, previous function contains syntax error: $@\n";
+						}
+					}
 				}
 			}
 		}
 	});
 }
 
-
-sub evaluate() {
+# Runs the given program. What else?
+sub run_program($$) {
 	my ($program_ref, $program_args_ref) = @_;
 	
 	my ($use_args_ref, $dirs_to_list) = extract_dirs_to_list($program_ref, $program_args_ref);
+	my @use_args = @{ $use_args_ref };
 
 	my ($dirs_ref, $stats_ref, $previous_ref) = (undef, undef);
 	
-	$program_ref = push_args_values($program_ref, $program_args_ref);
-
 	walk_program($program_ref, sub {
 		my ($instruction_ref,$function_name,$function_method,$requires_list,$requires_stats,$params_ref,$args_ref) = @_;
 		
-		my @arguments;
-		if ($function_name ne "list_all_directories") {
-			@arguments = @{ $args_ref };
-			@arguments = map {
-				my $result = $_;
-				if ($_ =~ "sub ?\{") {
-					$result = eval($_);
-					if ($@) {
-						print STDERR "Syntax error $@ in $_\n";
-					}
-				}
-				$result;
-			} @arguments;
-		
-			if ($requires_stats) {
-				unshift @arguments, $stats_ref;
-			}
-			if ($requires_list) {
-				unshift @arguments, $dirs_ref;
-			}
-		} else {
-			@arguments = @{ $dirs_to_list };
-		}
+		my $arguments_ref;
+		($arguments_ref, $use_args_ref) = prepare_arguments(
+			$function_name, $requires_list, $requires_stats, $dirs_ref, $stats_ref, $previous_ref, $args_ref, $use_args_ref, $dirs_to_list);
+		my @arguments = @{ $arguments_ref };
 		
 		#print "Will invoke $function_name with " . join(", ", @arguments) . "...\n";
 		my @result = $function_method->(@arguments);
@@ -409,6 +352,42 @@ sub evaluate() {
 	});
 }
 
+sub prepare_arguments($) {
+	my ($function_name,$requires_list,$requires_stats,$dirs_ref,$stats_ref,$previous_ref,$args_ref,$use_args_ref,$dirs_to_list) = @_;
+
+	my @use_args = @{ $use_args_ref };
+
+	my @arguments;
+	if ($function_name ne "list_all_directories") {
+		@arguments = @{ $args_ref };
+		@arguments = map {
+			my $result = $_;
+			if ($_ eq "\$\$") {
+				$result = shift @use_args;
+			}
+			if ($_ =~ "sub ?\{") {
+				$result = eval($_);
+				if ($@) {
+					print STDERR "Syntax error $@ in $_\n";
+				}
+			}
+			$result;
+		} @arguments;
+	
+		if ($requires_stats) {
+			unshift @arguments, $stats_ref;
+		}
+		if ($requires_list) {
+			unshift @arguments, $dirs_ref;
+		}
+
+		return (\@arguments, \@use_args);
+	} else {
+		return ($dirs_to_list, $use_args_ref);
+	}
+}
+
+# Based on "$$" argvalues splits given program args to the "$$"-ones and to the rest
 sub extract_dirs_to_list($$) {
 	my ($program_ref, $program_args_ref) = @_;
 
@@ -432,6 +411,27 @@ sub extract_dirs_to_list($$) {
 
 #######################################
 
+# Utility method for simplified walking throught an program.
+sub walk_program($$) {
+	my ($program_ref, $instruction_runner) = @_;
+
+	for my $instruction (@{ $program_ref }) {
+		my $function_ref = $instruction->{"function"};
+		
+		my $function_name = $function_ref->{"name"};
+		my $function_method = $function_ref->{"method"};
+		my $requires_list = $function_ref->{"requires_list"};
+		my $requires_stats = $function_ref->{"requires_stats"};
+		my $params_ref = $function_ref->{"params"};
+
+		my $args_ref = $instruction->{"arguments"};
+	
+		$instruction_runner->
+			($instruction, $function_name, $function_method, $requires_list, $requires_stats, $params_ref, $args_ref);
+	}
+}
+
+# Lists all the supported Disketo_Extras's methods with all the required informations about them
 sub functions_table() {
 	my %table = (
 		"list_all_directories" => { "name" => "list_all_directories", "method" => \&Disketo_Extras::list_all_directories,
@@ -460,7 +460,7 @@ sub functions_table() {
 			"requires_list" => 1, "requires_stats" => 0, "params" => ["printer"]},
 		"print_files" => { "name" => "print_files", "method" => \&Disketo_Extras::print_files,
 			"requires_list" => 1, "requires_stats" => 0, "params" => ["printer"]}
-		#		"" => { "name" => "X", "method" => \&Disketo_Extras::X
+		#		"X" => { "name" => "X", "method" => \&Disketo_Extras::X
 		#	"requires_list" => 1, "requires_stats" => 1, "params" => ["Y", "Z"]},
 	);
 
