@@ -19,7 +19,7 @@ sub run($$$) {
 	
 	my ($program_ref) = parse($script);
 	my $params_count = count_params($program_ref);
-
+	
 	if (scalar @{ $args_ref } < $params_count) {
 		print_usage($script, $program_ref, $args_ref);
 	} else {
@@ -41,7 +41,7 @@ sub parse($) {
 	my $parsed_ref = parse_content($content);
 	my ($program_ref, $parameters_ref) = validate($parsed_ref);
 
-	return ($program_ref, $parameters_ref);
+	return ($program_ref, $parameters_ref); #XXX parameters_ref is useless
 }
 
 sub load_file($) {
@@ -104,7 +104,8 @@ sub tokenize($) {
 		(\# [^\n]* \n) /gx;
 		
 	my @filtered = grep /(.+)|(\n)/, @parts;
-	my @collapsed = collapse_subs(@filtered);
+	my @cleaned = map { $_ =~ s/^\"([^\"]*)\"$/\1/r } @filtered;
+	my @collapsed = collapse_subs(@cleaned);
 
 	return @collapsed;
 }
@@ -183,13 +184,6 @@ sub validate_params($$$) {
 			my %param = ("name" => $param_name, "function" => $function_ref);
 			push @statement_params, \%param;
 		}
-		elsif ($arg =~ /^sub ?\{/) {
-			my $fn = eval($arg);
-			@arguments[$index] = $fn;
-		}
-		else {
-			##okay, cmon
-		}
 
 		$index++;
 	}
@@ -211,6 +205,8 @@ sub count_params($) {
 			}
 		}
 	});
+
+	return $count;
 }
 
 
@@ -244,12 +240,13 @@ sub print_usage($$$) {
 sub prepare($$) {
 	my ($program_ref, $program_args_ref) = @_;
 
-	$program_ref = push_args_values($program_ref, $program_args_ref);
+	#	$program_ref = push_args_values($program_ref, $program_args_ref);
 	$program_ref = insert_loads($program_ref);
 	
 	return $program_ref;
 }
 
+#XXX
 sub push_args_values($$) {
 	my ($program_ref, $program_args_ref) = @_;
 
@@ -335,28 +332,33 @@ sub printit($$) {
 	my ($program_ref, $program_args_ref) = @_;
 	my @program_args = @{ $program_args_ref };
 
+	my ($use_args_ref, $dirs_to_list) = extract_dirs_to_list($program_ref, $program_args_ref);	
+	my @args_to_use = @{ $use_args_ref };
+
 	walk_program($program_ref, sub {
 		my ($instruction_ref,$function_name,$function_method,$requires_list,$requires_stats,$params_ref,$args_ref) = @_;
 
 		print STDERR "Will invoke $function_name:\n";
-		my $index;
+		if ($function_name eq "list_all_directories") {
+			print STDERR "\t with directories " . join(", ", @{ $dirs_to_list }) . "\n";
+		} else {
+			my $index;
 
-		my @params = @{ $params_ref };
-		my @args = @{ $args_ref };
-		for ($index = 0; $index < scalar @params; $index++) {
-			my $param = $params[$index];
-			my $arg = $args[$index];
+			my @params = @{ $params_ref };
+			my @args = @{ $args_ref };
+			for ($index = 0; $index < scalar @params; $index++) {
+				my $param = $params[$index];
+				my $arg = $args[$index];
 
-			if ($arg eq "\$\$") {
-				my $value = shift @program_args;
-				print STDERR "\t$param := $arg, which is currently $value\n";
-			} else {
-				print STDERR "\t$param := $arg\n";
+				if ($arg eq "\$\$") {
+					my $value = shift @args_to_use;
+					print STDERR "\t$param := $arg, which is currently $value\n";
+				} else {
+					print STDERR "\t$param := $arg\n";
+				}
 			}
 		}
 	});
-	
-	print STDERR "The remaining arguments (" . join(", ", @program_args) . ") will be used as a list of directories\n";
 }
 
 
@@ -365,8 +367,10 @@ sub evaluate() {
 	
 	my ($use_args_ref, $dirs_to_list) = extract_dirs_to_list($program_ref, $program_args_ref);
 
-	my ($dirs_ref, $stats_ref, $previous_ref) = (42, 99);
+	my ($dirs_ref, $stats_ref, $previous_ref) = (undef, undef);
 	
+	$program_ref = push_args_values($program_ref, $program_args_ref);
+
 	walk_program($program_ref, sub {
 		my ($instruction_ref,$function_name,$function_method,$requires_list,$requires_stats,$params_ref,$args_ref) = @_;
 		
@@ -374,11 +378,14 @@ sub evaluate() {
 		if ($function_name ne "list_all_directories") {
 			@arguments = @{ $args_ref };
 			@arguments = map {
+				my $result = $_;
 				if ($_ =~ "sub ?\{") {
-					eval($_);
-				} else {
-					$_;
+					$result = eval($_);
+					if ($@) {
+						print STDERR "Syntax error $@ in $_\n";
+					}
 				}
+				$result;
 			} @arguments;
 		
 			if ($requires_stats) {
@@ -391,8 +398,8 @@ sub evaluate() {
 			@arguments = @{ $dirs_to_list };
 		}
 		
-		print "Will invoke $function_name with " . join(", ", @arguments) . "\n\n";
-		my @result = (44, "the-result"); #TODO replace by method call
+		#print "Will invoke $function_name with " . join(", ", @arguments) . "...\n";
+		my @result = $function_method->(@arguments);
 		
 		$previous_ref = \@result;
 		$dirs_ref = @result[0];
@@ -404,19 +411,20 @@ sub evaluate() {
 
 sub extract_dirs_to_list($$) {
 	my ($program_ref, $program_args_ref) = @_;
+
 	my @program_args = @{ $program_args_ref };
 	my @use_args = ();
 
-	for my $instruction (@{ $program_ref }) {
-		my $args_ref = $instruction->{"arguments"};
-		for my $arg (@{ $args_ref }) {
-
-			if ($arg eq "\$\$") {
-				my $value = shift @program_args;
-				push @use_args, $value;
+	walk_program($program_ref, sub {
+			my ($instruction_ref,$function_name,$function_method,$requires_list,$requires_stats,$params_ref,$args_ref) = @_;
+		
+			for my $arg (@{ $args_ref }) {
+				if ($arg eq "\$\$") {
+					my $value = shift @program_args;
+					push @use_args, $value;
+				}
 			}
-		}
-	}
+	});
 	
 	return (\@use_args, \@program_args);
 }
@@ -426,34 +434,34 @@ sub extract_dirs_to_list($$) {
 
 sub functions_table() {
 	my %table = (
-		"list_all_directories" => { "name" => "list_all_directories", 
+		"list_all_directories" => { "name" => "list_all_directories", "method" => \&Disketo_Extras::list_all_directories,
 			"requires_list" => 0, "requires_stats" => 0, "params" => []},
-		"load_stats" => { "name" => "load_stats", 
+		"load_stats" => { "name" => "load_stats", "method" => \&Disketo_Extras::load_stats,
 			"requires_list" => 1, "requires_stats" => 0, "params" => []},
-		"filter_directories_custom" => { "name" => "filter_directories_custom", 
+		"filter_directories_custom" => { "name" => "filter_directories_custom", "method" => \&Disketo_Extras::filter_directories_custom,
 			"requires_list" => 1, "requires_stats" => 0, "params" => ["predicate"]},
-		"filter_directories_by_pattern" => { "name" => "filter_directories_by_pattern", 
+		"filter_directories_by_pattern" => { "name" => "filter_directories_by_pattern", "method" => \&Disketo_Extras::filter_directories_by_pattern,
 			"requires_list" => 1, "requires_stats" => 0, "params" => ["pattern"]},
-		"filter_directories_by_files_pattern" => { "name" => "filter_directories_by_files_pattern", 
+		"filter_directories_by_files_pattern" => { "name" => "filter_directories_by_files_pattern", "method" => \&Disketo_Extras::filter_directories_by_files_pattern,
 			"requires_list" => 1, "requires_stats" => 0, "params" => ["pattern", "threshold"]},
-		"filter_directories_matching" => { "name" => "filter_directories_matching", 
+		"filter_directories_matching" => { "name" => "filter_directories_matching", "method" => \&Disketo_Extras::filter_directories_matching,
 			"requires_list" => 1, "requires_stats" => 0, "params" => ["matcher"]},
-		"filter_directories_of_same_name" => { "name" => "filter_directories_of_same_name", 
+		"filter_directories_of_same_name" => { "name" => "filter_directories_of_same_name", "method" => \&Disketo_Extras::filter_directories_matching,
 			"requires_list" => 1, "requires_stats" => 0, "params" => []},
-		"filter_directories_with_common_files" => { "name" => "filter_directories_with_common_files", 
+		"filter_directories_with_common_files" => { "name" => "filter_directories_with_common_files", "method" => \&Disketo_Extras::filter_directories_with_common_files,
 			"requires_list" => 1, "requires_stats" => 0, "params" => ["min_count", "files_matcher"]},
-		"filter_directories_with_common_file_names" => { "name" => "filter_directories_with_common_file_names", 
+		"filter_directories_with_common_file_names" => { "name" => "filter_directories_with_common_file_names", "method" => \&Disketo_Extras::filter_directories_with_common_file_names,
 			"requires_list" => 1, "requires_stats" => 0, "params" => ["min_coun"]},
-		"filter_directories_with_common_file_names_with_size" => { "name" => "filter_directories_with_common_file_names_with_size", 
+		"filter_directories_with_common_file_names_with_size" => { "name" => "filter_directories_with_common_file_names_with_size", "method" => \&Disketo_Extras::filter_directories_with_common_file_names_with_size,
 			"requires_list" => 1, "requires_stats" => 1, "params" => ["min_count"]},
-		"print_directories_simply" => { "name" => "print_directories_simply", 
+		"print_directories_simply" => { "name" => "print_directories_simply", "method" => \&Disketo_Extras::print_directories_simply,
 			"requires_list" => 1, "requires_stats" => 0, "params" => []},
-		"print_directories" => { "name" => "print_directories", 
+		"print_directories" => { "name" => "print_directories", "method" => \&Disketo_Extras::print_directories,
 			"requires_list" => 1, "requires_stats" => 0, "params" => ["printer"]},
-		"print_files" => { "name" => "print_files", 
+		"print_files" => { "name" => "print_files", "method" => \&Disketo_Extras::print_files,
 			"requires_list" => 1, "requires_stats" => 0, "params" => ["printer"]}
-		#		"" => { "name" => "", 
-		#	"requires_list" => 1, "requires_stats" => 1, "params" => [""]},
+		#		"" => { "name" => "X", "method" => \&Disketo_Extras::X
+		#	"requires_list" => 1, "requires_stats" => 1, "params" => ["Y", "Z"]},
 	);
 
 	return \%table;

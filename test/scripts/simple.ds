@@ -6,4 +6,4 @@ filter_directories_with_common_files $$ sub {
 	return (shift @_) < (shift @_);
 }
 
-print_files sub { return shift @_ }
+print_files sub { return (shift @_) . ", " . (scalar %{ $stats_ref }) }

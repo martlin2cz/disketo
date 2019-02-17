@@ -1,0 +1,8 @@
+# script listing some equal txt files in test dir
+filter_directories_by_pattern "(foo)|(ba[rz])"
+filter_directories_by_files_pattern "(.*)\.txt" $$ 
+#filter_directories_with_common_files $$ sub {
+#	return (shift @_) eq (shift @_);
+#}
+
+print_files sub { return (shift @_) . "!" }
