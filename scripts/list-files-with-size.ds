@@ -1,0 +1,28 @@
+# Lists files with sizes with hooman unit (B, kB, MB, GB or TB)
+load_stats
+print_files sub {
+		my ($file) = @_;
+		my $stats = $stats_ref->{$file};
+		my $size = $stats->size;
+
+		if ($size < 1000) {
+			return "$file \t $size B";
+		}
+
+		$size = $size / 1000;
+		if ($size < 1000) {
+			return "$file \t $size kB";
+		}
+
+		$size = $size / 1000;
+		if ($size < 1000) {
+			return "$file \t $size MB";
+		}
+
+		$size = $size / 1000;
+		if ($size < 1000) {
+			return "$file \t $size GB";
+		}
+
+		return "$file \t $size TB";
+}

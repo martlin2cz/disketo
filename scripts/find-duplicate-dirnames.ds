@@ -1,0 +1,12 @@
+# Finds duplicate directories (directory names) (with their duplicates)
+# optionally specify filter (if not, use ".*")
+filter_directories_by_pattern $$
+filter_directories_of_same_name
+print_directories sub {
+	my ($dir) = @_;
+
+	my $pairs_ref = $previous_ref->[1];
+	my $paired_ref = $pairs_ref->{$dir};
+
+	return $dir . " == " . join(" ", @{ $paired_ref });
+}

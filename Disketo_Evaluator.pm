@@ -157,13 +157,13 @@ sub validate($) {
 # Validates given function (checks her existence agains given functions table)
 sub validate_function($$) {
 	my ($statement_ref, $functions_ref) = @_;
-
+	
 	my @statement = @{ $statement_ref };
 	my $fnname = shift @statement;
 
 	my $function_ref = %{ $functions_ref }{$fnname};
 	if (!$function_ref) {
-		die("Unknown command $fnname");
+		die("Unknown command \"$fnname\"");
 	}
 
 	return (\@statement, $fnname, $function_ref);
@@ -208,7 +208,7 @@ sub print_usage($$$) {
 	});
 	$usage = $usage . "<DIRECTORY...>";
 	
-	print STDERR "Expected $count arguments, given " . (scalar @{ $program_args_ref }) . "\n";
+	print STDERR "Expected at least " . ($count + 1) . " arguments, given " . (scalar @{ $program_args_ref }) . "\n";
 	Disketo_Utils::usage([], $usage);
 }
 
@@ -313,6 +313,7 @@ sub print_program($$) {
 				} else {
 					print STDERR "\t$param := $arg\n";
 					if ($arg =~ "sub ?\{") {
+						my ($dirs_ref, $stats_ref, $previous_ref) = (undef, undef, undef); #to parse normally
 						eval($arg);
 						if ($@) {
 							print STDERR "\tWarning, previous function contains syntax error: $@\n";
@@ -331,7 +332,7 @@ sub run_program($$) {
 	my ($use_args_ref, $dirs_to_list) = extract_dirs_to_list($program_ref, $program_args_ref);
 	my @use_args = @{ $use_args_ref };
 
-	my ($dirs_ref, $stats_ref, $previous_ref) = (undef, undef);
+	my ($dirs_ref, $stats_ref, $previous_ref) = (undef, undef, undef);
 	
 	walk_program($program_ref, sub {
 		my ($instruction_ref,$function_name,$function_method,$requires_list,$requires_stats,$params_ref,$args_ref) = @_;
@@ -446,7 +447,7 @@ sub functions_table() {
 			"requires_list" => 1, "requires_stats" => 0, "params" => ["pattern", "threshold"]},
 		"filter_directories_matching" => { "name" => "filter_directories_matching", "method" => \&Disketo_Extras::filter_directories_matching,
 			"requires_list" => 1, "requires_stats" => 0, "params" => ["matcher"]},
-		"filter_directories_of_same_name" => { "name" => "filter_directories_of_same_name", "method" => \&Disketo_Extras::filter_directories_matching,
+		"filter_directories_of_same_name" => { "name" => "filter_directories_of_same_name", "method" => \&Disketo_Extras::filter_directories_of_same_name,
 			"requires_list" => 1, "requires_stats" => 0, "params" => []},
 		"filter_directories_with_common_files" => { "name" => "filter_directories_with_common_files", "method" => \&Disketo_Extras::filter_directories_with_common_files,
 			"requires_list" => 1, "requires_stats" => 0, "params" => ["min_count", "files_matcher"]},

@@ -1,0 +1,10 @@
+# Prints simple files tree structure
+print_files sub() {
+		my $file = shift @_;
+		
+    my @parts = split(/\/+/, $file);
+    my $name = pop @parts;
+    my $count = scalar @parts;
+    
+		return ("|  " x $count) . "+ $name";		
+}

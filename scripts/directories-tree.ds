@@ -1,0 +1,10 @@
+# Prints simply directories tree structure
+print_directories sub() {
+		my $dir = shift @_;
+		
+    my @parts = split(/\/+/, $dir);
+    my $name = pop @parts;
+    my $count = scalar @parts;
+    
+		return ("|  " x $count) . "+ $name";		
+}
