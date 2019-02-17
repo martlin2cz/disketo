@@ -1,0 +1,5 @@
+# Lists directories containing at least given number of given files.
+# but firstly filters directories against the given pattern
+filter_directories_by_pattern $$
+filter_directories_by_files_pattern $$ $$
+print_directories_simply
