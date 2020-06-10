@@ -4,7 +4,7 @@ use strict;
 BEGIN { unshift @INC, "."; }
 
 package Disketo_Evaluator;
-my $VERSION=1.1;
+my $VERSION=1.1.2;
 
 use Data::Dumper;
 use Disketo_Utils;
@@ -435,32 +435,59 @@ sub walk_program($$) {
 # Lists all the supported Disketo_Extras's methods with all the required informations about them
 sub functions_table() {
 	my %table = (
+		#---------
 		"list_all_directories" => { "name" => "list_all_directories", "method" => \&Disketo_Extras::list_all_directories,
-			"requires_list" => 0, "requires_stats" => 0, "params" => []},
+			"requires_list" => 0, "requires_stats" => 0, "params" => [], "doc" => 
+			"Explicitly (re)loads the contents from the directories/files specified by the command line args. Executed by default at the beggining of the each disketo script."},
+		#----------
 		"load_stats" => { "name" => "load_stats", "method" => \&Disketo_Extras::load_stats,
-			"requires_list" => 1, "requires_stats" => 0, "params" => []},
+			"requires_list" => 1, "requires_stats" => 0, "params" => [], "doc" =>
+			"Explicitly loads the filesystem stats (acces rights, dates, sizes, etc.) of the files. Executed by default by methods requiring that, call if you have custom sub requiring the stats."},
+		#---------
 		"filter_directories_custom" => { "name" => "filter_directories_custom", "method" => \&Disketo_Extras::filter_directories_custom,
-			"requires_list" => 1, "requires_stats" => 0, "params" => ["predicate"]},
+			"requires_list" => 1, "requires_stats" => 0, "params" => ["predicate"], "doc" =>
+			"Filters the directories (passes the ones matching the given predicate). The predicate may be sub(\$dir,\$children_ref) returning boolean."},
+		#---------
 		"filter_directories_by_pattern" => { "name" => "filter_directories_by_pattern", "method" => \&Disketo_Extras::filter_directories_by_pattern,
-			"requires_list" => 1, "requires_stats" => 0, "params" => ["pattern"]},
+			"requires_list" => 1, "requires_stats" => 0, "params" => ["pattern"], doc => 
+			"Filters the directories (passes the ones matching the given pattern). The pattern may be regex."},
+		#---------
 		"filter_directories_by_files_pattern" => { "name" => "filter_directories_by_files_pattern", "method" => \&Disketo_Extras::filter_directories_by_files_pattern,
-			"requires_list" => 1, "requires_stats" => 0, "params" => ["pattern", "threshold"]},
+			"requires_list" => 1, "requires_stats" => 0, "params" => ["pattern", "threshold"], "doc" => 
+			"Filters the directories (passes the directories which has at least threshold files matching pattern). The pattern may be regex, the threshold integer."},
+		#--------
 		"filter_directories_matching" => { "name" => "filter_directories_matching", "method" => \&Disketo_Extras::filter_directories_matching,
-			"requires_list" => 1, "requires_stats" => 0, "params" => ["matcher"]},
+			"requires_list" => 1, "requires_stats" => 0, "params" => ["matcher"], "doc" => 
+			"Filters the directories (passes the directories couples, which are matched by the given matcher function). The matcher may be sub(\$dir_1, \$dir_1_children_ref, \$dir_2, \$dir_2_children_ref) returning boolean."},
+		#--------
 		"filter_directories_of_same_name" => { "name" => "filter_directories_of_same_name", "method" => \&Disketo_Extras::filter_directories_of_same_name,
-			"requires_list" => 1, "requires_stats" => 0, "params" => []},
+			"requires_list" => 1, "requires_stats" => 0, "params" => [], "doc" =>
+			"Filters the directories (passes the directories couples, which has the same name)."},
+		#--------
 		"filter_directories_with_common_files" => { "name" => "filter_directories_with_common_files", "method" => \&Disketo_Extras::filter_directories_with_common_files,
-			"requires_list" => 1, "requires_stats" => 0, "params" => ["min_count", "files_matcher"]},
+			"requires_list" => 1, "requires_stats" => 0, "params" => ["min_count", "files_matcher"], "doc" => 
+			"Filters the directories (passes the directories couples which has at least min_count common files) The common files are specified by the files_matcher, which may be sub(\$file_1, \$file_2) returning boolean."},
+		#--------
 		"filter_directories_with_common_file_names" => { "name" => "filter_directories_with_common_file_names", "method" => \&Disketo_Extras::filter_directories_with_common_file_names,
-			"requires_list" => 1, "requires_stats" => 0, "params" => ["min_coun"]},
+			"requires_list" => 1, "requires_stats" => 0, "params" => ["min_count"], "doc" => 
+			"Filters the directories (passes the directories which has at least min_count same files). The 'same files' here means the files with the same name."},
+		#--------
 		"filter_directories_with_common_file_names_with_size" => { "name" => "filter_directories_with_common_file_names_with_size", "method" => \&Disketo_Extras::filter_directories_with_common_file_names_with_size,
-			"requires_list" => 1, "requires_stats" => 1, "params" => ["min_count"]},
+			"requires_list" => 1, "requires_stats" => 1, "params" => ["min_count"], "doc" => 
+			"Filters the directories (passes the directories which has at least min_count same files). The 'same files' here means the files with the same name and size as well."},
+		#--------
 		"print_directories_simply" => { "name" => "print_directories_simply", "method" => \&Disketo_Extras::print_directories_simply,
-			"requires_list" => 1, "requires_stats" => 0, "params" => []},
+			"requires_list" => 1, "requires_stats" => 0, "params" => [], "doc" => 
+			"Simply prints all the directories."},
+		#-------
 		"print_directories" => { "name" => "print_directories", "method" => \&Disketo_Extras::print_directories,
-			"requires_list" => 1, "requires_stats" => 0, "params" => ["printer"]},
+			"requires_list" => 1, "requires_stats" => 0, "params" => ["printer"], "doc" => 
+			"Prints the directories by using the given printer. The printer may be sub(\$dir) returning string to be printed."},
+		#-------
 		"print_files" => { "name" => "print_files", "method" => \&Disketo_Extras::print_files,
-			"requires_list" => 1, "requires_stats" => 0, "params" => ["printer"]}
+			"requires_list" => 1, "requires_stats" => 0, "params" => ["printer"], "doc" =>
+			"Prints the files by using the given printer. The printer may be sub(\$file) returning string to be printed."}
+
 		#		"X" => { "name" => "X", "method" => \&Disketo_Extras::X
 		#	"requires_list" => 1, "requires_stats" => 1, "params" => ["Y", "Z"]},
 	);

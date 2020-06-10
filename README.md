@@ -120,7 +120,7 @@ You could also run disketo script with flag `--dry-run`, which shows which agrum
 
 
 # New in version 1.1
- - Added load from file. The input now can be either the directory to list or plain text file with files (recommended absolute paths) one on each line, like:
+ - Added load from file (version 1.1). The input now can be either the directory to list or plain text file with files (recommended absolute paths) one on each line, like:
 
 ```
 /home/user/libraries/lib.jar
@@ -128,9 +128,16 @@ You could also run disketo script with flag `--dry-run`, which shows which agrum
 /home/user/dev/lib/bin/lib.jar
 ```
 
+- Added simple description to the statements in `--list` and improoved the displaing (version 1.1.2):
+
+```
+$ ./run-disketo-script.pl --list
+...
+print_files	printer
+	Prints the files by using the given printer. The printer may be sub($file) returning string to be printed.
+```
+
 # TODO
-
-
 - [x] add support for save/load directory lists to/from text file, to
  1. allow to pause and resume the process for large storages
  2. simplify the debugging

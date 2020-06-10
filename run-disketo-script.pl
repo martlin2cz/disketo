@@ -36,9 +36,12 @@ sub list_functions() {
 
 	for my $fnname (sort keys %table) {
 		my $function_ref = $table{$fnname};
+		my $doc = $function_ref->{"doc"};
 		my $params_ref = $function_ref->{"params"};
 	
-		print STDERR "$fnname\t" . join ("\t", @{ $params_ref }) . "\n";
+		print STDERR "$fnname\t" . join ("  ", @{ $params_ref }) . "\n";
+		print STDERR "\t$doc\n\n";
+
 	}
 }
 
