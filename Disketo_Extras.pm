@@ -2,7 +2,7 @@
 use strict;
 
 package Disketo_Extras; 
-my $VERSION=0.1;
+my $VERSION=0.2;
 
 use File::Basename;
 use Data::Dumper;
@@ -15,14 +15,15 @@ use Disketo_Utils;
 # LIST DIRECTORIES
 #############################################################
 # Lists all directories recursivelly of given list of root directories
+# OR root ls files
 sub list_all_directories(@) {
 	my @roots = @_;
 
-	Disketo_Utils::log_entry("Listing all directories in " . join(", ", @roots));
+	Disketo_Utils::log_entry("Listing all directories in/from " . join(", ", @roots));
 
 	my %result = ();
 	for my $root (@roots) {
-		my %sub_result = %{ Disketo_Core::list_directory($root) };
+		my %sub_result = %{ Disketo_Core::list($root) };
 		%result = (%result, %sub_result);
 	}
 

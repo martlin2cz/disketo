@@ -2,13 +2,29 @@
 use strict;
 
 package Disketo_Core; 
-my $VERSION=0.1;
+my $VERSION=0.2;
 
 use File::Basename;
 use File::stat;
 use Data::Dumper;
 use Disketo_Utils; 
 
+#############################################################
+# Lists either the all the directories if the $ is directory,
+# or simply loads the listed resources from the $ text file.
+# Fails otherwise.
+sub list($) {
+	my ($dir_or_file) = @_;
+
+	if (-d $dir_or_file) {
+		return list_directory($dir_or_file);
+	}
+	if (-f $dir_or_file) {
+		return list_from_file($dir_or_file);
+	}
+
+	die("Nor directory or file: $dir_or_file ")	
+}
 
 #############################################################
 # Lists recursivelly all the subdirectories of given directory 
@@ -30,6 +46,16 @@ sub list_directory($) {
 
 	return \%result;		
 }	
+
+#############################################################
+# Lists all the paths from the given file. Assuming absolute paths
+# and one at each line.
+sub list_from_file($) {
+	my ($file) = @_;
+	
+	my $lines_ref = load_lines($file);
+	return files_to_dirs($lines_ref);
+}
 
 #############################################################
 # Returns ref to array containing all (non-hidden) child resources 
@@ -58,6 +84,40 @@ sub children_of($) {
 	closedir $dh;
 
 	return \@result;
+}
+
+#############################################################
+# For given input file loads all its lines
+sub load_lines($) {
+	my ($file) = @_;
+
+	my $handle;
+	unless(open $handle, '<', $file) {
+		print STDERR "Can't open $file: $!\n";
+		return \{}
+	}
+	chomp(my @lines = <$handle>);
+	close $handle;
+
+	return \@lines;
+}
+
+#############################################################
+# For given input lines (representing the files paths) list ref
+# creates ref to hash with their dirs.
+sub files_to_dirs($) {
+	my @files = @{ shift @_ };
+	my %result = ();
+
+	for my $file (@files) {
+		my @parts = split(/\/+/, $file);
+		pop @parts;
+		my $parent = join("/", @parts);
+		
+		push @{ $result{$parent} }, $file;
+	}
+
+	return \%result;
 }
 
 #############################################################

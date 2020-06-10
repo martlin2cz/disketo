@@ -1,0 +1,5 @@
+# Prints files simply
+print_files sub() {
+	my $file = shift @_;
+	return $file;
+}

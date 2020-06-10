@@ -27,9 +27,9 @@ BEGIN { unshift @INC, "."; }
 use Disketo_Utils;
 use Disketo_Extras;
 
-Disketo_Utils::usage(\@ARGV, " <PATTERN> <DIRECTORIES...>");
+Disketo_Utils::usage(\@ARGV, " <PATTERN> <DIRECTORIES/FILES...>");
 if (scalar \@ARGV < 2) {
-	Disketo_Utils::usage([], " <PATTERN> <directories...>");
+	Disketo_Utils::usage([], " <PATTERN> <directories/files...>");
 }
 
 my $pattern = shift @ARGV;
@@ -52,7 +52,7 @@ Disketo_Extras::print_directories($dirs_ref, sub {
 });
 ```
 
-to write script printing simple directories tree, but you can use simply:
+to write script printing matching directories (directories with the same names), but you can use simply:
 
 
 ```perl
@@ -80,19 +80,19 @@ In the sub you can use variables `$dirs_ref`, `$stats_ref` and `$previous_ref` h
 Final script is executed by:
 
 ```shell
-$ ./run-disketo-script.pl script.ds "$$ PARAM 1" "$$ PARAM 2" "DIRECTORY 1" "DIRECTORY 2"
+$ ./run-disketo-script.pl script.ds "$$ PARAM 1" "$$ PARAM 2" "DIRECTORY OR FILE 1" "DIRECTORY OR FILE 2"
 ```
 
 For instance:
 
 ```shell
-$ ./run-disketo-script.pl scripts/find-duplicate-dirnames.ds "(foo)|(ba[rz])" test/
+$ ./run-disketo-script.pl scripts/find-duplicate-dirnames.ds "(foo)|(ba[rz])" test/ ls-of-some-backup.txt
 ```
 
 which produces following output:
 
 ```
-21:58:05 # Listing all directories in test/
+21:58:05 # Listing all directories in test/, ls-of-some-backup.txt
 21:58:05 # Got 11 of them
 21:58:05 # Filtering directories matching (foo)|(ba[rz])
 21:58:05 # Got 5 of them
@@ -103,6 +103,8 @@ test//ipsum/foo == test//lorem/foo
 test//lorem/bar == test//other/bar
 test//lorem/foo == test//ipsum/foo
 test//other/bar == test//lorem/bar
+backup//doc == test//project/doc
+test//project/doc == backup//doc
 21:58:05 # Printed 4 of them
 ```
 
@@ -111,14 +113,25 @@ This is exactly what the snippets at the beggining does. If you don't provide re
 ```shell
 $ ./run-disketo-script.pl scripts/find-duplicate-dirnames.ds "(foo)|(ba[rz])"
 Expected at least 2 arguments, given 1
-Usage: ./run-disketo-script.pl scripts/find-duplicate-dirnames.ds <pattern of filter_directories_by_pattern> <DIRECTORY...>
+Usage: ./run-disketo-script.pl scripts/find-duplicate-dirnames.ds <pattern of filter_directories_by_pattern> <DIRECTORY/FILE...>
 ```
 
 You could also run disketo script with flag `--dry-run`, which shows which agruments will be used as what.
 
+
+# New in version 1.1
+ - Added load from file. The input now can be either the directory to list or plain text file with files (recommended absolute paths) one on each line, like:
+
+```
+/home/user/libraries/lib.jar
+/home/user/libraries/lib-1.1.jar
+/home/user/dev/lib/bin/lib.jar
+```
+
 # TODO
 
--[ ] add support for save/load directory lists to/from text file, to
+
+- [x] add support for save/load directory lists to/from text file, to
  1. allow to pause and resume the process for large storages
  2. simplify the debugging
  3. allow user to include/exclude some directories by hand

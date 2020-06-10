@@ -4,7 +4,7 @@ use strict;
 BEGIN { unshift @INC, "."; }
 
 package Disketo_Evaluator;
-my $VERSION=1.0;
+my $VERSION=1.1;
 
 use Data::Dumper;
 use Disketo_Utils;
@@ -206,7 +206,7 @@ sub print_usage($$$) {
 			}
 		}
 	});
-	$usage = $usage . "<DIRECTORY...>";
+	$usage = $usage . "<DIRECTORY/FILE ...>";
 	
 	print STDERR "Expected at least " . ($count + 1) . " arguments, given " . (scalar @{ $program_args_ref }) . "\n";
 	Disketo_Utils::usage([], $usage);
