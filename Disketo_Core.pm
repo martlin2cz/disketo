@@ -92,7 +92,7 @@ sub load_lines($) {
 	my ($file) = @_;
 
 	my $handle;
-	unless(open $handle, '<', $file) {
+	unless(open $handle, '<:encoding(utf8)', $file) {
 		print STDERR "Can't open $file: $!\n";
 		return \{}
 	}
@@ -110,10 +110,7 @@ sub files_to_dirs($) {
 	my %result = ();
 
 	for my $file (@files) {
-		my @parts = split(/\/+/, $file);
-		pop @parts;
-		my $parent = join("/", @parts);
-		
+		my $parent = dirname($file);
 		push @{ $result{$parent} }, $file;
 	}
 

@@ -1,4 +1,5 @@
 # Lists files with sizes with hooman unit (B, kB, MB, GB or TB)
+filter_directories_by_files_pattern $$ $$
 load_stats
 print_files sub {
 		my ($file) = @_;
