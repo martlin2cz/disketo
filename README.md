@@ -119,7 +119,7 @@ Usage: ./run-disketo-script.pl scripts/find-duplicate-dirnames.ds <pattern of fi
 You could also run disketo script with flag `--dry-run`, which shows which agruments will be used as what.
 
 
-# New in version 1.1
+# New features
  - Added load from file (version 1.1). The input now can be either the directory to list or plain text file with files (recommended absolute paths) one on each line, like:
 
 ```
@@ -136,6 +136,9 @@ $ ./run-disketo-script.pl --list
 print_files	printer
 	Prints the files by using the given printer. The printer may be sub($file) returning string to be printed.
 ```
+
+- Load from file now supports UTF-8 (version 1.1.3).
+
 
 # TODO
 - [x] add support for save/load directory lists to/from text file, to
