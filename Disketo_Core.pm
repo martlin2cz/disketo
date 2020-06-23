@@ -2,7 +2,7 @@
 use strict;
 
 package Disketo_Core; 
-my $VERSION=0.3;
+my $VERSION=0.4;
 
 use File::Basename;
 use File::stat;
@@ -41,6 +41,8 @@ sub list_directory($) {
 		if (-d $child) {
 			my %sub_result = %{ list_directory($child) };
 			%result = (%result, %sub_result);
+		
+			Disketo_Utils::check_progress(scalar %result, undef);
 		}
 	}
 
@@ -112,6 +114,8 @@ sub files_to_dirs($) {
 	for my $file (@files) {
 		my $parent = dirname($file);
 		push @{ $result{$parent} }, $file;
+
+		Disketo_Utils::check_progress(scalar %result, undef);
 	}
 
 	return \%result;
@@ -124,11 +128,14 @@ sub load_stats($) {
 	my %dirs = %{ shift @_ };
 
 	my %stats = ();
-	for my $dir (keys %dirs) {
+	#for my $dir (keys %dirs) {
+	Disketo_Utils::iterate([keys %dirs], sub($$) {
+		my ($dir, $i) = @_;
+
 		my @children = @{%dirs{$dir}};
 		my %stat = map { $_ => stat($_) } @children;
 		%stats = (%stats, %stat);
-	}
+	});
 
 	return (\%dirs, \%stats);
 }
@@ -142,14 +149,17 @@ sub filter_directories($$) {
 	my $predicate = shift @_;
 
 	my %result = ();
-	for my $dir (keys %dirs) {
+	#for my $dir (keys %dirs) {
+	Disketo_Utils::iterate([keys %dirs], sub($$) {
+		my ($dir, $i) = @_;
+
 		my @children = @{%dirs{$dir}};
 
 		my $okay = $predicate->($dir, \@children);
 		if ($okay) {
 			$result{$dir} = \@children;
 		}
-	}
+	});
 
 	return \%result;
 }
@@ -165,7 +175,10 @@ sub filter_directories_matching($$) {
 
 	my %filtered = ();
 	my %pairs = ();
-	for my $left_dir (keys %dirs) {
+	#for my $left_dir (keys %dirs) {
+	Disketo_Utils::iterate([keys %dirs], sub($$) {
+		my ($left_dir, $i) = @_;
+
 		my $left_children_ref = %dirs{$left_dir};
 
 		for my $right_dir (keys %dirs) {
@@ -181,7 +194,7 @@ sub filter_directories_matching($$) {
 				push (@{ $pairs{$left_dir} }, $right_dir);
 			}
 		}
-	}
+	});
 
 	return (\%filtered, \%pairs);
 }
@@ -227,10 +240,13 @@ sub print_directories($$) {
 	my @dirs = keys %dirs;
 	@dirs = sort @dirs;
 
-	for my $dir (@dirs) {
+	#for my $dir (@dirs) {
+	Disketo_Utils::iterate(\@dirs, sub($$) {
+		my ($dir, $i) = @_;
+
 		my $printed = $printer->($dir);
 		print "$printed\n";
-	}
+	});
 }
 
 ############################################################
@@ -241,16 +257,22 @@ sub print_files($$) {
 	my $printer = shift @_;
 
 	my @files = ();
-	for my $dir (keys %dirs) {
+	#for my $dir (keys %dirs) {
+	Disketo_Utils::iterate([keys %dirs], sub($$) {
+		my ($dir, $i) = @_;
+
 		my @subfiles = @{ %dirs{$dir} };
 		@files = (@files, @subfiles);
-	}
+	});
 
 	@files = sort @files;
 
-	for my $file (@files) {
+	#for my $file (@files) {
+	Disketo_Utils::iterate(\@files, sub($$) {
+		my ($file, $i) = @_;
+
 		my $printed = $printer->($file);
 		print "$printed\n";
-	}
+	});
 }
 
