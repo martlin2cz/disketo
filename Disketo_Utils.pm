@@ -71,6 +71,7 @@ sub log_exit($) {
 #############################################################
 # The last time progress have been printed
 my $last_printed_at = 0;
+my $loop_started_at = 0;
 
 #############################################################
 # Iterates over the given array, applying given function;
@@ -82,8 +83,7 @@ sub iterate($$) {
 	my $total = scalar @array;
 	my @result = ();
 
-	print_progress(0, $total);
-	my $last_printed_at = time();
+	start_progress($total);
 	
 	for (my $i = 0; $i < $total; $i++) {
 		my $item = $array[$i];
@@ -97,6 +97,18 @@ sub iterate($$) {
 
 	return \@result;
 }
+
+#############################################################
+# (Re)initializes the progress running, resets the indicators.
+sub start_progress($) {
+	my $total = shift @_;
+	
+	print_progress(0, $total);
+	
+	$last_printed_at = time();
+	$loop_started_at = time();
+}
+
 #############################################################
 # If more than PROGRESS_PERIOD since last print_progress, 
 # prints_progress with given i (and total).
@@ -119,7 +131,18 @@ sub print_progress($$) {
 	
 	if ($total) {
 		my $percent = ($i * 100.0) / $total;
-		printf (STDERR "\t%4.2g%% \r", $percent);
+		
+		my $now = time();
+		my $time_spent = $loop_started_at;
+		if ($percent > 0) {
+			my $remaining_seconds = int(($now - $time_spent) * (100.0 - $percent) / $percent);
+			my $remaining_minutes = int($remaining_seconds / 60);
+			my $minutes = int($remaining_minutes % 60);
+			my $hours = int($remaining_minutes / 60);
+			printf (STDERR "\t%4.2g%%, remaining approx. %d hours and %d minutes \r", $percent, $hours, $minutes);
+		} else {
+			printf (STDERR "\t%4.2g%% \r", $percent);
+		}
 	} else {
 		printf (STDERR "\t%d \r", $i); 
 	}
