@@ -139,6 +139,11 @@ print_files	printer
 
 - Load from file now supports UTF-8 (version 1.1.3).
 
+- Prints progress (version 1.2.1) and remaining time (version 1.2.2):
+```
+20:13:17 # Filtering directories of same name
+          36%, remaining approx. 2 hours and 41 minutes
+```
 
 # TODO
 - [x] add support for save/load directory lists to/from text file, to

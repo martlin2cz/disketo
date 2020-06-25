@@ -2,7 +2,9 @@
 use strict;
 
 package Disketo_Utils; 
-my $VERSION=0.2;
+my $VERSION=0.3;
+
+# How offten (in seconds) tu orint the current orogress?
 use constant PROGRESS_PERIOD => 60;
 
 use DateTime;

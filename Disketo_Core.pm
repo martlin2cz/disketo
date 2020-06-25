@@ -2,7 +2,7 @@
 use strict;
 
 package Disketo_Core; 
-my $VERSION=0.4;
+my $VERSION=0.5;
 
 use File::Basename;
 use File::stat;
@@ -16,8 +16,10 @@ use Disketo_Utils;
 sub list($) {
 	my ($dir_or_file) = @_;
 
+	#Disketo_Utils::start_progress(undef);
+
 	if (-d $dir_or_file) {
-		return list_directory($dir_or_file);
+		return list_directory($dir_or_file, 0);
 	}
 	if (-f $dir_or_file) {
 		return list_from_file($dir_or_file);
@@ -28,21 +30,24 @@ sub list($) {
 
 #############################################################
 # Lists recursivelly all the subdirectories of given directory 
-# returns ref to hash mapping for each path the directory children
+# returns ref to hash mapping for each path the directory children.
 sub list_directory($) {
-	my ($dir) = @_;
+	my ($dir, $previous_count) = @_;
 	my %result = ();
+	my $count = $previous_count;
 
 	my $children_ref = children_of($dir);
 	my @children = @{ $children_ref };
 	$result{$dir} = $children_ref;
-
+	
 	foreach my $child (@children) {
 		if (-d $child) {
-			my %sub_result = %{ list_directory($child) };
-			%result = (%result, %sub_result);
-		
-			Disketo_Utils::check_progress(scalar %result, undef);
+			my %sub_result = %{ list_directory($child, $count) };
+
+			%result = (%result, %sub_result);		
+			$count += scalar %sub_result;
+
+			Disketo_Utils::check_progress($count, undef);
 		}
 	}
 
