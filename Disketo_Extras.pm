@@ -2,7 +2,7 @@
 use strict;
 
 package Disketo_Extras; 
-my $VERSION=0.2;
+my $VERSION = 1.1;
 
 use File::Basename;
 use Data::Dumper;

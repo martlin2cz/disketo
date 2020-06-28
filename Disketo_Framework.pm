@@ -2,7 +2,7 @@
 use strict;
 
 package Disketo_Framework; 
-my $VERSION=0.1;
+my $VERSION = 1.1;
 
 use File::Basename;
 use File::stat;

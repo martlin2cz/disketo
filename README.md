@@ -144,6 +144,7 @@ print_files	printer
 20:13:17 # Filtering directories of same name
           36%, remaining approx. 2 hours and 41 minutes
 ```
+- Added `--help` and `--version` (version 1.3).
 
 # TODO
 - [x] add support for save/load directory lists to/from text file, to
