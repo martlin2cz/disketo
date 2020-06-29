@@ -1,0 +1,52 @@
+load:
+	- only dirs
+	- dirs with files
+
+iterate:
+	- compute:
+		- load stats
+		- group by:
+			- name
+			- name and size
+			- CUSTOM GROUPPER
+		- collect:
+			- dir resources count
+			- dir total size
+			- CUSTOM COLLECTOR
+
+	- print:
+		- print dirs:
+			- simply
+			- CUSTOM PRINTER
+
+		- print files:
+			- simply
+			- CUSTOM PRINTER
+filter:
+	- filter matching:
+		- dirs matching:
+			- pattern
+			- CUSTOM MATCHER
+
+			- has at least X files matching:
+				- pattern
+				- size
+				- CUSTOM MATCHER
+
+		- files matching
+			- pattern
+			- bigger than size
+			- CUSTOM MATCHER
+
+	- filter with duplicates:
+		- filter duplicate files:
+			- by ...
+		- filter duplicate dirs:
+			- with at least X duplicate files
+
+----
+dirs: dir => [files]
+stats: resource = > stats
+groups: groups identifier (i.e. name) => [resources]
+duplicites: resource => [same resources]
+
