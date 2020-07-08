@@ -35,7 +35,7 @@ sub function_for_each_file($$) {
 	return $file . " is a file";
 }
 
-Disketo_Engine::calculate_for_each_dir(\&function_for_each_file, "file meta", $context);
+Disketo_Engine::calculate_for_each_file(\&function_for_each_file, "file meta", $context);
 #Disketo_Engine::context_stats($context);
 #######################################
 
@@ -65,7 +65,7 @@ sub filter_each_dir($$) {
 }
 
 Disketo_Engine::filter_dirs(\&filter_each_dir, $context);
-Disketo_Engine::context_stats($context);
+#Disketo_Engine::context_stats($context);
 #######################################
 
 sub filter_each_file($$) {

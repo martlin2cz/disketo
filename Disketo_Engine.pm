@@ -42,10 +42,9 @@ sub load($$) {
 # to obtain given identifier over the dirs in the given context.
 sub calculate_for_each_dir($$$) {
 	my ($function, $identifier, $context) = @_;
-	my %resources = %{$context->{"resources"}};
 
 	my %values = ();
-	Disketo_Utils::iterate([keys %resources], sub($$) {
+	Disketo_Utils::iterate_dirs($context, sub($$) {
 		my ($dir, $i) = @_;
 		my $value = $function->($dir, $context);
 		$values{$dir} = $value;
@@ -60,11 +59,10 @@ sub calculate_for_each_dir($$$) {
 # to obtain given identifier over the files in the given context.
 sub calculate_for_each_file($$$) {
 	my ($function, $identifier, $context) = @_;
-	my %resources = %{$context->{"resources"}};
 
 	my %values = ();
-	Disketo_Utils::iterate([(map {@$_} (values %resources))], sub($$) {
-		my ($file, $i) = @_;
+	Disketo_Utils::iterate_files($context, sub($$$$) {
+		my ($dir, $i, $file, $j) = @_;
 		my $value = $function->($file, $context);
 		$values{$file} = $value;
 	});
@@ -78,10 +76,9 @@ sub calculate_for_each_file($$$) {
 # to obtain groups for the dirs in the given context.
 sub group_dirs($$$) {
 	my ($groupper, $identifier, $context) = @_;
-	my %resources = %{$context->{"resources"}};
 
 	my %values = ();
-	Disketo_Utils::iterate([keys %resources], sub($$) {
+	Disketo_Utils::iterate_dirs($context, sub($$) {
 		my ($dir, $i) = @_;
 		my $group = $groupper->($dir, $context);
 		push @{$values{$group}}, $dir;
@@ -96,11 +93,11 @@ sub group_dirs($$$) {
 # to obtain groups for the files in the given context.
 sub group_files($$$) {
 	my ($groupper, $identifier, $context) = @_;
-	my %resources = %{$context->{"resources"}};
 
 	my %values = ();
-	Disketo_Utils::iterate([(map {@$_} (values %resources))], sub($$) {
-		my ($file, $i) = @_;
+	Disketo_Utils::iterate_files($context, sub($$$$) {
+		my ($dir, $i, $file, $j) = @_;
+		
 		my $group = $groupper->($file, $context);
 		push @{$values{$group}}, $file;
 	});
@@ -114,10 +111,10 @@ sub group_files($$$) {
 # Performs the filtration based on the predicate($dir,$context) 
 sub filter_dirs($$) {
 	my ($predicate, $context) = @_;
-	my %resources = %{$context->{"resources"}};
-
+	my %resources = %{ $context->{"resources"} };
+	
 	my %new_resources = ();
-	Disketo_Utils::iterate([keys %resources], sub($$) {
+	Disketo_Utils::iterate_dirs($context, sub($$) {
 		my ($dir, $i) = @_;
 		my $matches = $predicate->($dir, $context);
 		if ($matches) {
@@ -134,15 +131,13 @@ sub filter_dirs($$) {
 # Performs the filtration based on the predicate($file,$context) 
 sub filter_files($$) {
 	my ($predicate, $context) = @_;
-	my %resources = %{$context->{"resources"}};
 
 	my %new_resources = ();
-	Disketo_Utils::iterate([(map {@$_} (values %resources))], sub($$) {
-		my ($file, $i) = @_;
+	Disketo_Utils::iterate_files($context, sub($$$$) {
+		my ($dir, $i, $file, $j) = @_;
 		my $matches = $predicate->($file, $context);
 		if ($matches) {
-			my $parent = dirname($file);
-			push @{ $new_resources{$parent} }, $file;
+			push @{ $new_resources{$dir} }, $file;
 		}
 	});
 	
@@ -154,9 +149,8 @@ sub filter_files($$) {
 # Performs the print based on the printer($dir,$context) 
 sub print_dirs($$) {
 	my ($printer, $context) = @_;
-	my %resources = %{$context->{"resources"}};
 
-	Disketo_Utils::iterate([keys %resources], sub($$) {
+	Disketo_Utils::iterate_dirs($context, sub($$) {
 		my ($dir, $i) = @_;
 		my $str = $printer->($dir, $context);
 		print("$str\n");
@@ -167,10 +161,9 @@ sub print_dirs($$) {
 # Performs the print based on the printer($file,$context) 
 sub print_files($$) {
 	my ($printer, $context) = @_;
-	my %resources = %{$context->{"resources"}};
 
-	Disketo_Utils::iterate([(map {@$_} (values %resources))], sub($$) {
-		my ($file, $i) = @_;
+	Disketo_Utils::iterate_files($context, sub($$$$) {
+		my ($dir, $i, $file, $j) = @_;
 		my $str = $printer->($file, $context);
 		print("$str\n");
 	});

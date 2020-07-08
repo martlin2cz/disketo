@@ -76,29 +76,49 @@ my $last_printed_at = 0;
 my $loop_started_at = 0;
 
 #############################################################
-# Iterates over the given array, applying given function;
+# Iterates over the context's dirs, applying given function;
 # each PROGRESS_PERIOD seconds prints percentage of done.
-sub iterate($$) {
-	my @array = @{ shift @_ };
-	my $function_ref = shift @_;
+sub iterate_dirs($$) {
+	my ($context, $function_ref) = @_;
+	my @dirs = keys %{ $context->{"resources"} };
 
-	my $total = scalar @array;
-	my @result = ();
-
+	my $total = scalar @dirs;
 	start_progress($total);
 	
 	for (my $i = 0; $i < $total; $i++) {
-		my $item = $array[$i];
-		my $subresult = $function_ref->($item, $i, \@result);
-		if ($subresult) {
-			push @result, $subresult;
+		my $dir = $dirs[$i];
+
+		$function_ref->($dir, $i);
+		
+		check_progress($i, $total);
+	}
+}
+
+#############################################################
+# Iterates over the context's files, applying given function;
+# each PROGRESS_PERIOD seconds prints percentage of done.
+sub iterate_files($$) {
+	my ($context, $function_ref) = @_;
+	my %resources = %{ $context->{"resources"} };
+	my @dirs = keys %resources;
+	
+	my $total = scalar @dirs;
+	start_progress($total);
+	
+	for (my $i = 0; $i < $total; $i++) {
+		my $dir = $dirs[$i];
+		my @files = @{ %resources{$dir} };
+		my $files_count = scalar @files;
+		
+		for (my $j = 0; $j < $files_count; $j++) {
+			my $file = $files[$j];
+			$function_ref->($dir, $i, $file, $j);
 		}
 		
 		check_progress($i, $total);
 	}
-
-	return \@result;
 }
+
 
 #############################################################
 # (Re)initializes the progress running, resets the indicators.
