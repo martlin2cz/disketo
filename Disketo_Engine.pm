@@ -25,7 +25,7 @@ sub create_context() {
 # into the given context.
 sub load($$) {
 	my ($roots, $context) = @_;
-	
+
 	my %resources = ();
 	foreach my $root (@$roots) {
 		#print("-> $root\n");
@@ -47,6 +47,7 @@ sub calculate_for_each_dir($$$) {
 	Disketo_Utils::iterate_dirs($context, sub($$) {
 		my ($dir, $i) = @_;
 		my $value = $function->($dir, $context);
+		# TODO add only if value is not none?
 		$values{$dir} = $value;
 	});
 	
@@ -64,6 +65,7 @@ sub calculate_for_each_file($$$) {
 	Disketo_Utils::iterate_files($context, sub($$$$) {
 		my ($dir, $i, $file, $j) = @_;
 		my $value = $function->($file, $context);
+		# TODO add only if value is not none?
 		$values{$file} = $value;
 	});
 	
