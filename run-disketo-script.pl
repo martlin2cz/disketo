@@ -3,10 +3,11 @@
 use strict;
 BEGIN { unshift @INC, "."; }
 
-my $VERSION = 1.3;
+my $VERSION = 2.0.0;
 
 use Disketo_Utils;
 use Disketo_Evaluator;
+use Disketo_Instruction_Set;
 
 #######################################
 my $dry_run = 0;
@@ -50,7 +51,7 @@ Disketo_Evaluator::run($dry_run, $script, \@args);
 #######################################
 
 sub list_functions() {
-	my $table_ref = Disketo_Evaluator::functions_table();
+	my $table_ref = Disketo_Instruction_Set::instructions();
 	my %table = %{ $table_ref };
 
 	for my $fnname (sort keys %table) {

@@ -6,7 +6,10 @@ BEGIN { unshift @INC, "."; }
 use Data::Dumper;
 use Disketo_Utils;
 use Disketo_Evaluator;
+use Disketo_Instruction_Set;
 
+Disketo_Utils::logit("(instructions)");
+my $table4_ref = Disketo_Instruction_Set::commands();
 
 #######################################
 #######################################
@@ -43,16 +46,9 @@ my @filtered8a = ("foo", "sub", "{ 42; }", "bar", "sub{return 1;}", "baz");
 my @collapsed8a = Disketo_Evaluator::collapse_subs(@filtered8a);
 print Dumper(\@collapsed8a);
 
-
-
-#######################################
-Disketo_Utils::logit("functions_table");
-my $table4_ref = Disketo_Evaluator::functions_table();
-print Dumper($table4_ref);
-
 #######################################
 Disketo_Utils::logit("validate_function");
-my @statement5a = ("filter_directories_matching", "42", "karel");
+my @statement5a = ("filter_dirs_matching_pattern", "42", "karel");
 my ($statement5a_mod_ref, $fnname5a, $function5a_ref) = Disketo_Evaluator::validate_function(\@statement5a, $table4_ref);
 print Dumper($statement5a_mod_ref, $fnname5a, $function5a_ref);
 

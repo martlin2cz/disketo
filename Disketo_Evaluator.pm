@@ -4,11 +4,12 @@ use strict;
 BEGIN { unshift @INC, "."; }
 
 package Disketo_Evaluator;
-my $VERSION=1.1.3;
+my $VERSION=2.0.0;
 
 use Data::Dumper;
 use Disketo_Utils;
 use Disketo_Extras;
+use Disketo_Instruction_Set;
 
 #######################################
 #######################################
@@ -139,29 +140,29 @@ sub collapse_subs(@) {
 sub validate($) {
 	my ($parsed_ref) = @_;
 
-	my $functions_ref = functions_table();
+	my $commands = Disketo_Instruction_Set::commands();
 	my @program = ();
 
 	for my $statement_ref (@{ $parsed_ref }) {
-		my ($statement_mod_ref, $fnname, $function_ref) = validate_function($statement_ref, $functions_ref);
+		my ($statement_mod_ref, $cmdname, $command) = validate_function($statement_ref, $commands);
 		
-		my $resolved_args_ref = validate_params($statement_mod_ref, $fnname, $function_ref);
+		my $resolved_args_ref = validate_params($statement_mod_ref, $cmdname, $command);
 
-		my %instruction = ( "function" => $function_ref, "arguments" => $resolved_args_ref );
+		my %instruction = ( "command" => $command, "arguments" => $resolved_args_ref );
 		push @program, \%instruction;
 	}
 
 	return \@program;
 }
 
-# Validates given function (checks her existence agains given functions table)
+# Validates given function (checks her existence agains given commands table)
 sub validate_function($$) {
-	my ($statement_ref, $functions_ref) = @_;
+	my ($statement_ref, $commands) = @_;
 	
 	my @statement = @{ $statement_ref };
 	my $fnname = shift @statement;
 
-	my $function_ref = %{ $functions_ref }{$fnname};
+	my $function_ref = %{ $commands }{$fnname};
 	if (!$function_ref) {
 		die("Unknown command \"$fnname\"");
 	}
@@ -194,7 +195,7 @@ sub print_usage($$$) {
 	my $usage = "$script_name ";
 	my $count = 0;
 	walk_program($program_ref, sub {
-		my ($instruction_ref,$function_name,$function_method,$requires_list,$requires_stats,$params_ref,$args_ref)	= @_;
+		my ($instruction_ref,$function_name,$function_method,$requires,$produces,$params_ref,$args_ref)	= @_;
 
 		for (my $i = 0; $i < scalar @{ $params_ref }; $i++) {
 			my $param = $params_ref->[$i];
@@ -218,7 +219,7 @@ sub count_params($) {
 
 	my $count = 0;
 	walk_program($program_ref, sub {
-		my ($instruction_ref,$function_name,$function_method,$requires_list,$requires_stats,$params_ref,$args_ref)	= @_;
+		my ($instruction_ref,$function_name,$function_method,$requires,$produces,$params_ref,$args_ref)	= @_;
 
 		for my $arg (@{ $args_ref }) {
 			if ($arg eq "\$\$") {
@@ -242,43 +243,65 @@ sub prepare($$) {
 	return $program_ref;
 }
 
-# Inserts load_* instructions where needed
+# Inserts required instructions where needed
 sub insert_loads($) {
 	my ($program_ref) = @_;
 	
-	my $functions_ref = functions_table();
+	my $commands = Disketo_Instruction_Set::commands();
 	
 	my @program_mod = ();
-	my $listed = 0;
-	my $stats_loaded = 0;
+	
+	my $load_command = $commands->{"load"};
+	my $load_instruction = {"command" => $load_command, "arguments" => [] };
+	push @program_mod, $load_instruction;
 
 	walk_program($program_ref, sub {
-		my ($instruction_ref,$function_name,$function_method,$requires_list,$requires_stats,$params_ref,$args_ref)	= @_;
-
-		if ($function_name eq "list_all_directories") {
-			$listed = 1;
-		}
-		if ($function_name eq "load_stats") {
-			$stats_loaded = 1;
-		}
+		my ($instruction_ref,$function_name,$function_method,$requires,$produces,$params_ref,$args_ref)	= @_;
 		
-		if ($requires_list and not $listed) {
-			my $list_function = $functions_ref->{"list_all_directories"};
-			my %list_instruction = ("function" => $list_function, "arguments" => []);
-			push @program_mod, \%list_instruction;
-			$listed = 1;
-		}
-		if ($requires_stats and not $stats_loaded) {
-			my $stats_function = $functions_ref->{"load_stats"};
-			my %stats_instruction = ("function" => $stats_function, "arguments" => []);
-			push @program_mod, \%stats_instruction;
-			$stats_loaded = 1;
+		for my $required_meta  (@{ $requires }) {
+			
+			if (meta_already_produced(\@program_mod, $required_meta)) {
+				next;
+			}
+			
+			my $new_command = find_first_command_producing_meta($required_meta);
+			if (!$new_command) {
+				die("Meta '" . $required_meta . "' is not produced by any command");
+			}
+			
+			my $new_instruction = Disketo_Instruction_Set::prepending_instruction($instruction_ref, $new_command);
+			push @program_mod, $new_instruction;
 		}
 
 		push @program_mod, $instruction_ref;
 	});
 
 	return \@program_mod;
+}
+
+sub meta_already_produced($$) {
+	my ($program, $meta_name) = @_;
+	
+	for my $instruction (@{ $program }) {
+		my $produces = $instruction->{"command"}->{"produces"};
+		if ($produces == $meta_name) {
+			return 1;
+		}
+	}
+	
+	return 0;
+}
+
+sub find_first_command_producing_meta($$) {
+	my ($required_meta) = @_;
+	
+	my %commands = %{ Disketo_Instruction_Set::commands() };
+		
+	for my $another_command (values %commands) {
+		if ($another_command->{"produces"} == $required_meta) {
+			return $another_command;
+		}
+	}
 }
 
 
@@ -293,10 +316,10 @@ sub print_program($$) {
 	my @args_to_use = @{ $use_args_ref };
 
 	walk_program($program_ref, sub {
-		my ($instruction_ref,$function_name,$function_method,$requires_list,$requires_stats,$params_ref,$args_ref) = @_;
+		my ($instruction_ref,$instruction_name,$instruction_method,$requires,$produces,$params_ref,$args_ref) = @_;
 
-		print STDERR "Will invoke $function_name:\n";
-		if ($function_name eq "list_all_directories") {
+		print STDERR "Will invoke $instruction_name:\n";
+		if ($instruction_name eq "list_all_directories") {
 			print STDERR "\t with directories " . join(", ", @{ $dirs_to_list }) . "\n";
 		} else {
 			my $index;
@@ -313,10 +336,9 @@ sub print_program($$) {
 				} else {
 					print STDERR "\t$param := $arg\n";
 					if ($arg =~ "sub ?\{") {
-						my ($dirs_ref, $stats_ref, $previous_ref) = (undef, undef, undef); #to parse normally
 						eval($arg);
 						if ($@) {
-							print STDERR "\tWarning, previous function contains syntax error: $@\n";
+							print STDERR "\tWarning, previous instruction contains syntax error: $@\n";
 						}
 					}
 				}
@@ -332,37 +354,32 @@ sub run_program($$) {
 	my ($use_args_ref, $dirs_to_list) = extract_dirs_to_list($program_ref, $program_args_ref);
 	my @use_args = @{ $use_args_ref };
 
-	my ($dirs_ref, $stats_ref, $previous_ref) = (undef, undef, undef);
+	my $context = Disketo_Engine::create_context();
 	
 	walk_program($program_ref, sub {
-		my ($instruction_ref,$function_name,$function_method,$requires_list,$requires_stats,$params_ref,$args_ref) = @_;
-		
+		my ($instruction_ref,$instruction_name,$instruction_method,$requires,$produces,$params_ref,$args_ref) = @_;
 		my $arguments_ref;
-		($arguments_ref, $use_args_ref) = prepare_arguments(
-			$function_name, $requires_list, $requires_stats, $dirs_ref, $stats_ref, $previous_ref, $args_ref, $use_args_ref, $dirs_to_list);
-		my @arguments = @{ $arguments_ref };
+		($arguments_ref, $use_args_ref) = prepare_arguments($instruction_name, $context, $args_ref, $use_args_ref, $dirs_to_list);
 		
-		#print "Will invoke $function_name with " . join(", ", @arguments) . "...\n";
-		my @result = $function_method->(@arguments);
-		
-		$previous_ref = \@result;
-		$dirs_ref = @result[0];
-		if ($function_name eq "load_stats") {
-			$stats_ref = @result[1];
-		}
+		print "Will invoke $instruction_name with " . join(", ", @{ $arguments_ref }) . " ...\n";
+		$instruction_method->(@{ $arguments_ref });
+		print("Executed instruction " . $instruction_name . ", having " . (scalar (keys %{ $context->{"resources"} })) . " dirs\n");
 	});
 }
 
 sub prepare_arguments($) {
-	my ($function_name,$requires_list,$requires_stats,$dirs_ref,$stats_ref,$previous_ref,$args_ref,$use_args_ref,$dirs_to_list) = @_;
-
+	my ($instruction_name, $context, $args_ref, $use_args_ref, $dirs_to_list) = @_;
 	my @use_args = @{ $use_args_ref };
 
-	my @arguments;
-	if ($function_name ne "list_all_directories") {
-		@arguments = @{ $args_ref };
+	my @arguments = ($context);
+
+	if ($instruction_name ne "load") {
+		push @arguments, @{ $args_ref };
 		@arguments = map {
 			my $result = $_;
+			if ($_ == $context) {
+				$result = $_;
+			}
 			if ($_ eq "\$\$") {
 				$result = shift @use_args;
 			}
@@ -374,18 +391,11 @@ sub prepare_arguments($) {
 			}
 			$result;
 		} @arguments;
-	
-		if ($requires_stats) {
-			unshift @arguments, $stats_ref;
-		}
-		if ($requires_list) {
-			unshift @arguments, $dirs_ref;
-		}
-
-		return (\@arguments, \@use_args);
 	} else {
-		return ($dirs_to_list, $use_args_ref);
+		push @arguments, $dirs_to_list;
 	}
+	
+	return (\@arguments, \@use_args);
 }
 
 # Based on "$$" argvalues splits given program args to the "$$"-ones and to the rest
@@ -396,7 +406,7 @@ sub extract_dirs_to_list($$) {
 	my @use_args = ();
 
 	walk_program($program_ref, sub {
-			my ($instruction_ref,$function_name,$function_method,$requires_list,$requires_stats,$params_ref,$args_ref) = @_;
+			my ($instruction_ref,$instruction_name,$instruction_method,$requires,$produces,$params_ref,$args_ref) = @_;
 		
 			for my $arg (@{ $args_ref }) {
 				if ($arg eq "\$\$") {
@@ -417,80 +427,17 @@ sub walk_program($$) {
 	my ($program_ref, $instruction_runner) = @_;
 
 	for my $instruction (@{ $program_ref }) {
-		my $function_ref = $instruction->{"function"};
+		my $command = $instruction->{"command"};
 		
-		my $function_name = $function_ref->{"name"};
-		my $function_method = $function_ref->{"method"};
-		my $requires_list = $function_ref->{"requires_list"};
-		my $requires_stats = $function_ref->{"requires_stats"};
-		my $params_ref = $function_ref->{"params"};
+		my $instruction_name = $command->{"name"};
+		my $instruction_method = $command->{"method"};
+		my $requires = $command->{"requires"};
+		my $produces = $command->{"produces"};
+		my $params_ref = $command->{"params"};
 
 		my $args_ref = $instruction->{"arguments"};
 	
 		$instruction_runner->
-			($instruction, $function_name, $function_method, $requires_list, $requires_stats, $params_ref, $args_ref);
+			($instruction, $instruction_name, $instruction_method, $requires, $produces, $params_ref, $args_ref);
 	}
-}
-
-# Lists all the supported Disketo_Extras's methods with all the required informations about them
-sub functions_table() {
-	my %table = (
-		#---------
-		"list_all_directories" => { "name" => "list_all_directories", "method" => \&Disketo_Extras::list_all_directories,
-			"requires_list" => 0, "requires_stats" => 0, "params" => [], "doc" => 
-			"Explicitly (re)loads the contents from the directories/files specified by the command line args. Executed by default at the beggining of the each disketo script."},
-		#----------
-		"load_stats" => { "name" => "load_stats", "method" => \&Disketo_Extras::load_stats,
-			"requires_list" => 1, "requires_stats" => 0, "params" => [], "doc" =>
-			"Explicitly loads the filesystem stats (acces rights, dates, sizes, etc.) of the files. Executed by default by methods requiring that, call if you have custom sub requiring the stats."},
-		#---------
-		"filter_directories_custom" => { "name" => "filter_directories_custom", "method" => \&Disketo_Extras::filter_directories_custom,
-			"requires_list" => 1, "requires_stats" => 0, "params" => ["predicate"], "doc" =>
-			"Filters the directories (passes the ones matching the given predicate). The predicate may be sub(\$dir,\$children_ref) returning boolean."},
-		#---------
-		"filter_directories_by_pattern" => { "name" => "filter_directories_by_pattern", "method" => \&Disketo_Extras::filter_directories_by_pattern,
-			"requires_list" => 1, "requires_stats" => 0, "params" => ["pattern"], doc => 
-			"Filters the directories (passes the ones matching the given pattern). The pattern may be regex."},
-		#---------
-		"filter_directories_by_files_pattern" => { "name" => "filter_directories_by_files_pattern", "method" => \&Disketo_Extras::filter_directories_by_files_pattern,
-			"requires_list" => 1, "requires_stats" => 0, "params" => ["pattern", "threshold"], "doc" => 
-			"Filters the directories (passes the directories which has at least threshold files matching pattern). The pattern may be regex, the threshold integer."},
-		#--------
-		"filter_directories_matching" => { "name" => "filter_directories_matching", "method" => \&Disketo_Extras::filter_directories_matching,
-			"requires_list" => 1, "requires_stats" => 0, "params" => ["matcher"], "doc" => 
-			"Filters the directories (passes the directories couples, which are matched by the given matcher function). The matcher may be sub(\$dir_1, \$dir_1_children_ref, \$dir_2, \$dir_2_children_ref) returning boolean."},
-		#--------
-		"filter_directories_of_same_name" => { "name" => "filter_directories_of_same_name", "method" => \&Disketo_Extras::filter_directories_of_same_name,
-			"requires_list" => 1, "requires_stats" => 0, "params" => [], "doc" =>
-			"Filters the directories (passes the directories couples, which has the same name)."},
-		#--------
-		"filter_directories_with_common_files" => { "name" => "filter_directories_with_common_files", "method" => \&Disketo_Extras::filter_directories_with_common_files,
-			"requires_list" => 1, "requires_stats" => 0, "params" => ["min_count", "files_matcher"], "doc" => 
-			"Filters the directories (passes the directories couples which has at least min_count common files) The common files are specified by the files_matcher, which may be sub(\$file_1, \$file_2) returning boolean."},
-		#--------
-		"filter_directories_with_common_file_names" => { "name" => "filter_directories_with_common_file_names", "method" => \&Disketo_Extras::filter_directories_with_common_file_names,
-			"requires_list" => 1, "requires_stats" => 0, "params" => ["min_count"], "doc" => 
-			"Filters the directories (passes the directories which has at least min_count same files). The 'same files' here means the files with the same name."},
-		#--------
-		"filter_directories_with_common_file_names_with_size" => { "name" => "filter_directories_with_common_file_names_with_size", "method" => \&Disketo_Extras::filter_directories_with_common_file_names_with_size,
-			"requires_list" => 1, "requires_stats" => 1, "params" => ["min_count"], "doc" => 
-			"Filters the directories (passes the directories which has at least min_count same files). The 'same files' here means the files with the same name and size as well."},
-		#--------
-		"print_directories_simply" => { "name" => "print_directories_simply", "method" => \&Disketo_Extras::print_directories_simply,
-			"requires_list" => 1, "requires_stats" => 0, "params" => [], "doc" => 
-			"Simply prints all the directories."},
-		#-------
-		"print_directories" => { "name" => "print_directories", "method" => \&Disketo_Extras::print_directories,
-			"requires_list" => 1, "requires_stats" => 0, "params" => ["printer"], "doc" => 
-			"Prints the directories by using the given printer. The printer may be sub(\$dir) returning string to be printed."},
-		#-------
-		"print_files" => { "name" => "print_files", "method" => \&Disketo_Extras::print_files,
-			"requires_list" => 1, "requires_stats" => 0, "params" => ["printer"], "doc" =>
-			"Prints the files by using the given printer. The printer may be sub(\$file) returning string to be printed."}
-
-		#		"X" => { "name" => "X", "method" => \&Disketo_Extras::X
-		#	"requires_list" => 1, "requires_stats" => 1, "params" => ["Y", "Z"]},
-	);
-
-	return \%table;
 }

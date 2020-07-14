@@ -51,8 +51,17 @@ filter:
 				+ by CUSTOM MATCHER
 				
 ----
-dirs: dir => [files]
-stats: resource = > stats
+context = resources + metas
+meta[name] = resource => whatever
+resources: dir => [files]
+stats: resource => stats
 groups: groups identifier (i.e. name) => [resources]
 duplicites: resource => [same resources]
 
+----
+disketo script file = a file containing disketo skript
+disketo script = a list of statements
+statement = one "line" of the disketo script
+command = a general definition of the instruction
+instruction = particular command usage (with arguments)
+program = a list of instructions

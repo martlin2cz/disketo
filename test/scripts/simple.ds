@@ -1,9 +1,4 @@
 # simple script
-filter_directories_by_pattern "(text)|(doc)" 
-filter_directories_by_files_pattern "(\.xlsx?)|(\.docx?)" $$ 
-load_stats
-filter_directories_with_common_files $$ sub {
-	return (shift @_) < (shift @_);
-}
-
-print_files sub { return (shift @_) . ", " . (scalar %{ $stats_ref }) }
+filter_dirs_matching_pattern "(text)|(doc)" 
+filter_dirs_with_files_matching_pattern "(\.xlsx?)|(\.docx?)" $$ 
+print_files_custom sub { return (shift @_) }

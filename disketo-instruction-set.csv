@@ -1,4 +1,5 @@
 # statement name;function name;requires (list);produces (1);params (list);doc;
+load;load;;;;Loads the dirs and files from directories or files;
 group_files_by_names;group_files_by_names;;file names;;Groups files by names;group_files_by_names($context)
 group_dirs_by_names;group_dirs_by_names;;dir names;;Groups dirs by names.;group_dirs_by_names($context)
 compute_files_matching;compute_files_matching;;files matching;matcher;Computes files matching;compute_files_matching($matcher, $context)

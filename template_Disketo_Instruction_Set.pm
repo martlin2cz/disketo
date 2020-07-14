@@ -12,10 +12,21 @@ use Disketo_Instructions;
 # statements and particular perl functions.
 ########################################################################
 
-sub instructions() {
+sub commands() {
 	my %table = (
 		# GENERATE INSTRUCTIONS HERE
 	);
 	
 	return \%table;
+}
+
+sub prepending_instruction($$) {
+	my ($instruction, $prepending_command) = @_;
+	
+	my $command = $prepending_command->{"statement_name"};
+	my $arguments = [];
+	
+	#TODO arguments := if $prepending_instruction takes XYZ, then pick from $instruction 
+	
+	return {"command" => $command, "arguments" => $arguments };
 }

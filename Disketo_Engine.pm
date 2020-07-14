@@ -25,7 +25,6 @@ sub create_context() {
 # into the given context.
 sub load($$) {
 	my ($roots, $context) = @_;
-
 	my %resources = ();
 	foreach my $root (@$roots) {
 		#print("-> $root\n");
