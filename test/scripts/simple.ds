@@ -1,4 +1,9 @@
 # simple script
 filter_dirs_matching_pattern "(text)|(doc)" 
+compute_custom_for_each_file "files matching" sub { 
+	my ($file, $context) = @_;
+
+	return ($file =~ /(\.xlsx?)|(\.docx?)/);
+}
 filter_dirs_with_files_matching_pattern "(\.xlsx?)|(\.docx?)" $$ 
 print_files_custom sub { return (shift @_) }
