@@ -51,7 +51,7 @@ Disketo_Evaluator::run($dry_run, $script, \@args);
 #######################################
 
 sub list_functions() {
-	my $table_ref = Disketo_Instruction_Set::instructions();
+	my $table_ref = Disketo_Instruction_Set::commands();
 	my %table = %{ $table_ref };
 
 	for my $fnname (sort keys %table) {

@@ -14,6 +14,9 @@ use Disketo_Engine;
 # functions, which may be then mapped to instructions.
 ########################################################################
 
+########################################################################
+# The simple resource -> something functions
+
 sub file_of_file($$) {
 	my ($file, $context) = @_;
 	return $file;
@@ -47,6 +50,18 @@ sub load_stats_of_file($) {
 
 
 ########################################################################
+# The matchers creating functions
+
+sub meta_matcher($) {
+	my ($meta_name) = @_;
+	
+	my $matcher = sub($$) {
+		my ($resource, $context) = @_;
+		return $context->{$meta_name}->{$resource};
+	};
+	
+	return $matcher;
+}
 
 sub matcher_of_pattern($) {
 	my ($pattern) = @_;
@@ -81,15 +96,12 @@ sub matcher_of_at_least_files_matching($$) {
 		
 		my $count = 0;
 		for my $child (@children) {
-			if ($context->{"files matching"}->{$child}) {
+			if ($files_matcher->($child)) {
 				$count++;
 			}
 		}
 		
 		return $count > $min_count;
-	
-		#~ my @matching = @{ $context->{"files matching"}->{$dir} };
-		#~ return (scalar @matching) >= $min_count;
 	};
 	
 	return $matcher;
@@ -110,19 +122,20 @@ sub duplicities_matcher_by_group($$$) {
 }
 
 ########################################################################
+# Computing and grouping functions
 
-sub group_files_by_names($) {
+sub _group_files_by_names($) {
 	my ($context) = @_;
 	Disketo_Engine::group_files(\&Disketo_Instructions::name_of_file, "file names", $context);
 }
 
-sub group_dirs_by_names($) {
+sub _group_dirs_by_names($) {
 	my ($context) = @_;
 	Disketo_Engine::group_dirs(\&Disketo_Instructions::name_of_dir, "dir names", $context);
 }
 
 
-sub compute_files_matching($$) {
+sub _compute_files_matching($$) {
 	my ($matcher, $context) = @_;
 	my $computer = sub($$) {
 		my ($file, $context) = @_;
@@ -132,7 +145,7 @@ sub compute_files_matching($$) {
 	Disketo_Engine::calculate_for_each_file($computer, "files matching", $context);
 }
 
-sub compute_dirs_matching($$) {
+sub _compute_dirs_matching($$) {
 	my ($matcher, $context) = @_;
 	my $computer = sub($$) {
 		my ($dir, $context) = @_;
@@ -143,7 +156,7 @@ sub compute_dirs_matching($$) {
 }
 
 
-sub compute_files_of_dir_matching($$) {
+sub _compute_files_of_dir_matching($$) {
 	my ($file_matcher, $context) = @_;
 	my $computer = sub($$) {
 		my ($dir, $context) = @_;
@@ -162,22 +175,29 @@ sub compute_files_of_dir_matching($$) {
 	Disketo_Engine::calculate_for_each_dir($computer, "dirs matching", $context);
 }
 
-
 ########################################################################
+########################################################################
+# The remaining instructions
 
 sub load($$) {
 	my ($context, $roots) = @_;
 	Disketo_Engine::load($roots, $context);
 }
 
-########################################################################
+sub context_stats($) {
+	my ($context) = @_;
+	Disketo_Engine::context_stats($context);
+}
 
-sub group_files_by_name($) {
+########################################################################
+# Grouping functions
+
+sub group_files_by_names($) {
 	my ($context) = @_;
 	Disketo_Engine::group_files(\&Disketo_Instructions::name_of_file, "file names", $context);
 }
 
-sub group_dirs_by_name($) {
+sub group_dirs_by_names($) {
 	my ($context) = @_;
 	Disketo_Engine::group_dirs(\&Disketo_Instructions::name_of_dir, "dir names", $context);
 }
@@ -193,29 +213,71 @@ sub group_dirs_by_custom($$$) {
 }
 
 ########################################################################
+# Computing functions
 
 sub count_files($) {
 	my ($context) = @_;
 	Disketo_Engine::calculate_for_each_dir(\&Disketo_Instructions::count_of_children, "children count", $context);
 }
 
+# TODO compute_dir_size
+
 sub compute_custom_for_each_dir($$$) {
-	my ($context, $name, $computer) = @_;
-	Disketo_Engine::calculate_for_each_dir($computer, $name, $context);
+	my ($context, $meta_name, $computer) = @_;
+	Disketo_Engine::calculate_for_each_dir($computer, $meta_name, $context);
 }
 
 sub compute_custom_for_each_file($$$) {
-	my ($context, $name, $computer) = @_;
-	Disketo_Engine::calculate_for_each_file($computer, $name, $context);
+	my ($context, $meta_name, $computer) = @_;
+	Disketo_Engine::calculate_for_each_file($computer, $meta_name, $context);
 }
 
 sub load_stats($) {
 	my ($context) = @_;
 	
+	die("TODO load_stats");
 	#TODO
 }
 
 ########################################################################
+# Compute matching metas
+
+sub compute_files_matching_pattern($$) {
+	my ($context, $pattern) = @_;
+	my $matcher = matcher_of_pattern($pattern);
+	Disketo_Engine::calculate_for_each_file($matcher, "files matching", $context);
+}
+
+sub compute_files_matching_custom($$) {
+	my ($context, $matcher) = @_;
+	Disketo_Engine::calculate_for_each_file($matcher, "files matching", $context);
+}
+
+sub compute_dirs_matching_pattern($$) {
+	my ($context, $pattern) = @_;
+	my $matcher = matcher_of_pattern($pattern);
+	Disketo_Engine::calculate_for_each_dir($matcher, "dirs matching", $context);
+}
+
+sub compute_dirs_matching_custom($$) {
+	my ($context, $matcher) = @_;
+	Disketo_Engine::calculate_for_each_file($matcher, "dirs matching", $context);
+}
+
+sub compute_files_of_dir_matching_pattern($$) {
+	my ($context, $pattern) = @_;
+	my $matcher = matcher_of_pattern($pattern);
+	Disketo_Engine::calculate_for_each_file($matcher, "files matching", $context);
+}
+
+sub compute_files_of_dir_matching_custom($$) {
+	my ($context, $matcher) = @_;
+	Disketo_Engine::calculate_for_each_file($matcher, "files matching", $context);
+}
+
+
+########################################################################
+# Printing functions
 
 sub print_dirs_simply($) {
 	my ($context) = @_;
@@ -238,6 +300,7 @@ sub print_files_custom($$) {
 }
 
 ########################################################################
+# Simply filtering functions
 
 sub filter_dirs_matching_pattern($$) {
 	my ($context, $pattern) = @_;
@@ -250,16 +313,9 @@ sub filter_dirs_matching_custom($$) {
 	Disketo_Engine::filter_dirs($matcher, $context);
 }
 
-sub filter_dirs_with_files_matching_pattern($$$) {
-	my ($context, $files_pattern, $count) = @_;
-	my $files_matcher = matcher_of_pattern($files_pattern);
-	my $matcher = matcher_of_at_least_files_matching($files_matcher, $count);
-	Disketo_Engine::filter_dirs($matcher, $context);
-}
-
-sub filter_dirs_with_files_matching_custom($$$) {
-	my ($context, $files_matcher, $count) = @_;
-	my $matcher = matcher_of_at_least_files_matching($files_matcher, $count);
+sub filter_dirs_by_meta($$) {
+	my ($context, $meta_name) = @_;
+	my $matcher = meta_matcher($meta_name);
 	Disketo_Engine::filter_dirs($matcher, $context);
 }
 
@@ -275,11 +331,40 @@ sub filter_files_matching_custom($$) {
 	Disketo_Engine::filter_files($matcher, $context);	
 }
 
-########################################################################
+sub filter_files_by_meta($$) {
+	my ($context, $meta_name) = @_;
+	my $matcher = meta_matcher($meta_name);
+	Disketo_Engine::filter_files($matcher, $context);
+}
 
-sub filter_custom_duplicate_files($$$) {
-	my ($context, $group_name, $groupper) = @_;
-	my $matcher = duplicities_matcher_by_group($groupper, $group_name, $context);
+
+sub filter_dirs_with_files_matching_pattern($$$) {
+	my ($context, $files_pattern, $count) = @_;
+	my $files_matcher = matcher_of_pattern($files_pattern);
+	my $matcher = matcher_of_at_least_files_matching($files_matcher, $count);
+	Disketo_Engine::filter_dirs($matcher, $context);
+}
+
+sub filter_dirs_with_files_matching_custom($$$) {
+	my ($context, $files_matcher, $count) = @_;
+	my $matcher = matcher_of_at_least_files_matching($files_matcher, $count);
+	Disketo_Engine::filter_dirs($matcher, $context);
+}
+
+sub filter_dirs_with_files_matching_meta($$$) {
+	my ($context, $meta_name, $count) = @_;
+	my $files_matcher = meta_matcher($meta_name);
+	my $matcher = matcher_of_at_least_files_matching($files_matcher, $count);
+	Disketo_Engine::filter_dirs($matcher, $context);
+}
+
+
+########################################################################
+# Duplicities filtering functions
+
+sub filter_duplicate_files_by_custom_groupper($$$) {
+	my ($context, $meta_name, $groupper) = @_;
+	my $matcher = duplicities_matcher_by_group($groupper, $meta_name, $context);
 	Disketo_Engine::filter_files($matcher, $context);	
 }
 
@@ -290,9 +375,9 @@ sub filter_duplicate_files_by_name($) {
 }
 
 
-sub filter_custom_duplicate_dirs($$$) {
-	my ($context, $group_name, $groupper) = @_;
-	my $matcher = duplicities_matcher_by_group($groupper, $group_name, $context);
+sub filter_duplicate_dirs_by_custom_groupper($$$) {
+	my ($context, $meta_name, $groupper) = @_;
+	my $matcher = duplicities_matcher_by_group($groupper, $meta_name, $context);
 	Disketo_Engine::filter_dirs($matcher, $context);	
 }
 
@@ -302,16 +387,14 @@ sub filter_duplicate_dirs_by_name($) {
 	Disketo_Engine::filter_dirs($matcher, $context);
 }
 
-########################################################################
-
-sub filter_dirs_by_duplicate_files_by_name($$) {
+sub filter_duplicate_dirs_with_common_files_by_name($$) {
 	my ($context, $count) = @_;
 	my $files_matcher = duplicities_matcher_by_group(\&Disketo_Instructions::name_of_file, "dirs matching", $context);
 	my $matcher = matcher_of_at_least_files_matching($files_matcher, $count);
 	Disketo_Engine::filter_dirs($matcher, $context);
 }
 
-sub filter_dirs_by_custom_duplicate_files($$$) {
+sub filter_duplicate_dirs_with_common_files_by_custom_groupper($$$) {
 	my ($context, $groupper, $count) = @_;
 	my $files_matcher = duplicities_matcher_by_group($groupper, "dirs matching", $context);
 	my $matcher = matcher_of_at_least_files_matching($files_matcher, $count);
@@ -319,3 +402,25 @@ sub filter_dirs_by_custom_duplicate_files($$$) {
 }
 
 ########################################################################
+# Filter duplicities by comparer
+
+sub filter_duplicate_dirs_by_custom_comparer($$) {
+	my ($context, $comparer) = @_;
+	
+	#TODO
+	die("TODO: filter_duplicate_dirs_by_custom_comparer");
+}
+
+sub filter_duplicate_files_by_custom_comparer($$) {
+	my ($context, $comparer) = @_;
+	
+	#TODO
+	die("TODO: filter_duplicate_files_by_custom_comparer");
+}
+
+sub filter_duplicate_dirs_with_common_files_by_custom_comparer($$) {
+	my ($context, $files_comparer) = @_;
+	
+	#TODO
+	die("TODO: filter_duplicate_dirs_with_common_files_by_custom_comparer");
+}

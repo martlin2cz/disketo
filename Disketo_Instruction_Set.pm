@@ -23,97 +23,17 @@ sub commands() {
 			'requires' => [], 
 			'produces' => '', 
 			'params' => [], 
-			'doc' => 'Loads the dirs and files from directories or files' 
+			'doc' => 'Loads the resources from the filesystem(s)' 
 		}, 
 		  
-		# --- group_files_by_names    -----------------------
-		'group_files_by_names' => { 
-			'name' => 'group_files_by_names', 
-			'method' => \&Disketo_Instructions::group_files_by_names, 
+		# --- context_stats    -----------------------
+		'context_stats' => { 
+			'name' => 'context_stats', 
+			'method' => \&Disketo_Instructions::context_stats, 
 			'requires' => [], 
-			'produces' => 'file names', 
+			'produces' => '', 
 			'params' => [], 
-			'doc' => 'Groups files by names' 
-		}, 
-		  
-		# --- group_dirs_by_names    -----------------------
-		'group_dirs_by_names' => { 
-			'name' => 'group_dirs_by_names', 
-			'method' => \&Disketo_Instructions::group_dirs_by_names, 
-			'requires' => [], 
-			'produces' => 'dir names', 
-			'params' => [], 
-			'doc' => 'Groups dirs by names.' 
-		}, 
-		  
-		# --- compute_files_matching   matcher -----------------------
-		'compute_files_matching' => { 
-			'name' => 'compute_files_matching', 
-			'method' => \&Disketo_Instructions::compute_files_matching, 
-			'requires' => [], 
-			'produces' => 'files matching', 
-			'params' => ['matcher', ], 
-			'doc' => 'Computes files matching' 
-		}, 
-		  
-		# --- compute_dirs_matching   matcher -----------------------
-		'compute_dirs_matching' => { 
-			'name' => 'compute_dirs_matching', 
-			'method' => \&Disketo_Instructions::compute_dirs_matching, 
-			'requires' => [], 
-			'produces' => 'dirs matching', 
-			'params' => ['matcher', ], 
-			'doc' => 'Computes dirs matching' 
-		}, 
-		  
-		# --- compute_files_of_dir_matching   file_matcher -----------------------
-		'compute_files_of_dir_matching' => { 
-			'name' => 'compute_files_of_dir_matching', 
-			'method' => \&Disketo_Instructions::compute_files_of_dir_matching, 
-			'requires' => ['files matching', ], 
-			'produces' => 'dirs matches', 
-			'params' => ['file_matcher', ], 
-			'doc' => 'Computes files of dir matching' 
-		}, 
-		  
-		# --- group_files_by_names    -----------------------
-		'group_files_by_names' => { 
-			'name' => 'group_files_by_names', 
-			'method' => \&Disketo_Instructions::group_files_by_names, 
-			'requires' => [], 
-			'produces' => 'file names', 
-			'params' => [], 
-			'doc' => 'Groups files by names' 
-		}, 
-		  
-		# --- group_dirs_by_names    -----------------------
-		'group_dirs_by_names' => { 
-			'name' => 'group_dirs_by_names', 
-			'method' => \&Disketo_Instructions::group_dirs_by_names, 
-			'requires' => [], 
-			'produces' => 'dir names', 
-			'params' => [], 
-			'doc' => 'Groups dirs by names.' 
-		}, 
-		  
-		# --- group_files_by_custom   groupper, files_group_name -----------------------
-		'group_files_by_custom' => { 
-			'name' => 'group_files_by_custom', 
-			'method' => \&Disketo_Instructions::group_files_by_custom, 
-			'requires' => [], 
-			'produces' => 'file groups', 
-			'params' => ['groupper', 'files_group_name', ], 
-			'doc' => 'Groups files by groupper' 
-		}, 
-		  
-		# --- group_dirs_by_custom   groupper, dirs_group_name -----------------------
-		'group_dirs_by_custom' => { 
-			'name' => 'group_dirs_by_custom', 
-			'method' => \&Disketo_Instructions::group_dirs_by_custom, 
-			'requires' => [], 
-			'produces' => 'dir groups', 
-			'params' => ['groupper', 'dirs_group_name', ], 
-			'doc' => 'Groups dirs by groupper' 
+			'doc' => 'Prints the informations about the current context' 
 		}, 
 		  
 		# --- count_files    -----------------------
@@ -121,39 +41,129 @@ sub commands() {
 			'name' => 'count_files', 
 			'method' => \&Disketo_Instructions::count_files, 
 			'requires' => [], 
-			'produces' => 'files counts', 
+			'produces' => 'files count', 
 			'params' => [], 
-			'doc' => 'Counts files' 
+			'doc' => 'Computes the counts of the files in each dir' 
 		}, 
 		  
-		# --- compute_custom_for_each_dir   dirs_groups_name, computer -----------------------
+		# --- compute_custom_for_each_dir   meta_name, computer -----------------------
 		'compute_custom_for_each_dir' => { 
 			'name' => 'compute_custom_for_each_dir', 
 			'method' => \&Disketo_Instructions::compute_custom_for_each_dir, 
 			'requires' => [], 
-			'produces' => 'custom for dirs', 
-			'params' => ['dirs_groups_name', 'computer', ], 
-			'doc' => 'Computes for each dir' 
+			'produces' => '', 
+			'params' => ['meta_name', 'computer', ], 
+			'doc' => 'Computes given computer on each dir to produce the given meta' 
 		}, 
 		  
-		# --- compute_custom_for_each_file   files_groups_name, computer -----------------------
+		# --- compute_custom_for_each_file   meta_name, computer -----------------------
 		'compute_custom_for_each_file' => { 
 			'name' => 'compute_custom_for_each_file', 
 			'method' => \&Disketo_Instructions::compute_custom_for_each_file, 
 			'requires' => [], 
-			'produces' => 'custom for files', 
-			'params' => ['files_groups_name', 'computer', ], 
-			'doc' => 'Computes for each file' 
+			'produces' => '', 
+			'params' => ['meta_name', 'computer', ], 
+			'doc' => 'Computes given computer on each file to produce the given meta' 
 		}, 
 		  
-		# --- load_stats    -----------------------
-		'load_stats' => { 
-			'name' => 'load_stats', 
-			'method' => \&Disketo_Instructions::load_stats, 
+		# --- compute_files_matching_pattern   pattern -----------------------
+		'compute_files_matching_pattern' => { 
+			'name' => 'compute_files_matching_pattern', 
+			'method' => \&Disketo_Instructions::compute_files_matching_pattern, 
 			'requires' => [], 
-			'produces' => 'stats', 
+			'produces' => 'files matching', 
+			'params' => ['pattern', ], 
+			'doc' => 'Computes meta with files matching given pattern' 
+		}, 
+		  
+		# --- compute_files_matching_custom   matcher -----------------------
+		'compute_files_matching_custom' => { 
+			'name' => 'compute_files_matching_custom', 
+			'method' => \&Disketo_Instructions::compute_files_matching_custom, 
+			'requires' => [], 
+			'produces' => 'files matching', 
+			'params' => ['matcher', ], 
+			'doc' => 'Computes meta with files matching given matcher' 
+		}, 
+		  
+		# --- compute_dirs_matching_pattern   pattern -----------------------
+		'compute_dirs_matching_pattern' => { 
+			'name' => 'compute_dirs_matching_pattern', 
+			'method' => \&Disketo_Instructions::compute_dirs_matching_pattern, 
+			'requires' => [], 
+			'produces' => 'dirs matching', 
+			'params' => ['pattern', ], 
+			'doc' => 'Computes meta with dirs matching given pattern' 
+		}, 
+		  
+		# --- compute_dirs_matching_custom   matcher -----------------------
+		'compute_dirs_matching_custom' => { 
+			'name' => 'compute_dirs_matching_custom', 
+			'method' => \&Disketo_Instructions::compute_dirs_matching_custom, 
+			'requires' => [], 
+			'produces' => 'dirs matching', 
+			'params' => ['matcher', ], 
+			'doc' => 'Computes meta with dirs matching given matcher' 
+		}, 
+		  
+		# --- compute_files_of_dir_matching_pattern   pattern -----------------------
+		'compute_files_of_dir_matching_pattern' => { 
+			'name' => 'compute_files_of_dir_matching_pattern', 
+			'method' => \&Disketo_Instructions::compute_files_of_dir_matching_pattern, 
+			'requires' => [], 
+			'produces' => 'files matching', 
+			'params' => ['pattern', ], 
+			'doc' => 'Computes meta with files of each dir matching given pattern' 
+		}, 
+		  
+		# --- compute_files_of_dir_matching_custom   matcher -----------------------
+		'compute_files_of_dir_matching_custom' => { 
+			'name' => 'compute_files_of_dir_matching_custom', 
+			'method' => \&Disketo_Instructions::compute_files_of_dir_matching_custom, 
+			'requires' => [], 
+			'produces' => 'files matching', 
+			'params' => ['matcher', ], 
+			'doc' => 'Computes meta with files of each dir matching given matcher' 
+		}, 
+		  
+		# --- group_files_by_names    -----------------------
+		'group_files_by_names' => { 
+			'name' => 'group_files_by_names', 
+			'method' => \&Disketo_Instructions::group_files_by_names, 
+			'requires' => [], 
+			'produces' => 'files names', 
 			'params' => [], 
-			'doc' => 'Loads stats of files' 
+			'doc' => 'Groups files by names' 
+		}, 
+		  
+		# --- group_files_by_custom   groupper, meta_name -----------------------
+		'group_files_by_custom' => { 
+			'name' => 'group_files_by_custom', 
+			'method' => \&Disketo_Instructions::group_files_by_custom, 
+			'requires' => [], 
+			'produces' => '', 
+			'params' => ['groupper', 'meta_name', ], 
+			'doc' => 'Groups files by custom groupper' 
+		}, 
+		  
+		# --- group_dirs_by_names    -----------------------
+		'group_dirs_by_names' => { 
+			'name' => 'group_dirs_by_names', 
+			'method' => \&Disketo_Instructions::group_dirs_by_names, 
+			'requires' => [], 
+			'produces' => 'dirs names', 
+			'params' => [], 
+			'doc' => 'Groups dirs by names' 
+		}, 
+		  
+		# --- group_dirs_by_custom   groupper, meta_name -----------------------
+		'group_dirs_by_custom' => { 
+			'name' => 'group_dirs_by_custom', 
+			'method' => \&Disketo_Instructions::group_dirs_by_custom, 
+			'requires' => [], 
+			'produces' => '', 
+			'params' => ['groupper', 'meta_name', ], 
+			'doc' => 'Groups dirs by custom groupper' 
 		}, 
 		  
 		# --- filter_dirs_matching_pattern   pattern -----------------------
@@ -163,37 +173,27 @@ sub commands() {
 			'requires' => [], 
 			'produces' => '', 
 			'params' => ['pattern', ], 
-			'doc' => 'Filters dirs matching pattern' 
+			'doc' => 'Filters dirs matching given pattern' 
 		}, 
 		  
-		# --- filter_dirs_matching_custom   matcher -----------------------
+		# --- filter_dirs_matching_custom   predicate -----------------------
 		'filter_dirs_matching_custom' => { 
 			'name' => 'filter_dirs_matching_custom', 
 			'method' => \&Disketo_Instructions::filter_dirs_matching_custom, 
 			'requires' => [], 
 			'produces' => '', 
-			'params' => ['matcher', ], 
-			'doc' => 'Filters dirs matching matcher' 
+			'params' => ['predicate', ], 
+			'doc' => 'Filters dirs matching given predicate' 
 		}, 
 		  
-		# --- filter_dirs_with_files_matching_pattern   files_pattern, count -----------------------
-		'filter_dirs_with_files_matching_pattern' => { 
-			'name' => 'filter_dirs_with_files_matching_pattern', 
-			'method' => \&Disketo_Instructions::filter_dirs_with_files_matching_pattern, 
-			'requires' => ['files matching', ], 
+		# --- filter_dirs_by_meta   meta_name -----------------------
+		'filter_dirs_by_meta' => { 
+			'name' => 'filter_dirs_by_meta', 
+			'method' => \&Disketo_Instructions::filter_dirs_by_meta, 
+			'requires' => [], 
 			'produces' => '', 
-			'params' => ['files_pattern', 'count', ], 
-			'doc' => 'Filters dirs which files matching pattern' 
-		}, 
-		  
-		# --- filter_dirs_with_files_matching_custom   files_matcher, count -----------------------
-		'filter_dirs_with_files_matching_custom' => { 
-			'name' => 'filter_dirs_with_files_matching_custom', 
-			'method' => \&Disketo_Instructions::filter_dirs_with_files_matching_custom, 
-			'requires' => ['files matching', ], 
-			'produces' => '', 
-			'params' => ['files_matcher', 'count', ], 
-			'doc' => 'Filters dirs with files matching matcher' 
+			'params' => ['meta_name', ], 
+			'doc' => 'Filters dirs matching given meta' 
 		}, 
 		  
 		# --- filter_files_matching_pattern   pattern -----------------------
@@ -203,47 +203,57 @@ sub commands() {
 			'requires' => [], 
 			'produces' => '', 
 			'params' => ['pattern', ], 
-			'doc' => 'Filters files matching pattern' 
+			'doc' => 'Filters files matching given pattern' 
 		}, 
 		  
-		# --- filter_files_matching_custom   matcher -----------------------
+		# --- filter_files_matching_custom   predicate -----------------------
 		'filter_files_matching_custom' => { 
 			'name' => 'filter_files_matching_custom', 
 			'method' => \&Disketo_Instructions::filter_files_matching_custom, 
 			'requires' => [], 
 			'produces' => '', 
-			'params' => ['matcher', ], 
-			'doc' => 'Filters files matching matcher' 
+			'params' => ['predicate', ], 
+			'doc' => 'Filters files matching given predicate' 
 		}, 
 		  
-		# --- filter_custom_duplicate_files   files_group_name, groupper -----------------------
-		'filter_custom_duplicate_files' => { 
-			'name' => 'filter_custom_duplicate_files', 
-			'method' => \&Disketo_Instructions::filter_custom_duplicate_files, 
-			'requires' => ['files groups', ], 
+		# --- filter_files_by_meta   meta_name -----------------------
+		'filter_files_by_meta' => { 
+			'name' => 'filter_files_by_meta', 
+			'method' => \&Disketo_Instructions::filter_files_by_meta, 
+			'requires' => [], 
 			'produces' => '', 
-			'params' => ['files_group_name', 'groupper', ], 
-			'doc' => 'Filter duplicate files' 
+			'params' => ['meta_name', ], 
+			'doc' => 'Filters files matching given meta' 
 		}, 
 		  
-		# --- filter_duplicate_files_by_name    -----------------------
-		'filter_duplicate_files_by_name' => { 
-			'name' => 'filter_duplicate_files_by_name', 
-			'method' => \&Disketo_Instructions::filter_duplicate_files_by_name, 
-			'requires' => ['files names', ], 
+		# --- filter_dirs_with_files_matching_pattern   files_pattern,min_count -----------------------
+		'filter_dirs_with_files_matching_pattern' => { 
+			'name' => 'filter_dirs_with_files_matching_pattern', 
+			'method' => \&Disketo_Instructions::filter_dirs_with_files_matching_pattern, 
+			'requires' => [], 
 			'produces' => '', 
-			'params' => [], 
-			'doc' => 'Filter duplicate files by names' 
+			'params' => ['files_pattern', 'min_count', ], 
+			'doc' => 'Filters dirs with having at least given number of files matching given pattern' 
 		}, 
 		  
-		# --- filter_custom_duplicate_dirs   dirs_groups_name, groupper -----------------------
-		'filter_custom_duplicate_dirs' => { 
-			'name' => 'filter_custom_duplicate_dirs', 
-			'method' => \&Disketo_Instructions::filter_custom_duplicate_dirs, 
-			'requires' => ['dirs groups', ], 
+		# --- filter_dirs_with_files_matching_custom   files_predicate,min_count -----------------------
+		'filter_dirs_with_files_matching_custom' => { 
+			'name' => 'filter_dirs_with_files_matching_custom', 
+			'method' => \&Disketo_Instructions::filter_dirs_with_files_matching_custom, 
+			'requires' => [], 
 			'produces' => '', 
-			'params' => ['dirs_groups_name', 'groupper', ], 
-			'doc' => 'Filters duplicate files by custom groups' 
+			'params' => ['files_predicate', 'min_count', ], 
+			'doc' => 'Filters dirs with having at least given number of files matching given predicate' 
+		}, 
+		  
+		# --- filter_dirs_with_files_matching_meta   files_meta_name,min_count -----------------------
+		'filter_dirs_with_files_matching_meta' => { 
+			'name' => 'filter_dirs_with_files_matching_meta', 
+			'method' => \&Disketo_Instructions::filter_dirs_with_files_matching_meta, 
+			'requires' => [], 
+			'produces' => '', 
+			'params' => ['files_meta_name', 'min_count', ], 
+			'doc' => 'Filters dirs with having at least given number of files matching given meta' 
 		}, 
 		  
 		# --- filter_duplicate_dirs_by_name    -----------------------
@@ -253,27 +263,87 @@ sub commands() {
 			'requires' => ['dirs names', ], 
 			'produces' => '', 
 			'params' => [], 
-			'doc' => 'Filters duplicate dirs by names' 
+			'doc' => 'Filters duplicate dirs by name' 
 		}, 
 		  
-		# --- filter_dirs_by_duplicate_files_by_name   count -----------------------
-		'filter_dirs_by_duplicate_files_by_name' => { 
-			'name' => 'filter_dirs_by_duplicate_files_by_name', 
-			'method' => \&Disketo_Instructions::filter_dirs_by_duplicate_files_by_name, 
-			'requires' => ['files matching', 'files names', ], 
+		# --- filter_duplicate_files_by_name    -----------------------
+		'filter_duplicate_files_by_name' => { 
+			'name' => 'filter_duplicate_files_by_name', 
+			'method' => \&Disketo_Instructions::filter_duplicate_files_by_name, 
+			'requires' => ['files names', ], 
 			'produces' => '', 
-			'params' => ['count', ], 
-			'doc' => 'Filters duplivate files by names' 
+			'params' => [], 
+			'doc' => 'Filters duplicate files by name' 
 		}, 
 		  
-		# --- filter_dirs_by_custom_duplicate_files   groupper, count -----------------------
-		'filter_dirs_by_custom_duplicate_files' => { 
-			'name' => 'filter_dirs_by_custom_duplicate_files', 
-			'method' => \&Disketo_Instructions::filter_dirs_by_custom_duplicate_files, 
-			'requires' => ['files matching', 'files groups', ], 
+		# --- filter_duplicate_dirs_by_custom_groupper   groupper, meta_name -----------------------
+		'filter_duplicate_dirs_by_custom_groupper' => { 
+			'name' => 'filter_duplicate_dirs_by_custom_groupper', 
+			'method' => \&Disketo_Instructions::filter_duplicate_dirs_by_custom_groupper, 
+			'requires' => [], 
 			'produces' => '', 
-			'params' => ['groupper', 'count', ], 
-			'doc' => 'Filters dirs with duplicate files by custom groups' 
+			'params' => ['groupper', 'meta_name', ], 
+			'doc' => 'Filters duplicate dirs by given groupper' 
+		}, 
+		  
+		# --- filter_duplicate_files_by_custom_groupper   groupper, meta_name -----------------------
+		'filter_duplicate_files_by_custom_groupper' => { 
+			'name' => 'filter_duplicate_files_by_custom_groupper', 
+			'method' => \&Disketo_Instructions::filter_duplicate_files_by_custom_groupper, 
+			'requires' => [], 
+			'produces' => '', 
+			'params' => ['groupper', 'meta_name', ], 
+			'doc' => 'Filters duplicate files by given groupper' 
+		}, 
+		  
+		# --- filter_duplicate_dirs_with_common_files_by_name    -----------------------
+		'filter_duplicate_dirs_with_common_files_by_name' => { 
+			'name' => 'filter_duplicate_dirs_with_common_files_by_name', 
+			'method' => \&Disketo_Instructions::filter_duplicate_dirs_with_common_files_by_name, 
+			'requires' => ['files names', ], 
+			'produces' => '', 
+			'params' => [], 
+			'doc' => 'Filters duplicate dirs with common files by their name' 
+		}, 
+		  
+		# --- filter_duplicate_dirs_with_common_files_by_custom_groupper   groupper, meta_name -----------------------
+		'filter_duplicate_dirs_with_common_files_by_custom_groupper' => { 
+			'name' => 'filter_duplicate_dirs_with_common_files_by_custom_groupper', 
+			'method' => \&Disketo_Instructions::filter_duplicate_dirs_with_common_files_by_custom_groupper, 
+			'requires' => [], 
+			'produces' => '', 
+			'params' => ['groupper', 'meta_name', ], 
+			'doc' => 'Filters duplicate dirs with common files by their custom groupper' 
+		}, 
+		  
+		# --- filter_duplicate_dirs_by_custom_comparer   comparer -----------------------
+		'filter_duplicate_dirs_by_custom_comparer' => { 
+			'name' => 'filter_duplicate_dirs_by_custom_comparer', 
+			'method' => \&Disketo_Instructions::filter_duplicate_dirs_by_custom_comparer, 
+			'requires' => [], 
+			'produces' => '', 
+			'params' => ['comparer', ], 
+			'doc' => 'Filters duplicate dirs by custom comparer' 
+		}, 
+		  
+		# --- filter_duplicate_files_by_custom_comparer   comparer -----------------------
+		'filter_duplicate_files_by_custom_comparer' => { 
+			'name' => 'filter_duplicate_files_by_custom_comparer', 
+			'method' => \&Disketo_Instructions::filter_duplicate_files_by_custom_comparer, 
+			'requires' => [], 
+			'produces' => '', 
+			'params' => ['comparer', ], 
+			'doc' => 'Filters duplicate files by custom comparer' 
+		}, 
+		  
+		# --- filter_duplicate_dirs_with_common_files_by_custom_comparer   files_comparer -----------------------
+		'filter_duplicate_dirs_with_common_files_by_custom_comparer' => { 
+			'name' => 'filter_duplicate_dirs_with_common_files_by_custom_comparer', 
+			'method' => \&Disketo_Instructions::filter_duplicate_dirs_with_common_files_by_custom_comparer, 
+			'requires' => [], 
+			'produces' => '', 
+			'params' => ['files_comparer', ], 
+			'doc' => 'Filters duplicate dirs with common files by custom comparer' 
 		}, 
 		  
 		# --- print_dirs_simply    -----------------------
@@ -293,7 +363,7 @@ sub commands() {
 			'requires' => [], 
 			'produces' => '', 
 			'params' => ['printer', ], 
-			'doc' => 'Prints dirs by printer' 
+			'doc' => 'Prints dirs by custom printer' 
 		}, 
 		  
 		# --- print_files_simply    -----------------------
@@ -313,17 +383,7 @@ sub commands() {
 			'requires' => [], 
 			'produces' => '', 
 			'params' => ['printer', ], 
-			'doc' => 'Prints files by printer' 
-		}, 
-		  
-		# --- context_stats    -----------------------
-		'context_stats' => { 
-			'name' => 'context_stats', 
-			'method' => \&Disketo_Instructions::context_stats, 
-			'requires' => [], 
-			'produces' => '', 
-			'params' => [], 
-			'doc' => 'Prints the info about the current context' 
+			'doc' => 'Prints files by custom printer' 
 		}, 
 		
 	);
