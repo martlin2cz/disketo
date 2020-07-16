@@ -259,14 +259,13 @@ sub insert_loads($) {
 		my ($instruction_ref,$function_name,$function_method,$requires,$produces,$params_ref,$args_ref)	= @_;
 		
 		for my $required_meta  (@{ $requires }) {
-			
 			if (meta_already_produced(\@program_mod, $required_meta)) {
 				next;
 			}
 			
 			my $new_command = find_first_command_producing_meta($required_meta);
 			if (!$new_command) {
-				die("Meta '" . $required_meta . "' is not produced by any command");
+				die("Meta '" . $required_meta . "' is not produced by any command\n");
 			}
 			
 			my $new_instruction = Disketo_Instruction_Set::prepending_instruction($instruction_ref, $new_command);
@@ -282,9 +281,10 @@ sub insert_loads($) {
 sub meta_already_produced($$) {
 	my ($program, $meta_name) = @_;
 	
+	
 	for my $instruction (@{ $program }) {
 		my $produces = $instruction->{"command"}->{"produces"};
-		if ($produces == $meta_name) {
+		if ($produces eq $meta_name) {
 			return 1;
 		}
 	}
@@ -298,10 +298,12 @@ sub find_first_command_producing_meta($$) {
 	my %commands = %{ Disketo_Instruction_Set::commands() };
 		
 	for my $another_command (values %commands) {
-		if ($another_command->{"produces"} == $required_meta) {
+		if ($another_command->{"produces"} eq $required_meta) {
 			return $another_command;
 		}
 	}
+	
+	return undef;
 }
 
 

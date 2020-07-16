@@ -8,4 +8,4 @@ use Disketo_Instruction_Set;
 
 ########################################################################
 
-print(Dumper(Disketo_Instruction_Set::instructions()));
+print(Dumper(Disketo_Instruction_Set::commands()));

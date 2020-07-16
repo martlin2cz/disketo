@@ -49,7 +49,14 @@ filter:
 				+ by name
 				- by name and size
 				+ by CUSTOM MATCHER
-				
+			
+			
+TODO:
+		- filter NOT matching (exclude)
+		- filter dir having more than/LESS THAN count files matching ...
+		- filter NOT duplicate (with no duplicity)
+		- filter with MORE than one duplicity ?
+	
 ----
 context = resources + metas
 meta[name] = resource => whatever

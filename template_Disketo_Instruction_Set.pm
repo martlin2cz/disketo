@@ -4,7 +4,9 @@ use strict;
 package Disketo_Instruction_Set; 
 my $VERSION=2.0.0;
   
-use Disketo_Instructions; 
+use Disketo_Instructions;
+use Switch;
+use Data::Dumper;
 
   
 ########################################################################
@@ -22,11 +24,21 @@ sub commands() {
 
 sub prepending_instruction($$) {
 	my ($instruction, $prepending_command) = @_;
+	 
+	my $command = $instruction->{"command"};
+	my $arguments = $instruction->{"arguments"};
 	
-	my $command = $prepending_command->{"statement_name"};
-	my $arguments = [];
+	my $params = $command->{"params"};
+	my $prepending_params = $prepending_command->{"params"};
 	
-	#TODO arguments := if $prepending_instruction takes XYZ, then pick from $instruction 
+	my $prepending_arguments; 
+	if ($params ~~ $prepending_params) {
+		$prepending_arguments = $arguments;
+	#TODO arguments := if $prepending_instruction takes XYZ, then pick from $instruction
+	} else {
+		print(Dumper($prepending_command, $command));
+		die("Unimplemented prepend of " . $prepending_command->{"name"} . " before " . $command->{"name"});
+	}
 	
-	return {"command" => $command, "arguments" => $arguments };
+	return {"command" => $prepending_command, "arguments" => $prepending_arguments };
 }

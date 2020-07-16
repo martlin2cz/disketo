@@ -4,7 +4,9 @@ use strict;
 package Disketo_Instruction_Set; 
 my $VERSION=2.0.0;
   
-use Disketo_Instructions; 
+use Disketo_Instructions;
+use Switch;
+use Data::Dumper;
 
   
 ########################################################################
@@ -21,7 +23,7 @@ sub commands() {
 			'name' => 'load', 
 			'method' => \&Disketo_Instructions::load, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => [], 
 			'doc' => 'Loads the resources from the filesystem(s)' 
 		}, 
@@ -31,7 +33,7 @@ sub commands() {
 			'name' => 'context_stats', 
 			'method' => \&Disketo_Instructions::context_stats, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => [], 
 			'doc' => 'Prints the informations about the current context' 
 		}, 
@@ -51,7 +53,7 @@ sub commands() {
 			'name' => 'compute_custom_for_each_dir', 
 			'method' => \&Disketo_Instructions::compute_custom_for_each_dir, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => ['meta_name', 'computer', ], 
 			'doc' => 'Computes given computer on each dir to produce the given meta' 
 		}, 
@@ -61,7 +63,7 @@ sub commands() {
 			'name' => 'compute_custom_for_each_file', 
 			'method' => \&Disketo_Instructions::compute_custom_for_each_file, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => ['meta_name', 'computer', ], 
 			'doc' => 'Computes given computer on each file to produce the given meta' 
 		}, 
@@ -141,7 +143,7 @@ sub commands() {
 			'name' => 'group_files_by_custom', 
 			'method' => \&Disketo_Instructions::group_files_by_custom, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => ['groupper', 'meta_name', ], 
 			'doc' => 'Groups files by custom groupper' 
 		}, 
@@ -161,7 +163,7 @@ sub commands() {
 			'name' => 'group_dirs_by_custom', 
 			'method' => \&Disketo_Instructions::group_dirs_by_custom, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => ['groupper', 'meta_name', ], 
 			'doc' => 'Groups dirs by custom groupper' 
 		}, 
@@ -171,7 +173,7 @@ sub commands() {
 			'name' => 'filter_dirs_matching_pattern', 
 			'method' => \&Disketo_Instructions::filter_dirs_matching_pattern, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => ['pattern', ], 
 			'doc' => 'Filters dirs matching given pattern' 
 		}, 
@@ -181,7 +183,7 @@ sub commands() {
 			'name' => 'filter_dirs_matching_custom', 
 			'method' => \&Disketo_Instructions::filter_dirs_matching_custom, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => ['predicate', ], 
 			'doc' => 'Filters dirs matching given predicate' 
 		}, 
@@ -191,7 +193,7 @@ sub commands() {
 			'name' => 'filter_dirs_by_meta', 
 			'method' => \&Disketo_Instructions::filter_dirs_by_meta, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => ['meta_name', ], 
 			'doc' => 'Filters dirs matching given meta' 
 		}, 
@@ -201,7 +203,7 @@ sub commands() {
 			'name' => 'filter_files_matching_pattern', 
 			'method' => \&Disketo_Instructions::filter_files_matching_pattern, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => ['pattern', ], 
 			'doc' => 'Filters files matching given pattern' 
 		}, 
@@ -211,7 +213,7 @@ sub commands() {
 			'name' => 'filter_files_matching_custom', 
 			'method' => \&Disketo_Instructions::filter_files_matching_custom, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => ['predicate', ], 
 			'doc' => 'Filters files matching given predicate' 
 		}, 
@@ -221,7 +223,7 @@ sub commands() {
 			'name' => 'filter_files_by_meta', 
 			'method' => \&Disketo_Instructions::filter_files_by_meta, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => ['meta_name', ], 
 			'doc' => 'Filters files matching given meta' 
 		}, 
@@ -231,7 +233,7 @@ sub commands() {
 			'name' => 'filter_dirs_with_files_matching_pattern', 
 			'method' => \&Disketo_Instructions::filter_dirs_with_files_matching_pattern, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => ['files_pattern', 'min_count', ], 
 			'doc' => 'Filters dirs with having at least given number of files matching given pattern' 
 		}, 
@@ -241,7 +243,7 @@ sub commands() {
 			'name' => 'filter_dirs_with_files_matching_custom', 
 			'method' => \&Disketo_Instructions::filter_dirs_with_files_matching_custom, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => ['files_predicate', 'min_count', ], 
 			'doc' => 'Filters dirs with having at least given number of files matching given predicate' 
 		}, 
@@ -251,7 +253,7 @@ sub commands() {
 			'name' => 'filter_dirs_with_files_matching_meta', 
 			'method' => \&Disketo_Instructions::filter_dirs_with_files_matching_meta, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => ['files_meta_name', 'min_count', ], 
 			'doc' => 'Filters dirs with having at least given number of files matching given meta' 
 		}, 
@@ -261,7 +263,7 @@ sub commands() {
 			'name' => 'filter_duplicate_dirs_by_name', 
 			'method' => \&Disketo_Instructions::filter_duplicate_dirs_by_name, 
 			'requires' => ['dirs names', ], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => [], 
 			'doc' => 'Filters duplicate dirs by name' 
 		}, 
@@ -271,7 +273,7 @@ sub commands() {
 			'name' => 'filter_duplicate_files_by_name', 
 			'method' => \&Disketo_Instructions::filter_duplicate_files_by_name, 
 			'requires' => ['files names', ], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => [], 
 			'doc' => 'Filters duplicate files by name' 
 		}, 
@@ -281,7 +283,7 @@ sub commands() {
 			'name' => 'filter_duplicate_dirs_by_custom_groupper', 
 			'method' => \&Disketo_Instructions::filter_duplicate_dirs_by_custom_groupper, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => ['groupper', 'meta_name', ], 
 			'doc' => 'Filters duplicate dirs by given groupper' 
 		}, 
@@ -291,7 +293,7 @@ sub commands() {
 			'name' => 'filter_duplicate_files_by_custom_groupper', 
 			'method' => \&Disketo_Instructions::filter_duplicate_files_by_custom_groupper, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => ['groupper', 'meta_name', ], 
 			'doc' => 'Filters duplicate files by given groupper' 
 		}, 
@@ -301,7 +303,7 @@ sub commands() {
 			'name' => 'filter_duplicate_dirs_with_common_files_by_name', 
 			'method' => \&Disketo_Instructions::filter_duplicate_dirs_with_common_files_by_name, 
 			'requires' => ['files names', ], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => [], 
 			'doc' => 'Filters duplicate dirs with common files by their name' 
 		}, 
@@ -311,7 +313,7 @@ sub commands() {
 			'name' => 'filter_duplicate_dirs_with_common_files_by_custom_groupper', 
 			'method' => \&Disketo_Instructions::filter_duplicate_dirs_with_common_files_by_custom_groupper, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => ['groupper', 'meta_name', ], 
 			'doc' => 'Filters duplicate dirs with common files by their custom groupper' 
 		}, 
@@ -321,7 +323,7 @@ sub commands() {
 			'name' => 'filter_duplicate_dirs_by_custom_comparer', 
 			'method' => \&Disketo_Instructions::filter_duplicate_dirs_by_custom_comparer, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => ['comparer', ], 
 			'doc' => 'Filters duplicate dirs by custom comparer' 
 		}, 
@@ -331,7 +333,7 @@ sub commands() {
 			'name' => 'filter_duplicate_files_by_custom_comparer', 
 			'method' => \&Disketo_Instructions::filter_duplicate_files_by_custom_comparer, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => ['comparer', ], 
 			'doc' => 'Filters duplicate files by custom comparer' 
 		}, 
@@ -341,7 +343,7 @@ sub commands() {
 			'name' => 'filter_duplicate_dirs_with_common_files_by_custom_comparer', 
 			'method' => \&Disketo_Instructions::filter_duplicate_dirs_with_common_files_by_custom_comparer, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => ['files_comparer', ], 
 			'doc' => 'Filters duplicate dirs with common files by custom comparer' 
 		}, 
@@ -351,7 +353,7 @@ sub commands() {
 			'name' => 'print_dirs_simply', 
 			'method' => \&Disketo_Instructions::print_dirs_simply, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => [], 
 			'doc' => 'Prints dirs simply' 
 		}, 
@@ -361,7 +363,7 @@ sub commands() {
 			'name' => 'print_dirs_custom', 
 			'method' => \&Disketo_Instructions::print_dirs_custom, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => ['printer', ], 
 			'doc' => 'Prints dirs by custom printer' 
 		}, 
@@ -371,7 +373,7 @@ sub commands() {
 			'name' => 'print_files_simply', 
 			'method' => \&Disketo_Instructions::print_files_simply, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => [], 
 			'doc' => 'Prints files simply' 
 		}, 
@@ -381,7 +383,7 @@ sub commands() {
 			'name' => 'print_files_custom', 
 			'method' => \&Disketo_Instructions::print_files_custom, 
 			'requires' => [], 
-			'produces' => '', 
+			'produces' => undef, 
 			'params' => ['printer', ], 
 			'doc' => 'Prints files by custom printer' 
 		}, 
@@ -393,11 +395,21 @@ sub commands() {
 
 sub prepending_instruction($$) {
 	my ($instruction, $prepending_command) = @_;
+	 
+	my $command = $instruction->{"command"};
+	my $arguments = $instruction->{"arguments"};
 	
-	my $command = $prepending_command->{"statement_name"};
-	my $arguments = [];
+	my $params = $command->{"params"};
+	my $prepending_params = $prepending_command->{"params"};
 	
-	#TODO arguments := if $prepending_instruction takes XYZ, then pick from $instruction 
+	my $prepending_arguments; 
+	if ($params ~~ $prepending_params) {
+		$prepending_arguments = $arguments;
+	#TODO arguments := if $prepending_instruction takes XYZ, then pick from $instruction
+	} else {
+		print(Dumper($prepending_command, $command));
+		die("Unimplemented prepend of " . $prepending_command->{"name"} . " before " . $command->{"name"});
+	}
 	
-	return {"command" => $command, "arguments" => $arguments };
+	return {"command" => $prepending_command, "arguments" => $prepending_arguments };
 }

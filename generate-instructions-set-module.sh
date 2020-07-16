@@ -22,17 +22,18 @@ do
 	fi
 	
 	
-	REQUIRES_QUOT=$(echo $REQUIRES | sed -r "s/(([^,]+)(, *|$))/'\2', /g" )
-	PARAMS_QUOT=$(echo $PARAMS | sed -r "s/(([^,]+)(, *|$))/'\2', /g" )
+	REQUIRES_PERL=$(echo $REQUIRES | sed -r "s/(([^,]+)(, *|$))/'\2', /g" )
+	PARAMS_PERL=$(echo $PARAMS | sed -r "s/(([^,]+)(, *|$))/'\2', /g" )
+	PRODUCES_PERL=$([ "$PRODUCES" == "" ] && echo "undef" || echo "'$PRODUCES'")
 	
 	INSTRUCTION=" \n\
 		# --- $STATEMENT_NAME   $PARAMS -----------------------\n\
 		'$STATEMENT_NAME' => { \n\
 			'name' => '$STATEMENT_NAME', \n\
 			'method' => \\\&Disketo_Instructions::$FUNCTION_NAME, \n\
-			'requires' => [$REQUIRES_QUOT], \n\
-			'produces' => '$PRODUCES', \n\
-			'params' => [$PARAMS_QUOT], \n\
+			'requires' => [$REQUIRES_PERL], \n\
+			'produces' => $PRODUCES_PERL, \n\
+			'params' => [$PARAMS_PERL], \n\
 			'doc' => '$DOC' \n\
 		}, \n\
 		"
