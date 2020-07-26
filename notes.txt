@@ -72,3 +72,18 @@ statement = one "line" of the disketo script
 command = a general definition of the instruction
 instruction = particular command usage (with arguments)
 program = a list of instructions
+
+---
+disketo script file
+	V
+(parse)
+	V
+disketo script (just the statements, lists of tokens)
+	V
+(analyse)
+	V
+disketo program (all the semantic information and arguments resolved/evaluated)
+	V
+(interpret)
+	V
+result
