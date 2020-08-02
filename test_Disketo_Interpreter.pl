@@ -12,28 +12,45 @@ use Disketo_Interpreter;
 
 #######################################
 #######################################
-Disketo_Utils::logit("parse");
-my $script7a = "test/scripts/simple.ds";
-my ($program7a_ref) = Disketo_Parser::parse($script7a);
-print Dumper($program7a_ref);
-
+Disketo_Utils::logit("(commands)");
+my $commands = Disketo_Instruction_Set::commands();
 
 #######################################
-my @program_args_6a = ("foo", "bar", "baz");
+Disketo_Utils::logit("(prepare program)");
 
+my $file0a = "test/scripts/simple.ds";
+my $script0a = Disketo_Parser::parse($file0a);
+my $program0a = Disketo_Analyser::analyse($script0a);
+
+print(Dumper($program0a));
 #######################################
 Disketo_Utils::logit("print_usage");
-my @arguments8a = ("foo");
-### Disketo_Evaluator::print_usage($script7a, $program7a_ref, \@arguments8a);
+
+my @arguments1a = ("foo");
+### Disketo_Interpreter::print_usage($file0a, $program0a, \@arguments1a);
+print("skipped because would die\n");
 
 #######################################
 Disketo_Utils::logit("print_program");
-Disketo_Interpreter::print_program($program7a_ref, \@program_args_6a);
+
+Disketo_Interpreter::print_program($program0a, \@arguments1a);
 
 #######################################
-Disketo_Utils::logit("prepare");
-my ($prepared10_ref) = Disketo_Evaluator::prepare($program7a_ref, \@program_args_6a);
-print Dumper($prepared10_ref);
+Disketo_Utils::logit("resolve_args");
 
+Disketo_Interpreter::resolve_args($program0a, \@arguments1a);
+print Dumper($program0a);
+
+
+#######################################
+Disketo_Utils::logit("run_program");
+
+Disketo_Interpreter::run_program($program0a, \@arguments1a);
+
+print("----\n");
+my @arguments4b = ("test/");
+Disketo_Interpreter::run_program($program0a, \@arguments4b);
+
+# print("skipped because would die\n");
 
 

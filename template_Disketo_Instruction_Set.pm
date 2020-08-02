@@ -32,9 +32,14 @@ sub prepending_instruction($$) {
 	my $prepending_params = $prepending_command->{"params"};
 	
 	my $prepending_arguments; 
-	if ($params ~~ $prepending_params) {
+	if ($prepending_command->{"name"} eq "load") {
+		$prepending_arguments = [];
+
+	} elsif ($params ~~ $prepending_params) {
 		$prepending_arguments = $arguments;
+
 	#TODO arguments := if $prepending_instruction takes XYZ, then pick from $instruction
+
 	} else {
 		print(Dumper($prepending_command, $command));
 		die("Unimplemented prepend of " . $prepending_command->{"name"} . " before " . $command->{"name"});

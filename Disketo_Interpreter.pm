@@ -4,7 +4,7 @@ use strict;
 BEGIN { unshift @INC, "."; }
 
 package Disketo_Interpreter;
-my $VERSION=2.1.0;
+my $VERSION=2.1.1;
 
 use Data::Dumper;
 use Disketo_Utils;
@@ -18,39 +18,40 @@ use Disketo_Instruction_Set;
 
 # Prints usage of the app with script specified
 sub print_usage($$$) {
-	my ($script_name, $program_ref, $program_args_ref) = @_;
-	my @args = @{ $program_args_ref };
+	my ($script_name, $program, $program_args) = @_;
+	my @program_args = @{ $program_args };
 	
 	my $usage = "$script_name ";
 	my $count = 0;
-	walk_program($program_ref, sub {
-		my ($instruction_ref,$function_name,$function_method,$requires,$produces,$params_ref,$args_ref)	= @_;
-
-		for (my $i = 0; $i < scalar @{ $params_ref }; $i++) {
-			my $param = $params_ref->[$i];
-			my $arg = $args_ref->[$i];
+	Disketo_Analyser::walk_program($program, sub {
+		my ($instruction, $command_name, $command, $args, $resolved_args) = @_;
+		my @params = @{ $command->{"params"} };
+		
+		for (my $i = 0; $i < scalar @params; $i++) {
+			my $param = $params[$i];
+			my $arg = $args->[$i];
 
 			if ($arg eq "\$\$") {
-				$usage = $usage . "<$param of $function_name> ";
+				$usage = $usage . "<$param of $command_name> ";
 				$count++;
 			}
 		}
 	});
 	$usage = $usage . "<DIRECTORY/FILE ...>";
 	
-	print STDERR "Expected at least " . ($count + 1) . " arguments, given " . (scalar @{ $program_args_ref }) . "\n";
+	print STDERR "Expected at least " . ($count + 1) . " arguments, given " . (scalar @program_args) . "\n";
 	Disketo_Utils::usage([], $usage);
 }
 
 # Goes throught given program and counts number of "$$" occurences
 sub count_params($) {
-	my ($program_ref) = @_;
+	my ($program) = @_;
 
 	my $count = 0;
-	walk_program($program_ref, sub {
-		my ($instruction_ref,$function_name,$function_method,$requires,$produces,$params_ref,$args_ref)	= @_;
+	Disketo_Analyser::walk_program($program, sub {
+		my ($instruction, $command_name, $command, $args, $resolved_args) = @_;
 
-		for my $arg (@{ $args_ref }) {
+		for my $arg (@{ $args }) {
 			if ($arg eq "\$\$") {
 				$count++;
 			}
@@ -63,100 +64,25 @@ sub count_params($) {
 
 #######################################
 
-# Prepares the program to print/execute (inserts load_* instructions where needed)
-sub prepare($$) {
-	my ($program_ref, $program_args_ref) = @_;
-
-	$program_ref = insert_loads($program_ref);
-	
-	return $program_ref;
-}
-
-# Inserts required instructions where needed
-sub insert_loads($) {
-	my ($program_ref) = @_;
-	
-	my $commands = Disketo_Instruction_Set::commands();
-	
-	my @program_mod = ();
-	
-	my $load_command = $commands->{"load"};
-	my $load_instruction = {"command" => $load_command, "arguments" => [] };
-	push @program_mod, $load_instruction;
-
-	walk_program($program_ref, sub {
-		my ($instruction_ref,$function_name,$function_method,$requires,$produces,$params_ref,$args_ref)	= @_;
-		
-		for my $required_meta  (@{ $requires }) {
-			if (meta_already_produced(\@program_mod, $required_meta)) {
-				next;
-			}
-			
-			my $new_command = find_first_command_producing_meta($required_meta);
-			if (!$new_command) {
-				die("Meta '" . $required_meta . "' is not produced by any command\n");
-			}
-			
-			my $new_instruction = Disketo_Instruction_Set::prepending_instruction($instruction_ref, $new_command);
-			push @program_mod, $new_instruction;
-		}
-
-		push @program_mod, $instruction_ref;
-	});
-
-	return \@program_mod;
-}
-
-sub meta_already_produced($$) {
-	my ($program, $meta_name) = @_;
-	
-	
-	for my $instruction (@{ $program }) {
-		my $produces = $instruction->{"command"}->{"produces"};
-		if ($produces eq $meta_name) {
-			return 1;
-		}
-	}
-	
-	return 0;
-}
-
-sub find_first_command_producing_meta($$) {
-	my ($required_meta) = @_;
-	
-	my %commands = %{ Disketo_Instruction_Set::commands() };
-		
-	for my $another_command (values %commands) {
-		if ($another_command->{"produces"} eq $required_meta) {
-			return $another_command;
-		}
-	}
-	
-	return undef;
-}
-
-
-#######################################
-
 # Prints the program (with arguments)
 sub print_program($$) {
-	my ($program_ref, $program_args_ref) = @_;
-	my @program_args = @{ $program_args_ref };
+	my ($program, $program_args) = @_;
+	my @program_args = @{ $program_args };
 
-	my ($use_args_ref, $dirs_to_list) = extract_dirs_to_list($program_ref, $program_args_ref);	
-	my @args_to_use = @{ $use_args_ref };
+	my ($use_args, $dirs_to_list) = extract_dirs_to_list($program, $program_args);	
+	my @args_to_use = @{ $use_args };
 
-	walk_program($program_ref, sub {
-		my ($instruction_ref,$instruction_name,$instruction_method,$requires,$produces,$params_ref,$args_ref) = @_;
+	Disketo_Analyser::walk_program($program, sub {
+		my ($instruction, $command_name, $command, $args, $resolved_args) = @_;
 
-		print STDERR "Will invoke $instruction_name:\n";
-		if ($instruction_name eq "list_all_directories") {
+		print STDERR "Will invoke $command_name:\n";
+		if ($command_name eq "load") {
 			print STDERR "\t with directories " . join(", ", @{ $dirs_to_list }) . "\n";
 		} else {
 			my $index;
 
-			my @params = @{ $params_ref };
-			my @args = @{ $args_ref };
+			my @params = @{ $command->{"params"} };
+			my @args = @{ $args };
 			for ($index = 0; $index < scalar @params; $index++) {
 				my $param = $params[$index];
 				my $arg = $args[$index];
@@ -166,35 +92,70 @@ sub print_program($$) {
 					print STDERR "\t$param := $arg, which is currently $value\n";
 				} else {
 					print STDERR "\t$param := $arg\n";
-					if ($arg =~ "sub ?\{") {
-						eval($arg);
-						if ($@) {
-							print STDERR "\tWarning, previous instruction contains syntax error: $@\n";
-						}
-					}
 				}
 			}
 		}
 	});
 }
 
+#######################################
+
+# Runs the given program. What else?
+sub resolve_args($$) {
+	my ($program, $program_args) = @_;
+	my @program_args = @{ $program_args };
+
+	my ($use_args, $dirs_to_list) = extract_dirs_to_list($program, $program_args);	
+	my @args_to_use = @{ $use_args };
+
+	Disketo_Analyser::walk_program($program, sub {
+		my ($instruction, $command_name, $command, $args, $resolved_args) = @_;
+		
+		if ($command_name eq "load") {
+			$instruction->{"resolved_args"} = [ $dirs_to_list ];
+		} else {
+			my @args = @{ $instruction->{"arguments"} };
+			for my $arg (@args) {
+				my $value = undef;
+				
+				if ($arg eq "\$\$") {
+					$value = shift @args_to_use;
+				} elsif ($arg =~ "sub ?\{") {
+					$value = eval($arg);
+					if ($@) {
+						print STDERR "Syntax error $@ in $_\n";
+					}
+				} else {
+					$value = $arg;
+				}
+				
+				push @{ $instruction->{"resolved_args"} }, $value;
+			}
+		}
+	});
+}
+#######################################
+
+
 # Runs the given program. What else?
 sub run_program($$) {
-	my ($program_ref, $program_args_ref) = @_;
+	my ($program, $program_args) = @_;
 	
-	my ($use_args_ref, $dirs_to_list) = extract_dirs_to_list($program_ref, $program_args_ref);
-	my @use_args = @{ $use_args_ref };
+	my ($use_args, $dirs_to_list) = extract_dirs_to_list($program, $program_args);
+	my @use_args = @{ $use_args };
 
 	my $context = Disketo_Engine::create_context();
 	
-	walk_program($program_ref, sub {
-		my ($instruction_ref,$instruction_name,$instruction_method,$requires,$produces,$params_ref,$args_ref) = @_;
-		my $arguments_ref;
-		($arguments_ref, $use_args_ref) = prepare_arguments($instruction_name, $context, $args_ref, $use_args_ref, $dirs_to_list);
+	Disketo_Analyser::walk_program($program, sub {
+		my ($instruction, $command_name, $command, $args, $resolved_args) = @_;
+		my $arguments;
 		
-		print "Will invoke $instruction_name with " . join(", ", @{ $arguments_ref }) . " ...\n";
-		$instruction_method->(@{ $arguments_ref });
-		print("Executed instruction " . $instruction_name . ", having " . (scalar (keys %{ $context->{"resources"} })) . " dirs\n");
+		($arguments, $use_args) = prepare_arguments($command_name, $context, $args, $use_args, $dirs_to_list);
+		my $command_method = $command->{"method"};
+		
+		print("Will invoke $command_name with " . join(", ", @{ $arguments }) . " ...\n");
+		$command_method->(@{ $arguments });
+		print("Executed instruction " . $command_name . ", having " . (scalar (keys %{ $context->{"resources"} })) . " dirs\n");
 	});
 }
 
@@ -229,17 +190,20 @@ sub prepare_arguments($) {
 	return (\@arguments, \@use_args);
 }
 
+
+#######################################
+
 # Based on "$$" argvalues splits given program args to the "$$"-ones and to the rest
 sub extract_dirs_to_list($$) {
-	my ($program_ref, $program_args_ref) = @_;
+	my ($program, $program_args) = @_;
 
-	my @program_args = @{ $program_args_ref };
+	my @program_args = @{ $program_args };
 	my @use_args = ();
 
-	walk_program($program_ref, sub {
-			my ($instruction_ref,$instruction_name,$instruction_method,$requires,$produces,$params_ref,$args_ref) = @_;
+	Disketo_Analyser::walk_program($program, sub {
+		my ($instruction, $command_name, $command, $args, $resolved_args) = @_;
 		
-			for my $arg (@{ $args_ref }) {
+			for my $arg (@{ $args }) {
 				if ($arg eq "\$\$") {
 					my $value = shift @program_args;
 					push @use_args, $value;
@@ -251,24 +215,4 @@ sub extract_dirs_to_list($$) {
 }
 
 
-#######################################
 
-# Utility method for simplified walking throught an program.
-sub walk_program($$) {
-	my ($program_ref, $instruction_runner) = @_;
-
-	for my $instruction (@{ $program_ref }) {
-		my $command = $instruction->{"command"};
-		
-		my $instruction_name = $command->{"name"};
-		my $instruction_method = $command->{"method"};
-		my $requires = $command->{"requires"};
-		my $produces = $command->{"produces"};
-		my $params_ref = $command->{"params"};
-
-		my $args_ref = $instruction->{"arguments"};
-	
-		$instruction_runner->
-			($instruction, $instruction_name, $instruction_method, $requires, $produces, $params_ref, $args_ref);
-	}
-}

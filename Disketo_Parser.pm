@@ -4,14 +4,14 @@ use strict;
 BEGIN { unshift @INC, "."; }
 
 package Disketo_Parser;
-my $VERSION=2.1.0;
+my $VERSION=2.1.1;
 
 use Data::Dumper;
 use Disketo_Utils;
 
 #######################################
 
-# Parses given file
+# Parses given file. Returns the reference to the script.
 sub parse($) {
 	my ($script_file) = @_;
 	
@@ -29,7 +29,7 @@ sub load_file($) {
 	
 	open(F, "<$file") or die("Cannot open script file $file): " . $!);
 	while (<F>) {
-    $result = $result . $_;
+		$result = $result . $_;
 	}
 	close (F);
 
@@ -45,27 +45,27 @@ sub parse_content($) {
 	my @tokens = tokenize($content);
 	my @result = ([]);
 	for my $token (@tokens) {
-		if ($token =~ /^#/) {
+		if ($token =~ /^#/) { # if line starts with #, ignore it, it's comment
 			next;
 		}
-		elsif ($token eq "\n") {
+		elsif ($token eq "\n") { # if newline, push new statement
 			if (scalar @{ @result[-1] } > 0) { #if previous line wasn't empty
 				push @result, [];
 			}
 		} 
 		else {
-			push @{ @result[-1] }, $token;
+			push @{ @result[-1] }, $token; # append the token to the current statement
 		}
 	}
 
-	if (scalar @{ @result[-1] } == 0) { 
+	if (scalar @{ @result[-1] } == 0) { # if last line was empty, remove it
 		pop @result;
 	}
 
 	return \@result;
 }
 
-# Tokenizes given input string to tokens
+# Tokenizes given input string to array of tokens
 sub tokenize($) {
 	my ($content) = @_;
 
@@ -74,7 +74,7 @@ sub tokenize($) {
 		(\{ (?: [^{}]* | (?0) )* \} ) | 
 		(?# wrapped in double-quotes)
 		(\" [^\"]* \") | 
-		(?# regular text)
+		(?# regular text, including the numbers)
 		( [\w]+ ) | 
 		(?# the $$ marker)
 		( \$\$ ) | 

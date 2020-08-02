@@ -44,7 +44,7 @@ print Dumper(\@collapsed8a);
 
 #######################################
 Disketo_Utils::logit("parse");
-my $script7a = "test/scripts/simple.ds";
-my ($program7a_ref) = Disketo_Parser::parse($script7a);
-print Dumper($program7a_ref);
+my $file7a = "test/scripts/simple.ds";
+my ($script7a_ref) = Disketo_Parser::parse($file7a);
+print Dumper($script7a_ref);
 
