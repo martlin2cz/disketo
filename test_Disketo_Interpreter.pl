@@ -35,6 +35,14 @@ Disketo_Utils::logit("print_program");
 
 Disketo_Interpreter::print_program($program0a, \@arguments1a);
 
+
+#######################################
+Disketo_Utils::logit("insert_loads");
+
+my @arguments3a = ("foo", "lorem", "ipsum", "dolor");
+my $program3a = Disketo_Interpreter::insert_loads($program0a, \@arguments3a);
+print Dumper($program3a);
+
 #######################################
 Disketo_Utils::logit("resolve_args");
 

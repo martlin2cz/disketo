@@ -17,7 +17,7 @@ use File::Basename;
 ########################################################################
 # Creates the empty context.
 sub create_context() {
-	return { "test" => ["item 1", "item 2", "item 3"] };
+	return { "resources" => {} };
 }
 
 ########################################################################

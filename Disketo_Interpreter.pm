@@ -99,8 +99,34 @@ sub print_program($$) {
 }
 
 #######################################
+# Prepares the program to execute (or print)
+sub prepare($$) {
+	my ($program, $program_args) = @_;
+	
+	$program = insert_loads($program, $program_args);
+	$program = resolve_args($program, $program_args);
+	
+	return $program;
+}
 
-# Runs the given program. What else?
+# For each dir_to_list inserts a load instruction.
+sub insert_loads($$) {
+	my ($program, $program_args) = @_;
+	my @program = @{ $program };
+
+	my ($use_args, $dirs_to_list) = extract_dirs_to_list($program, $program_args);	
+	my $commands = Disketo_Instruction_Set::commands();
+	
+	for my $dir_to_list ( reverse @{ $dirs_to_list} ) {
+		my $statement = ["load", $dir_to_list];
+		my $instruction = Disketo_Analyser::compute_instruction($statement, $commands);
+		unshift @program, $instruction;
+	}
+
+	return \@program;
+}
+
+# Computes the resolved_args field of each instruction.
 sub resolve_args($$) {
 	my ($program, $program_args) = @_;
 	my @program_args = @{ $program_args };
@@ -133,6 +159,8 @@ sub resolve_args($$) {
 			}
 		}
 	});
+	
+	return $program;
 }
 #######################################
 
@@ -150,7 +178,7 @@ sub run_program($$) {
 		my ($instruction, $command_name, $command, $args, $resolved_args) = @_;
 		my $arguments;
 		
-		($arguments, $use_args) = prepare_arguments($command_name, $context, $args, $use_args, $dirs_to_list);
+		($arguments, $use_args) = prepare_method_arguments($command_name, $context, $args, $use_args, $dirs_to_list);
 		my $command_method = $command->{"method"};
 		
 		print("Will invoke $command_name with " . join(", ", @{ $arguments }) . " ...\n");
@@ -159,7 +187,7 @@ sub run_program($$) {
 	});
 }
 
-sub prepare_arguments($) {
+sub prepare_method_arguments($) {
 	my ($instruction_name, $context, $args_ref, $use_args_ref, $dirs_to_list) = @_;
 	my @use_args = @{ $use_args_ref };
 

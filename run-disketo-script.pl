@@ -3,11 +3,11 @@
 use strict;
 BEGIN { unshift @INC, "."; }
 
-my $VERSION = 2.0.0;
+my $VERSION = 2.1.1;
 
 use Disketo_Utils;
-use Disketo_Evaluator;
 use Disketo_Instruction_Set;
+use Disketo_Scripter;
 
 #######################################
 my $dry_run = 0;
@@ -46,7 +46,11 @@ Disketo_Utils::usage(\@ARGV, "[--dry|--dry-run] <SCRIPT> <SCRIPT PARAMS...>\n"
 my $script = shift @ARGV;
 my @args = @ARGV;
 
-Disketo_Evaluator::run($dry_run, $script, \@args);
+if ($dry_run) {
+	Disketo_Scripter::print_script($script, \@args);
+} else {
+	Disketo_Scripter::run_script($script, \@args);
+}
 
 #######################################
 
