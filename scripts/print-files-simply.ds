@@ -1,5 +1,2 @@
 # Prints files simply
-print_files sub() {
-	my $file = shift @_;
-	return $file;
-}
+print_files_simply

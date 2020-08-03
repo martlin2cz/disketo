@@ -1,3 +1,3 @@
 # Lists directories matching given pattern
-filter_directories_by_pattern $$
-print_directories_simply
+filter_dirs_matching_pattern $$
+print_dirs_simply

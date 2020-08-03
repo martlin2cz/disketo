@@ -3,10 +3,11 @@
 use strict;
 BEGIN { unshift @INC, "."; }
 
-my $VERSION = 1.3;
+my $VERSION=2.2.0;
 
 use Disketo_Utils;
-use Disketo_Evaluator;
+use Disketo_Instruction_Set;
+use Disketo_Scripter;
 
 #######################################
 my $dry_run = 0;
@@ -14,7 +15,7 @@ my $dry_run = 0;
 # check help
 if ((scalar @ARGV > 0) and ((@ARGV[0] eq "-h") or (@ARGV[0] eq "--help"))) {
 	print(STDERR "Disketo script executer\n");
-	Disketo_Utils::usage([], "[--dry|--dry-run] <SCRIPT> <SCRIPT PARAMS...>\n" 
+	Disketo_Utils::usage([], "[--dry|--dry-run] <SCRIPT> <SCRIPT ARGS...>\n" 
 		. "Use --list or --list-functions to list supported functions\n"
 		. "Use --help or -h to print this help\n"
 		. "Use --version or -v to print the version\n");
@@ -38,19 +39,23 @@ if ((scalar @ARGV > 0) and ((@ARGV[0] eq "--dry") or (@ARGV[0] eq "--dry-run")))
 }
 
 # check no args
-Disketo_Utils::usage(\@ARGV, "[--dry|--dry-run] <SCRIPT> <SCRIPT PARAMS...>\n" 
+Disketo_Utils::usage(\@ARGV, "[--dry|--dry-run] <SCRIPT> <SCRIPT ARGS...>\n" 
 	. "Run with --help for more info.\n");
 
 # and run the script
 my $script = shift @ARGV;
 my @args = @ARGV;
 
-Disketo_Evaluator::run($dry_run, $script, \@args);
+if ($dry_run) {
+	Disketo_Scripter::print_script($script, \@args);
+} else {
+	Disketo_Scripter::run_script($script, \@args);
+}
 
 #######################################
 
 sub list_functions() {
-	my $table_ref = Disketo_Evaluator::functions_table();
+	my $table_ref = Disketo_Instruction_Set::commands();
 	my %table = %{ $table_ref };
 
 	for my $fnname (sort keys %table) {

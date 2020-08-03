@@ -1,12 +1,15 @@
 # Finds duplicate directories (directory names) (with their duplicates)
 # optionally specify filter (if not, use ".*")
-filter_directories_by_pattern $$
-filter_directories_of_same_name
-print_directories sub {
-	my ($dir) = @_;
+filter_dirs_matching_pattern $$
+filter_duplicate_dirs_by_name
+print_dirs_custom sub {
+	use File::Basename;
 
-	my $pairs_ref = $previous_ref->[1];
-	my $paired_ref = $pairs_ref->{$dir};
+	my ($dir, $context) = @_;
+	## print(Dumper(@_));
+	my $pairs_ref = $context->{"dir names"};
+	my $name = basename($dir);
+	my $paired_ref = $pairs_ref->{$name};
 
 	return $dir . " == " . join(" ", @{ $paired_ref });
 }

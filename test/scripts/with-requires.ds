@@ -1,0 +1,4 @@
+# Some script testing the 'requires' mechanism
+filter_duplicate_dirs_by_name
+filter_duplicate_files_by_name
+filter_duplicate_dirs_with_common_files_by_name

@@ -1,0 +1,13 @@
+foo/
+foo/bar/
+foo/lorem.txt
+foo/ipsum.txt
+foo/baz/
+foo/baz/dolor.png
+foo/baz/sit.png
+foo/baz/amet.png
+aux/
+aux/qux/lorem.txt
+aux/quux/lorem.txt
+aux/quuux/lorem.txt
+
