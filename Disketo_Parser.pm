@@ -4,12 +4,16 @@ use strict;
 BEGIN { unshift @INC, "."; }
 
 package Disketo_Parser;
-my $VERSION=2.1.1;
+my $VERSION=2.2.0;
 
 use Data::Dumper;
 use Disketo_Utils;
+########################################################################
 
-#######################################
+# Implements the parsing procedure. The parsing procedure converts the 
+# disketo script file to the disketo script.
+
+########################################################################
 
 # Parses given file. Returns the reference to the script.
 sub parse($) {
@@ -20,6 +24,8 @@ sub parse($) {
 
 	return $script_ref;
 }
+
+########################################################################
 
 # Loads contents of given file into string
 sub load_file($) {
@@ -36,7 +42,7 @@ sub load_file($) {
 	return $result;
 }
 
-#######################################
+########################################################################
 
 # Parses given content into "statements"
 sub parse_content($) {
@@ -108,4 +114,4 @@ sub collapse_subs(@) {
 	return @result;
 }
 
-#######################################
+########################################################################

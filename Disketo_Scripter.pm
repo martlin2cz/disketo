@@ -4,7 +4,7 @@ use strict;
 BEGIN { unshift @INC, "."; }
 
 package Disketo_Scripter;
-my $VERSION=2.1.1;
+my $VERSION=2.2.0;
 
 use Data::Dumper;
 use Disketo_Utils;
@@ -12,6 +12,11 @@ use Disketo_Parser;
 use Disketo_Analyser;
 use Disketo_Instruction_Set;
 use Disketo_Interpreter;
+
+########################################################################
+
+# Just the fascade wrapping all the parser, analyser and interpreter 
+# stuff.
 
 ########################################################################
 # Runs the script.

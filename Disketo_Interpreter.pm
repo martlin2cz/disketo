@@ -4,17 +4,20 @@ use strict;
 BEGIN { unshift @INC, "."; }
 
 package Disketo_Interpreter;
-my $VERSION=2.1.1;
+my $VERSION=2.2.0;
 
 use Data::Dumper;
 use Disketo_Utils;
 use Disketo_Extras;
 use Disketo_Instruction_Set;
 
-#######################################
-#######################################
+########################################################################
 
-#######################################
+# Does the actual job with the disketo program. Prints usage, prints 
+# the instructions, or runs the program itself.
+# This includes the processing of the actual script arguments.
+
+########################################################################
 
 # Creates (as string) usage of the app with script specified. 
 # If program_args specified, checks its count as well.
@@ -44,29 +47,6 @@ sub create_usage($$$) {
 	return $usage;
 }
 
-# Goes throught given program and counts number of "$$" occurences
-# Deprecated
-sub count_params($) {
-	die("Deprecated!");
-	
-	my ($program) = @_;
-
-	my $count = 0;
-	Disketo_Analyser::walk_program($program, sub {
-		my ($instruction, $command_name, $command, $args, $resolved_args) = @_;
-
-		walk_params($instruction, sub($$$) {
-			my ($param, $arg, $resolved_arg) = @_;
-			
-			if ($arg eq "\$\$") {
-				$count++;
-			}
-		});
-	});
-
-	return $count;
-}
-
 # Goes throught given program and collects the "$$" arguments' params
 sub collect_wildcarded_args($) {
 	my ($program) = @_;
@@ -88,8 +68,7 @@ sub collect_wildcarded_args($) {
 	return \@params;
 }
 
-
-#######################################
+########################################################################
 
 # Prints the program (with arguments)
 sub print_program($$) {
@@ -120,7 +99,8 @@ sub print_program($$) {
 	});
 }
 
-#######################################
+########################################################################
+
 # Prepares the program to execute (or print)
 sub prepare($$) {
 	my ($program, $program_args) = @_;
@@ -184,8 +164,8 @@ sub resolve_args($$) {
 	
 	return $program;
 }
-#######################################
 
+########################################################################
 
 # Runs the given program. What else?
 sub run_program($$) {
@@ -209,6 +189,7 @@ sub run_program($$) {
 	});
 }
 
+# Prepares the arguments to the command method.
 sub prepare_method_arguments($) {
 	my ($instruction_name, $context, $args_ref, $use_args_ref, $dirs_to_list) = @_;
 	my @use_args = @{ $use_args_ref };
@@ -241,7 +222,7 @@ sub prepare_method_arguments($) {
 }
 
 
-#######################################
+########################################################################
 
 # Based on "$$" argvalues splits given program args to the "$$"-ones and to the rest
 sub extract_dirs_to_list($$) {

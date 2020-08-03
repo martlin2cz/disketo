@@ -4,8 +4,8 @@ context_stats;context_stats;;;;Prints the informations about the current context
 # compute metas;--;--;--;--;--;
 count_files;count_files;;files count;;Computes the counts of the files in each dir;
 #TODO: count_dir_size;count_dir_size;;dirs size;;Computes the sizes of the dirs;
-compute_custom_for_each_dir;compute_custom_for_each_dir;;;meta_name, computer;Computes given computer on each dir to produce the given meta;
-compute_custom_for_each_file;compute_custom_for_each_file;;;meta_name, computer;Computes given computer on each file to produce the given meta;
+compute_custom_for_each_dir;compute_custom_for_each_dir;;(user specified);meta_name, computer;Computes given computer on each dir to produce the given meta;
+compute_custom_for_each_file;compute_custom_for_each_file;;(user specified);meta_name, computer;Computes given computer on each file to produce the given meta;
 #TODO: load_stats;load_stats;;stats;;Loads the filesystem files statistics;
 # compute matches;--;--;--;--;--;
 compute_files_matching_pattern;compute_files_matching_pattern;;files matching;pattern;Computes meta with files matching given pattern;
@@ -23,13 +23,13 @@ group_dirs_by_custom;group_dirs_by_custom;;;groupper, meta_name;Groups dirs by c
 # filter simply;--;--;--;--;--;
 filter_dirs_matching_pattern;filter_dirs_matching_pattern;;;pattern;Filters dirs matching given pattern;
 filter_dirs_matching_custom;filter_dirs_matching_custom;;;predicate;Filters dirs matching given predicate;
-filter_dirs_by_meta;filter_dirs_by_meta;;;meta_name;Filters dirs matching given meta;
+filter_dirs_by_meta;filter_dirs_by_meta;(user specified);;meta_name;Filters dirs matching given meta;
 filter_files_matching_pattern;filter_files_matching_pattern;;;pattern;Filters files matching given pattern;
 filter_files_matching_custom;filter_files_matching_custom;;;predicate;Filters files matching given predicate;
-filter_files_by_meta;filter_files_by_meta;;;meta_name;Filters files matching given meta;
+filter_files_by_meta;filter_files_by_meta;(user specified);;meta_name;Filters files matching given meta;
 filter_dirs_with_files_matching_pattern;filter_dirs_with_files_matching_pattern;;;files_pattern,min_count;Filters dirs with having at least given number of files matching given pattern;
 filter_dirs_with_files_matching_custom;filter_dirs_with_files_matching_custom;;;files_predicate,min_count;Filters dirs with having at least given number of files matching given predicate;
-filter_dirs_with_files_matching_meta;filter_dirs_with_files_matching_meta;;;files_meta_name,min_count;Filters dirs with having at least given number of files matching given meta;
+filter_dirs_with_files_matching_meta;filter_dirs_with_files_matching_meta;(user specified);;files_meta_name,min_count;Filters dirs with having at least given number of files matching given meta;
 # filter duplicities by groupper;--;--;--;--;--;
 filter_duplicate_dirs_by_name;filter_duplicate_dirs_by_name;dirs names;;;Filters duplicate dirs by name;
 filter_duplicate_files_by_name;filter_duplicate_files_by_name;files names;;;Filters duplicate files by name;

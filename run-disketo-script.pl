@@ -3,7 +3,7 @@
 use strict;
 BEGIN { unshift @INC, "."; }
 
-my $VERSION = 2.1.1;
+my $VERSION=2.2.0;
 
 use Disketo_Utils;
 use Disketo_Instruction_Set;

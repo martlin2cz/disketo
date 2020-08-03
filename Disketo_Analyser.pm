@@ -4,12 +4,19 @@ use strict;
 BEGIN { unshift @INC, "."; }
 
 package Disketo_Analyser;
-my $VERSION=2.1.1;
+my $VERSION=2.2.0;
 
 use Data::Dumper;
 use Disketo_Utils;
 use Disketo_Extras;
 use Disketo_Instruction_Set;
+
+########################################################################
+
+# Implements the syntactic and semantic analysis of the disketo script.
+# Results in the disketo program. 
+# Does all the static analysis, without knowledge of the particular 
+# script arguments which is the script beeing called with.
 
 ########################################################################
 
@@ -23,7 +30,6 @@ sub analyse($) {
 	
 	return $program;
 }
-
 
 ########################################################################
 
@@ -51,6 +57,9 @@ sub compute_instruction($$) {
 	my %instruction = ( "command" => $command, "arguments" => $arguments );
 	return \%instruction;
 }
+
+########################################################################
+
 
 # Extracts the command name and arguments from the given statement
 sub extract($) {
@@ -103,7 +112,7 @@ sub fill_requireds($$) {
 		
 		my $missings = find_missing_required_metas($command, \@produced);
 		for my $missing_meta_name (@{ $missings }) {
-			my $new_command = find_first_command_producing_meta($missing_meta_name);
+			my $new_command = find_first_command_producing_meta($missing_meta_name, $commands);
 			if (!$new_command) {
 				die("Meta '" . $missing_meta_name . "' is not produced by any command\n");
 			}
@@ -147,10 +156,11 @@ sub find_missing_required_metas($$) {
 	return \@missings;
 }
 
+# Returns first command producing the given meta.
 sub find_first_command_producing_meta($$) {
-	my ($required_meta) = @_;
+	my ($required_meta, $commands) = @_;
        
-	my %commands = %{ Disketo_Instruction_Set::commands() };
+	my %commands = %{ $commands };
                
 	for my $another_command (values %commands) {
 		if ($another_command->{"produces"} eq $required_meta) {
