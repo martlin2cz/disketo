@@ -36,3 +36,13 @@ sub print_script($$) {
 	Disketo_Interpreter::print_program($program, $program_arguments);
 }
 
+# Prints the script usage
+sub print_usage($$) {
+	my ($script_file, $program_arguments) = @_;
+	
+	my $script = Disketo_Parser::parse($script_file);
+	my $program = Disketo_Analyser::analyse($script);
+	
+	my $usage = Disketo_Interpreter::compute_usage($program, $program_arguments);
+	Disketo_Utils::print_usage([], $usage);
+}

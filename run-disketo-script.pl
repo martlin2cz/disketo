@@ -15,7 +15,7 @@ my $dry_run = 0;
 # check help
 if ((scalar @ARGV > 0) and ((@ARGV[0] eq "-h") or (@ARGV[0] eq "--help"))) {
 	print(STDERR "Disketo script executer\n");
-	Disketo_Utils::usage([], "[--dry|--dry-run] <SCRIPT> <SCRIPT PARAMS...>\n" 
+	Disketo_Utils::usage([], "[--dry|--dry-run] <SCRIPT> <SCRIPT ARGS...>\n" 
 		. "Use --list or --list-functions to list supported functions\n"
 		. "Use --help or -h to print this help\n"
 		. "Use --version or -v to print the version\n");
@@ -39,7 +39,7 @@ if ((scalar @ARGV > 0) and ((@ARGV[0] eq "--dry") or (@ARGV[0] eq "--dry-run")))
 }
 
 # check no args
-Disketo_Utils::usage(\@ARGV, "[--dry|--dry-run] <SCRIPT> <SCRIPT PARAMS...>\n" 
+Disketo_Utils::usage(\@ARGV, "[--dry|--dry-run] <SCRIPT> <SCRIPT ARGS...>\n" 
 	. "Run with --help for more info.\n");
 
 # and run the script

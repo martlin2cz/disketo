@@ -16,49 +16,76 @@ use Disketo_Instruction_Set;
 
 #######################################
 
-# Prints usage of the app with script specified
-sub print_usage($$$) {
+# Creates (as string) usage of the app with script specified. 
+# If program_args specified, checks its count as well.
+sub create_usage($$$) {
 	my ($script_name, $program, $program_args) = @_;
-	my @program_args = @{ $program_args };
+	my @program_args = @{ $program_args } if $program_args;
 	
 	my $usage = "$script_name ";
-	my $count = 0;
-	Disketo_Analyser::walk_program($program, sub {
-		my ($instruction, $command_name, $command, $args, $resolved_args) = @_;
-		my @params = @{ $command->{"params"} };
-		
-		for (my $i = 0; $i < scalar @params; $i++) {
-			my $param = $params[$i];
-			my $arg = $args->[$i];
-
-			if ($arg eq "\$\$") {
-				$usage = $usage . "<$param of $command_name> ";
-				$count++;
-			}
-		}
-	});
-	$usage = $usage . "<DIRECTORY/FILE ...>";
 	
-	print STDERR "Expected at least " . ($count + 1) . " arguments, given " . (scalar @program_args) . "\n";
-	Disketo_Utils::usage([], $usage);
+	my $wilds = collect_wildcarded_args($program);
+	for my $wild_obj (@{ $wilds }) {
+		my $command_name = $wild_obj->{"command"}->{"name"};
+		my $param = $wild_obj->{"param"};
+		
+		$usage = $usage . "<$param of $command_name> ";
+	}
+	$usage = $usage . "<DIRECTORY/FILE ...>";
+	$usage = $usage . "\n";
+	if ($program_args) {
+		# + 1 at least 1 root file/dir
+		my $expected_count = (scalar @{ $wilds }) + 1; 
+		my $given_count = scalar @program_args;
+		if ($given_count < $expected_count) {
+			$usage = $usage . "Script expects at least " . $expected_count . " arguments, given " . $given_count . "\n";
+		}
+	}
+	return $usage;
 }
 
 # Goes throught given program and counts number of "$$" occurences
+# Deprecated
 sub count_params($) {
+	die("Deprecated!");
+	
 	my ($program) = @_;
 
 	my $count = 0;
 	Disketo_Analyser::walk_program($program, sub {
 		my ($instruction, $command_name, $command, $args, $resolved_args) = @_;
 
-		for my $arg (@{ $args }) {
+		walk_params($instruction, sub($$$) {
+			my ($param, $arg, $resolved_arg) = @_;
+			
 			if ($arg eq "\$\$") {
 				$count++;
 			}
-		}
+		});
 	});
 
 	return $count;
+}
+
+# Goes throught given program and collects the "$$" arguments' params
+sub collect_wildcarded_args($) {
+	my ($program) = @_;
+
+	my @params = ();
+	Disketo_Analyser::walk_program($program, sub {
+		my ($instruction, $command_name, $command, $args, $resolved_args) = @_;
+
+		walk_params($instruction, sub($$$) {
+			my ($param, $arg, $resolved_arg) = @_;
+			
+			if ($arg eq "\$\$") {
+				my $arg_obj = {"command" => $command, "param" => $param };
+				push @params, $arg_obj;
+			}
+		});
+	});
+
+	return \@params;
 }
 
 
@@ -79,13 +106,8 @@ sub print_program($$) {
 		if ($command_name eq "load") {
 			print STDERR "\t with directories " . join(", ", @{ $dirs_to_list }) . "\n";
 		} else {
-			my $index;
-
-			my @params = @{ $command->{"params"} };
-			my @args = @{ $args };
-			for ($index = 0; $index < scalar @params; $index++) {
-				my $param = $params[$index];
-				my $arg = $args[$index];
+			walk_params($instruction, sub($$$) {
+				my ($param, $arg, $resolved_arg) = @_;
 
 				if ($arg eq "\$\$") {
 					my $value = shift @args_to_use;
@@ -93,7 +115,7 @@ sub print_program($$) {
 				} else {
 					print STDERR "\t$param := $arg\n";
 				}
-			}
+			});
 		}
 	});
 }
@@ -140,8 +162,8 @@ sub resolve_args($$) {
 		if ($command_name eq "load") {
 			$instruction->{"resolved_args"} = [ $dirs_to_list ];
 		} else {
-			my @args = @{ $instruction->{"arguments"} };
-			for my $arg (@args) {
+			walk_params($instruction, sub($$$) {
+				my ($param, $arg, $resolved_arg) = @_;
 				my $value = undef;
 				
 				if ($arg eq "\$\$") {
@@ -149,14 +171,14 @@ sub resolve_args($$) {
 				} elsif ($arg =~ "sub ?\{") {
 					$value = eval($arg);
 					if ($@) {
-						print STDERR "Syntax error $@ in $_\n";
+						print STDERR "Syntax error $@ in $arg\n";
 					}
 				} else {
 					$value = $arg;
 				}
 				
 				push @{ $instruction->{"resolved_args"} }, $value;
-			}
+			});
 		}
 	});
 	
@@ -231,16 +253,36 @@ sub extract_dirs_to_list($$) {
 	Disketo_Analyser::walk_program($program, sub {
 		my ($instruction, $command_name, $command, $args, $resolved_args) = @_;
 		
-			for my $arg (@{ $args }) {
+			walk_params($instruction, sub($$$) {
+				my ($param, $arg, $resolved_arg) = @_;
+				
 				if ($arg eq "\$\$") {
 					my $value = shift @program_args;
 					push @use_args, $value;
 				}
-			}
+			});
 	});
 	
 	return (\@use_args, \@program_args);
 }
 
+# Iterates over the params and args of the given instruction
+sub walk_params($$) {
+	my ($instruction, $runner) = @_;
+	my $command = $instruction->{"command"};
 
+	my @params = @{ $command->{"params"} };
+	my @args = @{ $instruction->{"arguments"} };
+	my @resolved_args = @{ $instruction->{"resolved_arguments"} } 
+							if exists $instruction->{"resolved_arguments"};
+	
+	my $index;
+	for ($index = 0; $index < scalar @params; $index++) {
+		my $param = $params[$index];
+		my $arg = $args[$index];
+		my $resolved_arg = $resolved_args[$index];
+	
+		$runner->($param, $arg, $resolved_arg);
+	}
+}
 
