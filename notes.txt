@@ -87,3 +87,46 @@ disketo program (all the semantic information and arguments resolved/evaluated)
 (interpret)
 	V
 result
+
+disketo script v3 file syntax: 
+SCRIPT := STATEMENTS
+
+STATEMENTS := STATEMENT newline STATEMENTS | empty
+
+STATEMENT := command_name COMMAND_ARGUMENTS
+
+COMMAND_ARGUMENTS := ARGUMENTS
+
+ARGUMENTS := ARGUMENT ARGUMENTS | empty
+
+ARGUMENT := argument_name ARGUMENT_VALUE
+
+ARGUMENT_VALUE := VALUE | ARGUMENT
+
+VALUE := "text" | number | sub 
+
+sample statement:
+	test
+		foo 42
+		bar
+		baz
+			lorem "ok"
+			ipsum "nok"
+		aux sub { ... }
+
+
+particularly:
+	filter
+		directories
+		having
+			at-least-than-files 10
+			that 
+				has-extension "txt"
+			
+or:
+	print
+		files
+		simply
+
+
+

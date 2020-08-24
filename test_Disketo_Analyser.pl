@@ -19,40 +19,30 @@ Disketo_Utils::logit("(commands)");
 my $commands = Disketo_Instruction_Set::commands();
 
 #######################################
-Disketo_Utils::logit("extract");
+Disketo_Utils::logit("tree_usage");
 
-my $statement4a = ["filter_dirs_matching_pattern", "42", "karel"];
-my ($command_name4a, $arguments4a) = Disketo_Analyser::extract($statement4a);
-print(Dumper($command_name4a, $arguments4a));
+print(Disketo_Analyser::tree_usage());
 
-my $statement4b = ["foo_bar_baz", "lorem", "ipsum"];
-my ($command_name4b, $arguments4b) = Disketo_Analyser::extract($statement4b);
-print(Dumper($command_name4b, $arguments4b));
-#######################################
-Disketo_Utils::logit("validate_command_name");
+#~ #######################################
+#~ Disketo_Utils::logit("linear_usage");
 
-my $command_name5a = "filter_dirs_matching_pattern";
-my ($command5a) = Disketo_Analyser::validate_command_name($command_name5a, $commands);
-print Dumper($command5a);
-
-my $command_name5b = "foo_bar_baz";
-### Disketo_Analyser::validate_command_name($command_name5b, $commands);
-print("skipped because would die\n");
+#~ print(join("\n", @{ Disketo_Analyser::linear_usage() }));
 
 #######################################
-Disketo_Utils::logit("validate_command_params");
+Disketo_Utils::logit("compute_instruction");
 
-my $arguments6a = ["foo+"];
-my ($params6) = Disketo_Analyser::validate_command_params($arguments6a, $command5a);
-print Dumper($params6);
+my $statement6a = ["compute", "for-each-dir", "count-files"];
+my $tree6a = Disketo_Analyser::compute_instruction($statement6a, $commands);
+print(Dumper($tree6a));
 
-my $arguments6b = ["foo", "bar"];
-### Disketo_Analyser::validate_command_params($arguments6b, $command5a);
-print("skipped because would die\n");
+my $statement6b = ["compute", "for-each-file", "custom", "sub {...}", "\"the new meta\""];
+my $tree6b = Disketo_Analyser::compute_instruction($statement6b, $commands);
+print(Dumper($tree6b));
 
-my $arguments6c = [];
-### Disketo_Analyser::validate_command_params($arguments6c, $command5a);
-print("skipped because would die\n");
+#######################################
+Disketo_Utils::logit("print_syntax_tree");
+Disketo_Analyser::print_syntax_tree($tree6a);
+Disketo_Analyser::print_syntax_tree($tree6b);
 
 #######################################
 Disketo_Utils::logit("compute_instructions");

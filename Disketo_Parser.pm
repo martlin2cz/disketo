@@ -4,7 +4,7 @@ use strict;
 BEGIN { unshift @INC, "."; }
 
 package Disketo_Parser;
-my $VERSION=2.2.0;
+my $VERSION=3.0.0;
 
 use Data::Dumper;
 use Disketo_Utils;
@@ -80,8 +80,8 @@ sub tokenize($) {
 		(\{ (?: [^{}]* | (?0) )* \} ) | 
 		(?# wrapped in double-quotes)
 		(\" [^\"]* \") | 
-		(?# regular text, including the numbers)
-		( [\w]+ ) | 
+		(?# regular text, including the numbers and dash)
+		( [\w\-]+ ) | 
 		(?# the $$ marker)
 		( \$\$ ) | 
 		(?# pass newlines too)

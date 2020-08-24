@@ -18,11 +18,12 @@ print ">>> $content1 <<<\n";
 #######################################
 Disketo_Utils::logit("parse_content");
 
-my $content2a = "foo bar baz karel 42\n";
+my $content2a = "foo " . "lorem \"karel\" " . "ipsum 42\n";
 my $parsed2a_ref = Disketo_Parser::parse_content($content2a);
 print Dumper($parsed2a_ref);
 
-my $content2b = "foo_bar_baz \"99 luftbalons\" \t \"333\"\nlorem\t42\tsub { \n\t\"42\";\n } \$\$ ## test\n";
+my $content2b = "foo-bar-baz " . "sample \"99 luftbalons\" \t " . "another-sample \t \"333\"\n"
+				. "yet-another-sample\t42 "."subbed-sample\tsub { \n\t\"42\";\n } " . "wild-sample \$\$ " . "## test\n";
 my $parsed2b_ref = Disketo_Parser::parse_content($content2b);
 print Dumper($parsed2b_ref);
 
@@ -38,7 +39,7 @@ print Dumper(\@tokens3b_ref);
 #######################################
 Disketo_Utils::logit("collapse_subs");
 
-my @filtered8a = ("foo", "sub", "{ 42; }", "bar", "sub{return 1;}", "baz");
+my @filtered8a = ("whatever", "foo", "sub", "{ 42; }", "bar", "sub{return 1;}", "baz");
 my @collapsed8a = Disketo_Parser::collapse_subs(@filtered8a);
 print Dumper(\@collapsed8a);
 
