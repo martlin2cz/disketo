@@ -38,8 +38,9 @@ sub compute_instructions($$) {
 	my ($script, $commands) = @_;
 	my @instructions = ();
 
-	for my $statement (@{ $script }) {
-		my $instruction = compute_instruction($statement, $commands);
+	while (my ($i, $statement) = each @$script) {
+		my $statement_number = $i + 1;
+		my $instruction = compute_instruction($statement, $statement_number, $commands);
 		push @instructions, $instruction;
 	}
 
@@ -47,61 +48,123 @@ sub compute_instructions($$) {
 }
 
 # Computes the instruction for the given statement.
-sub compute_instruction($$) {
-	my ($statement, $commands) = @_;
+sub compute_instruction($$$) {
+	my ($statement, $statement_number, $commands) = @_;
 	
-	my $tree = build_syntax_tree($statement, $commands);
+	my $tree = build_syntax_tree($statement, $statement_number, $commands);
 	
 	return $tree;
 }
 
 ########################################################################
 
-sub build_syntax_tree($$) {
-	my ($statement, $commands) = @_;
+sub build_syntax_tree($$$) {
+	my ($statement, $statement_number, $commands) = @_;
 	
-	my $stack = [];
-	return build_syntax_subree($statement, $stack, $commands);
+	my $statement_spec = "statement $statement_number";
+	my $stack = [$statement_spec];
+	my $allowed_commands = $commands;
+	return process_next_token($statement, $stack, $commands);
 	#TODO if stack not empty ...
 }
 
-sub build_syntax_subree($$$) {
-	my ($statement, $stack, $context_commands) = @_;
-#print(Dumper($statement));
-	my $operation_name = shift @{ $statement };
-	my $operation = $context_commands->{$operation_name};
-	if (!$operation) {
-#print(Dumper($context_commands));
-		die("Operation " . $operation_name . " not allowed in this context. "
-		. "Allowed: " . ( join(", ", (keys %{ $context_commands }))));
-	}
+sub process_next_token($$$) {
+	my ($statement, $stack, $allowed_commands) = @_;
 	
-	my %params = %{ $operation->{"params"} };
-	my @children = ();
-	for my $param (keys %params) {
-		my $param_context = $params{$param};
+	my $next_token = shift @{ $statement };
 
-		if ($param_context) {
-			my $param_subtree = build_syntax_subree($statement, $stack, $param_context);
-			push @children, $param_subtree;
-		} else {
-			my $param_node = build_syntax_leaf_node($statement, $stack);
-			push @children, $param_node;
-		}
-	}
+	my $expected_operation = ref($allowed_commands) eq "HASH";
+	my $is_operation = is_operation($next_token);
 	
-	return {"operation" => $operation, "arguments" => \@children };
+	if ($expected_operation and $is_operation) {
+		# operation where expected, fine
+		my $operation_name = $next_token;
+		return process_as_operation($operation_name, $statement, $stack, $allowed_commands);
+		
+	} elsif (not $expected_operation and $is_operation) {
+		# operation where just atomic value expected
+		my $allowed_value = $allowed_commands;
+		die("Expected value " . $allowed_value . ", found: '" . $next_token . "' "
+			. "in: " . ( join(" -> ", @$stack)) . ". ");
+	
+	} elsif ($expected_operation and not $is_operation) {
+		# value where operation expected
+		my $value = $next_token;
+		die("Expected operation "
+			. "(some of: " . ( join(", ", (keys %{ $allowed_commands }))). "), "
+			. "found: '" . $value . "' "
+			. "in: " . ( join(" -> ", @$stack)) . ". ");
+		
+	} elsif (not $expected_operation and not $is_operation) {
+		# value where value expected
+		my $value = $next_token;
+		my $allowed_value = $allowed_commands;
+		return process_as_value($value, $allowed_value);
+	}
 }
 
-sub build_syntax_leaf_node($$) {
-	my ($statement, $stack) = @_;
-	
-	my $operation = undef; #TODO ?!
+sub process_as_operation($$$$) {
+	my ($operation_name, $statement, $stack, $allowed_commands) = @_;
 
-	my $value = shift @{ $statement };
-	my @children = [ $value ];
+	my $operation = $allowed_commands->{$operation_name};
+	if (!$operation) {
+		die("Operation '" . $operation_name . "' not allowed "
+			. "in: " . ( join(" -> ", @$stack)) . ". "
+			. "Allowed: " . ( join(", ", (keys %{ $allowed_commands }))));
+	}
+
+	my @params = @{ $operation->{"params"} };
+	my @children = ();
+	for my $param (@params) {
+		my $allowed_sub_commands = $operation->{"valid-args"}->{$param};
+		push @$stack, $operation_name;
+		
+	#	print("SETING $param to [" . join("; ", @$statement) . "]\n");
+		
+		my $child = process_next_token($statement, $stack, $allowed_sub_commands);
+		push @children, $child;
+		
+		#~ my $param_context = $params{$param};
+
+		#~ if ($param_context) {
+			#~ 
+			#~ my $param_subtree = build_syntax_subree($statement, $stack, $param_context);
+			#~ push @children, $param_subtree;
+		#~ } else {
+			#~ my $param_node = build_syntax_leaf_node($statement, $stack);
+			#~ push @children, $param_node;
+		#~ }
+	}
 	
-	return {"operation" => $operation, "arguments" => \@children };
+	#TODO build inner tree node method:
+	return create_operation_node($operation, \@children);
+}
+
+sub process_as_value($$) {
+	my ($value, $value_spec) = @_;
+	
+	return create_value_node($value, $value_spec);
+}
+
+sub is_operation($) {
+	my ($name) = @_;
+	
+	return ($name =~ /^([a-z][a-z0-9\-]+)$/);
+}
+
+sub create_value_node($$) {
+	my ($value, $value_spec) = @_;
+	
+	return {"name" => $value_spec, "value" => $value };
+}
+
+sub create_operation_node($$) {
+	my ($operation, $children) = @_;
+
+	my $name = $operation->{"name"};
+	
+	return {"name" => $name, "operation" => $operation, "arguments" => $children };
+	#return {"name" => $name, "arguments" => $children };
 }
 
 
@@ -143,6 +206,13 @@ sub build_syntax_leaf_node($$) {
 	#~ return \@params;
 #~ }
 
+sub print_syntax_forrest($) {
+	my ($trees) = @_;
+	for my $tree (@$trees) {
+		print_syntax_tree($tree);
+	}
+}
+
 sub print_syntax_tree($) {
 	my ($tree) = @_;
 	print_syntax_subree($tree, 0);
@@ -151,44 +221,36 @@ sub print_syntax_tree($) {
 sub print_syntax_subree($$) {
 	my ($sub_tree, $padding) = @_;
 	
-	my $operation = $sub_tree->{"operation"};
-	my @arguments = @{ $sub_tree->{"arguments"} };
-	
-	my $name;
-	my @parameters;
-	if ($operation) {
-		$name = $operation->{"name"};
-		@parameters = keys %{ $operation->{"params"} };
-	}
-	
+	my $name = $sub_tree->{"name"};
+
 	print(" " x $padding);
-	print($name);
+	print($name . "");
 	print("\n");
 	
-	my @arguments = @{ $sub_tree->{"arguments"} };
+	if ($sub_tree->{"operation"}) {
+		my $operation = $sub_tree->{"operation"};
+		my @parameters = @{ $operation->{"params"} };
+		my @arguments = @{ $sub_tree->{"arguments"} };
 	
-	#print(Dumper(\@arguments));
-	for my $i (0..(scalar @arguments - 1)) {
-		my $param = $parameters[$i] or "PARAM";
-		my $arg = $arguments[$i] or "ARG";
-		
-		print(" " x ($padding + 1));
-		print($param . ":");
-		print("\n");
-		
-		if (ref($arg) eq "HASH") {
-			print_syntax_subree($arg, $padding + 2);
+##	print(">>>" . Dumper(\@arguments) . "<<<");
+		for my $i (0..(scalar @arguments - 1)) {
+			my $param = $parameters[$i] or "PARAM";
+			my $arg = $arguments[$i] or "ARG";
 			
-		} elsif (ref($arg) eq "ARRAY") {
-			for my $argi (@{ $arg}) {
-				print(" " x ($padding + 1));
-				print($argi . "\n");
-			}
-			
-		} else {
 			print(" " x ($padding + 1));
-			print($arg . "\n");
+			print("[" . $param . "]");
+			print("\n");
+		
+			print_syntax_subree($arg, $padding + 4);
 		}
+	}
+	if ($sub_tree->{"value"}) {
+		my $value = $sub_tree->{"value"};
+		
+		print(" " x ($padding + 2));
+		print($value);
+		print("\n");
+	
 	}
 }
 
@@ -298,16 +360,17 @@ sub tree_usage() {
 
 sub tree_subtree_usage($$) {
 	my ($command, $padding) = @_;
-	my %params = %{ $command->{"params"} };
+	my @params = @{ $command->{"params"} };
+	my %args = %{ $command->{"valid-args"} };
 	my $padded = ("  " x (3 * $padding));
 	
 	my $name = $command->{"name"};
 	my $doc = $command->{"doc"};
-	my $params_list = join(" ", keys %params);
+	my $params_list = join(" ", @params);
 	
 	my $params_spec = "";
-	for my $param_name (keys %params) {
-		my $param_value = $params{$param_name};
+	for my $param_name (@params) {
+		my $param_value = $args{$param_name};
 
 		$params_spec .= "$padded    $param_name:";
 		if (ref($param_value) eq "HASH") {
@@ -319,7 +382,7 @@ sub tree_subtree_usage($$) {
 		} elsif ($param_value eq undef) {
 			$params_spec .= " (value)\n";
 		} else {
-			$params_spec .= " ($param_value)\n";
+			$params_spec .= " $param_value\n";
 		}
 	}
 	

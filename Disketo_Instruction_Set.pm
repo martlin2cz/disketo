@@ -18,78 +18,43 @@ sub TODO() {
 	die("TODO");
 }
 
-sub op($$$$$$) {
-	my ($name, $method, $requires, $produces, $doc, $params) = @_;
+sub op($$$$$$$) {
+	my ($name, $method, $requires, $produces, $doc, $params, $valid_arguments) = @_;
 	
 	return {"name" => $name, 
 			"method" => $method,
 			"requires" => $requires,
 			"produces" => $produces,
 			"doc" => $doc,
-			"params" => $params };
+			"params" => $params,
+			"valid-args" => $valid_arguments };
 }
 
 
 sub commands() {
-	#~ # -- computes instructions -----------------------------------------
-	
-	#~ my $load_all = TODO();
-	
-	#~ # -- computes instructions -----------------------------------------
-	
-	#~ my $compute_custom = subop(\&Disketo_Instructions::compute_custom_meta, ["meta-name", "by"], [], "(user specified)", "Computes the new meta.");
-	#~ my $load_files_stats = TODO();
 
-	#~ # -- filter instructions -----------------------------------------
-	
-	#~ my $file_with_extension = TODO();
-	#~ my $matching_patern = TODO();
-	#~ my $matching_custom = TODO();
-	#~ my $meta_spec = TODO();
-	
-	#~ my $at_least_than = TODO();
-	#~ my $no_more_than = TODO();
-	
-	#~ # -- print instructions -----------------------------------------
-	
-	#~ my $print_simply = TODO();
-	#~ my $print_custom = TODO();
-	
-	#~ # -- does instructions -----------------------------------------
-	
-	#~ my $do_custom = TODO();
-	
-	#~ # -- loads ---------------------------------------------------------
-	
-	#~ my $loads = {
-		#~ "files" => $load_all,
-		#~ "dirs" => $load_all,
-		#~ "resources" => $load_all,
-		#~ "files-and-dirs" => $load_all
-	#~ };
-	
 	# -- compute primitive operations ----------------------------------
 	
 	my $count_files = op("count-files", \&Disketo_Instructions::count_files, [], ["files counts"], 
 			"Counts of files in each dir.",
-			{}
-		);
+			[], {});
 	
 	my $files_stats = op("files-stats", \&Disketo_Instructions::files_stats, [], ["files stats"], 
 			"Obtains the stats of the files.",
-			{}
-		);
+			[], {});
 		
 	# -- compute composite operations ---------------------------------
 	
 	my $compute_custom = op("compute-custom", \&Disketo_Instructions::compute_custom, [], ["(user specified)"], 
 			"Computes the custom meta.",
-			{ "by" => undef, 
-			  "as-meta" => undef
+			[ "as-meta", "by" ],
+			{ "as-meta" => "(meta name)",
+			  "by" => "(computer function)" 
 		});
 		
 	my $for_each_file = op("for-each-file", \&Disketo_Instructions::for_each_file, [], [],
 		"For each file.",
+		[ "what" ],
 		{ "what" => {
 			"files-stats" => $files_stats,
 			"custom" => $compute_custom }
@@ -97,6 +62,7 @@ sub commands() {
 		
 	my $for_each_dir = op("for-each-dir", \&Disketo_Instructions::for_each_dir, [], [],
 		"For each dir.",
+		[ "what" ],
 		{ "what" => {
 			"custom" => $compute_custom,
 			"count-files" => $count_files }
@@ -104,7 +70,8 @@ sub commands() {
 	
 	my $compute = op("compute", \&Disketo_Instructions::compute, [], ["(user specified)"], 
 		"Computes a meta.",
-		{ "for_what" => {
+		[ "for-what" ],
+		{ "for-what" => {
 			"for-each-file" => $for_each_file,
 			"for-each-dir" => $for_each_dir }
 		});
@@ -113,32 +80,36 @@ sub commands() {
 	
 	my $matching_custom_matcher = op("matching-custom-matcher", \&Disketo_Instructions::matching_custom_matcher, [], [], 
 			"Filters by specified matcher function",
-			{ "by" => undef,
+			[ "by" ],
+			{ "by" => "(matcher function)",
 		});
 		
 	my $having_extension = op("having-extension", \&Disketo_Instructions::having_extension, [], [], 
 			"Files having the specified extension.",
-			{ "extension" => undef,
+			[ "extension" ],
+			{ "extension" => "(extension)",
 		});
 		
 	my $more_than = op("more-than", \&Disketo_Instructions::more_than, [], [], 
 			"Files having more than specified number of files matching the condition.",
-			{ "number" => undef,
+			[ "number" ],
+			{ "number" => "(count)",
 		});
 		
 	my $case_sensitive = op("case-sensitive", \&Disketo_Instructions::case_sensitive, [], [], 
 			"Matches the pattern respecing the case",
-			{});
+			[], {});
 
 	my $case_insensitive = op("case-insensitive", \&Disketo_Instructions::case_insensitive, [], [], 
 			"Matches the pattern ignoring the case",
-			{});
+			[], {});
 
 # -- filter composite operations ---------------------------------
 
 	my $matching_pattern = op("matching-pattern", \&Disketo_Instructions::matching_pattern, [], [], 
 			"Matches the given pattern specified way",
-			{	"pattern" => undef,
+			[ "pattern", "how" ],
+			{	"pattern" => "(the pattern)",
 				"how" => {
 					"case-sensitive" => $case_sensitive,
 					"case-insensitive" => $case_insensitive,
@@ -147,6 +118,7 @@ sub commands() {
 		
 	my $having_files = 	my $having_extension = op("having-files", \&Disketo_Instructions::having_files, [], [], 
 			"Directories having specified amount of files matching some condition.",
+			[ "amount", "condition" ],
 			{	"amount" => {
 					"more-than" => $more_than,
 					# TODO less-than, all-of-them, none-of-them, percentage, ...
@@ -160,6 +132,7 @@ sub commands() {
 
 	my $filter_files = op("filter-files", \&Disketo_Instructions::filter_files, [], [], 
 			"Filters files by given criteria",
+			[ "matching" ],
 			{ "matching" => {
 				"matching-custom-matcher" => $matching_custom_matcher,
 				"having-extension" => $having_extension,
@@ -169,6 +142,7 @@ sub commands() {
 
 	my $filter_dirs = op("filter-dirs", \&Disketo_Instructions::filter_dirs, [], [], 
 			"Filters dirs by given criteria",
+			[ "matching" ],
 			{ "matching" => {
 				"matching-custom-matcher" => $matching_custom_matcher,
 				"matching-pattern" => $matching_pattern, #TODO: reuse
@@ -178,6 +152,7 @@ sub commands() {
 
 	my $filter = op("filter", \&Disketo_Instructions::filter, [], [], 
 			"Filters by given criteria",
+			[ "what" ],
 			{ "what" => {
 				"files" => $filter_files,
 				"dirs" => $filter_dirs
@@ -188,23 +163,23 @@ sub commands() {
 	
 	my $print_simply = op("print-simply", \&Disketo_Instructions::print_simply, [], [], 
 			"Prints each resource by its complete path.",
-			{}
-		);
+			[], {});
 		
 	my $print_only_name = op("print-only-name", \&Disketo_Instructions::print_only_name, [], [], 
 			"Prints only the name of the resource.",
-			{}
-		);
+			[], {});
 	
 	my $print_custom = op("print-custom", \&Disketo_Instructions::print_custom, [], [], 
 			"Prints each resource by the given function.",
-			{ "printer" => undef }
+			[ "printer" ],
+			{ "printer" => "(printer function)" }
 		);
 		
 	# -- print composite operations ---------------------------------
 	
 	my $print_files = op("print_files", \&Disketo_Instructions::print_files, [], [],
 		"Prints files.",
+		[ "how" ],
 		{ "how" => {
 			"simply" => $print_simply,
 			"only-name" => $print_only_name,
@@ -213,6 +188,7 @@ sub commands() {
 				
 	my $print_dirs = op("print_files", \&Disketo_Instructions::print_dirs, [], [],
 		"Prints dirs.",
+		[ "how" ],
 		{ "how" => {
 			"simply" => $print_simply, #TODO reuse from print_files
 			"only-name" => $print_only_name,
@@ -221,6 +197,7 @@ sub commands() {
 	
 	my $print = op("print", \&Disketo_Instructions::print, [], [], 
 		"Prints given.",
+		[ "what" ],
 		{ "what" => {
 			"files" => $print_files,
 			"dirs" => $print_dirs }
@@ -237,6 +214,8 @@ sub commands() {
 		"compute" => $compute,
 		"filter" => $filter,
 		"print" => $print
+		
+		#TODO all the remaining
 	);
 	
 	return \%commands;
