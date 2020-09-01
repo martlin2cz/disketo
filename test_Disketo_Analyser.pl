@@ -44,10 +44,23 @@ my $tree6c = Disketo_Analyser::compute_instruction($statement6c, 0, $commands);
 print(Dumper($tree6c));
 
 #######################################
+Disketo_Utils::logit("walk_tree");
+Disketo_Analyser::walk_tree($tree6b, "B", 
+	sub { 
+		my ($node, $stack, $param_name, $name, $operation, $params, $arguments) = @_;
+		print("($name)\n");
+	},
+	sub { 
+		my ($node, $stack, $param_name, $name, $value, $prepared_value, $resolved_value) = @_;
+		print("- $name -> $value\n");
+	});
+
+#######################################
 Disketo_Utils::logit("print_syntax_tree");
-Disketo_Analyser::print_syntax_tree($tree6a);
-Disketo_Analyser::print_syntax_tree($tree6b);
-Disketo_Analyser::print_syntax_tree($tree6c);
+Disketo_Analyser::print_syntax_tree($tree6a, "A");
+Disketo_Analyser::print_syntax_tree($tree6b, "B");
+Disketo_Analyser::print_syntax_tree($tree6c, "C");
+
 
 #######################################
 Disketo_Utils::logit("compute_instructions");

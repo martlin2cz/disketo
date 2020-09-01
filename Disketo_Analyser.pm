@@ -32,6 +32,7 @@ sub analyse($) {
 }
 
 ########################################################################
+# PARSE (SCRIPT -> PROGRAM)
 
 # Computes the instructions for the given script
 sub compute_instructions($$) {
@@ -57,7 +58,10 @@ sub compute_instruction($$$) {
 }
 
 ########################################################################
+# BUILD SYNTAX TREE FOR THE STATEMENT
 
+# Builds the syntax (sub)tree for the given statement (remainder)
+# and the (in the current context allowed) commands hash.
 sub build_syntax_tree($$$) {
 	my ($statement, $statement_number, $commands) = @_;
 	
@@ -68,6 +72,8 @@ sub build_syntax_tree($$$) {
 	#TODO if stack not empty ...
 }
 
+# Consumes first token from the statement
+# and produces new syntax tree node.
 sub process_next_token($$$) {
 	my ($statement, $stack, $allowed_commands) = @_;
 	
@@ -103,6 +109,9 @@ sub process_next_token($$$) {
 	}
 }
 
+# Processes the given (potentional) operation_name with the given statement
+# remainer, with the given commands allowed at the current context.
+# Produces new node.
 sub process_as_operation($$$$) {
 	my ($operation_name, $statement, $stack, $allowed_commands) = @_;
 
@@ -119,45 +128,37 @@ sub process_as_operation($$$$) {
 		my $allowed_sub_commands = $operation->{"valid-args"}->{$param};
 		push @$stack, $operation_name;
 		
-	#	print("SETING $param to [" . join("; ", @$statement) . "]\n");
-		
 		my $child = process_next_token($statement, $stack, $allowed_sub_commands);
 		push @children, $child;
-		
-		#~ my $param_context = $params{$param};
-
-		#~ if ($param_context) {
-			#~ 
-			#~ my $param_subtree = build_syntax_subree($statement, $stack, $param_context);
-			#~ push @children, $param_subtree;
-		#~ } else {
-			#~ my $param_node = build_syntax_leaf_node($statement, $stack);
-			#~ push @children, $param_node;
-		#~ }
 	}
 	
-	#TODO build inner tree node method:
 	return create_operation_node($operation, \@children);
 }
 
+# Processes the given value with the given allowed value specifier.
+# Produces new node.
 sub process_as_value($$) {
 	my ($value, $value_spec) = @_;
 	
 	return create_value_node($value, $value_spec);
 }
 
+# Returns true, if the given token is operation name 
+# (sequence of alfanum charaters and dashes, and not in quotes).
 sub is_operation($) {
 	my ($name) = @_;
 	
 	return ($name =~ /^([a-z][a-z0-9\-]+)$/);
 }
 
+# Creates the (leaf) node for the (given) value.
 sub create_value_node($$) {
 	my ($value, $value_spec) = @_;
 	
 	return {"name" => $value_spec, "value" => $value };
 }
 
+# Creates the (inner) node for the given operation and child nodes.
 sub create_operation_node($$) {
 	my ($operation, $children) = @_;
 
@@ -167,94 +168,8 @@ sub create_operation_node($$) {
 	#return {"name" => $name, "arguments" => $children };
 }
 
-
-#~ # Extracts the command name and arguments from the given statement
-#~ sub extract($) {
-	#~ my ($statement) = @_;
-	
-	#~ my @statement = @{ $statement };
-	#~ my $command_name = shift @statement;
-	
-	#~ return ($command_name, \@statement);
-#~ }
-
-
-#~ # Validates given command name (checks its existence agains given commands table)
-#~ sub validate_command_name($$) {
-	#~ my ($command_name, $commands) = @_;
-	
-	#~ my $command = %{ $commands }{$command_name};
-	#~ if (!$command) {
-		#~ die("Unknown command \"$command_name\"");
-	#~ }
-
-	#~ return $command;
-#~ }
-
-#~ # Validates given command params (checks the number of them)
-#~ sub validate_command_params($$) {
-	#~ my ($arguments, $command) = @_;
-	#~ my @params = @{ $command->{"params"} };
-	#~ my @arguments = @{ $arguments };
-
-	#~ if ((scalar @params) ne (scalar @arguments)) {
-		#~ my $command_name = $command->{"name"};
-		#~ die("$command_name expects " . (scalar @params) . " params (" . join(", ", @params) . "), "
-				#~ . "given " . (scalar @arguments) . " (". join(", ", @arguments) . ")");
-	#~ }
-
-	#~ return \@params;
-#~ }
-
-sub print_syntax_forrest($) {
-	my ($trees) = @_;
-	for my $tree (@$trees) {
-		print_syntax_tree($tree);
-	}
-}
-
-sub print_syntax_tree($) {
-	my ($tree) = @_;
-	print_syntax_subree($tree, 0);
-}
-
-sub print_syntax_subree($$) {
-	my ($sub_tree, $padding) = @_;
-	
-	my $name = $sub_tree->{"name"};
-
-	print(" " x $padding);
-	print($name . "");
-	print("\n");
-	
-	if ($sub_tree->{"operation"}) {
-		my $operation = $sub_tree->{"operation"};
-		my @parameters = @{ $operation->{"params"} };
-		my @arguments = @{ $sub_tree->{"arguments"} };
-	
-##	print(">>>" . Dumper(\@arguments) . "<<<");
-		for my $i (0..(scalar @arguments - 1)) {
-			my $param = $parameters[$i] or "PARAM";
-			my $arg = $arguments[$i] or "ARG";
-			
-			print(" " x ($padding + 1));
-			print("[" . $param . "]");
-			print("\n");
-		
-			print_syntax_subree($arg, $padding + 4);
-		}
-	}
-	if ($sub_tree->{"value"}) {
-		my $value = $sub_tree->{"value"};
-		
-		print(" " x ($padding + 2));
-		print($value);
-		print("\n");
-	
-	}
-}
-
 ########################################################################
+# FILL MISSING METAS
 
 # Inserts instructions producing required metas
 sub fill_requireds($$) {
@@ -327,8 +242,151 @@ sub find_first_command_producing_meta($$) {
 }
 
 
-########################################################################
 
+########################################################################
+# PRINTS
+
+sub print_inner_node($$$$$) {
+	my ($node, $stack, $param_name, $name, $operation, $params, $arguments) = @_;
+	my $padding = "    " x ((scalar @$stack) - 1);
+	
+	#print("$padding [$param_name]\n");
+	#print("$padding   $name:\n");
+	print("$padding   [$param_name] $name:\n");
+}
+
+sub print_leaf_node($$$$$$) {
+	my ($node, $stack, $param_name, $name, $value, $prepared_value, $resolved_value) = @_;
+	my $padding = "    " x ((scalar @$stack) - 1);
+	
+	#print("$padding [$param_name]\n");
+	#print("$padding   $name: $value\n");
+	print("$padding   [$param_name] $name: $value\n");
+}
+
+sub print_syntax_forrest($) {
+	my ($forrest) = @_;
+	walk_forrest($forrest, \&print_inner_node, \&print_leaf_node);
+} 
+
+sub print_syntax_tree($$) {
+	my ($tree, $tree_number) = @_;
+	walk_tree($tree, $tree_number, \&print_inner_node, \&print_leaf_node);
+} 
+
+#~ sub print_syntax_forrest($) {
+	#~ my ($trees) = @_;
+	
+	#~ while (my ($i, $tree) = each @$trees) {
+		#~ my $tree_number = $i + 1;
+		
+		#~ print_syntax_tree($tree, $tree_number);
+	#~ }
+#~ }
+
+#~ sub print_syntax_tree($$) {
+	#~ my ($tree, $tree_number) = @_;
+	
+	#~ print("Statement $tree_number:\n");
+	#~ print_syntax_subree($tree, 1);
+#~ }
+
+#~ sub print_syntax_subree($$) {
+	#~ my ($sub_tree, $padding) = @_;
+	
+	#~ my $name = $sub_tree->{"name"};
+
+	#~ print(" " x $padding);
+	#~ print($name . "");
+	#~ print("\n");
+	
+	#~ if ($sub_tree->{"operation"}) {
+		#~ my $operation = $sub_tree->{"operation"};
+		#~ my @parameters = @{ $operation->{"params"} };
+		#~ my @arguments = @{ $sub_tree->{"arguments"} };
+	
+		#~ for my $i (0..(scalar @arguments - 1)) {
+			#~ my $param = $parameters[$i] or "PARAM";
+			#~ my $arg = $arguments[$i] or "ARG";
+			
+			#~ print(" " x ($padding + 1));
+			#~ print("[" . $param . "]");
+			#~ print("\n");
+		
+			#~ print_syntax_subree($arg, $padding + 4);
+		#~ }
+	#~ }
+	#~ if ($sub_tree->{"value"}) {
+		#~ my $value = $sub_tree->{"value"};
+		
+		#~ print(" " x ($padding + 2));
+		#~ print($value);
+		#~ print("\n");
+	
+	#~ }
+#~ }
+
+
+
+########################################################################
+# UTILITIES, WALK
+
+# Walks the given tree with given functions annotated:
+# sub { my ($node, $stack, $param_name, $name, $operation, $params, $arguments) = @_; }
+# sub { my ($node, $stack, $param_name, $name, $value, $prepared_value, $resolved_value) = @_; }
+sub walk_forrest($$$$) {
+	my ($trees, $operation_node_fn, $value_node_fn) = @_;
+	
+	while (my ($i, $tree) = each @$trees) {
+		my $tree_number = $i + 1;
+		
+		walk_tree($tree, $tree_number, $operation_node_fn, $value_node_fn);
+	}
+}
+
+# Walks the given tree.
+sub walk_tree($$$$) {
+	my ($tree, $tree_number, $operation_node_fn, $value_node_fn) = @_;
+	
+	my $param_name = "Statement $tree_number";	
+	my @stack = [ $param_name ];
+	my $root = $tree;
+	
+	walk_tree_node($root, \@stack, $param_name, $operation_node_fn, $value_node_fn);
+}
+
+# Walks the given tree node.
+sub walk_tree_node($$$$) {
+	my ($node, $stack, $param_name, $operation_node_fn, $value_node_fn) = @_;
+	
+	my $name = $node->{"name"};
+	if ($node->{"operation"}) {
+		my $operation = $node->{"operation"};
+		my $params = $operation->{"params"};
+		my $arguments = $node->{"arguments"};
+
+		$operation_node_fn->($node, $stack, $param_name, $name, $operation, $params, $arguments);
+		
+		my @sub_stack = @$stack;
+		push @sub_stack, $name;
+		
+		while (my ($i, $param_name) = each @$params) {
+			my $child_node = $arguments->[$i];
+			walk_tree_node($child_node, \@sub_stack, $param_name, $operation_node_fn, $value_node_fn);
+		}
+		
+	} elsif ($node->{"value"}) {
+		my $value = $node->{"value"};
+		my $prepared_value = $node->{"prepared_value"};
+		my $resolved_value = $node->{"resolved_value"};
+
+		$value_node_fn->($node, $stack, $param_name, $name, $value, $prepared_value, $resolved_value);
+	} else {
+		die("Unknown node.");
+	}
+}
+
+# DEPRECATED
 # Utility method for simplified walking throught an program.
 sub walk_program($$) {
 	my ($program, $instruction_runner) = @_;
@@ -346,6 +404,8 @@ sub walk_program($$) {
 }
 
 ########################################################################
+# USAGE
+
 sub tree_usage() {
 	my $commands = Disketo_Instruction_Set::commands();
 	
