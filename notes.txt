@@ -83,7 +83,11 @@ disketo script (just the statements, lists of tokens)
 	V
 (analyse)
 	V
-disketo program (all the semantic information and arguments resolved/evaluated)
+disketo program (the syntax forrest)
+	V
+(prepare)
+	V
+disketo program 2 (the syntax forrest with all the semantic information and arguments resolved/evaluated)
 	V
 (interpret)
 	V

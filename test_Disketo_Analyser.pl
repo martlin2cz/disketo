@@ -61,43 +61,11 @@ Disketo_Analyser::print_syntax_tree($tree6a, "A");
 Disketo_Analyser::print_syntax_tree($tree6b, "B");
 Disketo_Analyser::print_syntax_tree($tree6c, "C");
 
-
 #######################################
 Disketo_Utils::logit("compute_instructions");
 my $program7a = Disketo_Analyser::compute_instructions($script1a, $commands);
 print(Dumper($program7a));
 
 Disketo_Analyser::print_syntax_forrest($program7a);
-die("TODO FIXME");
-
 
 #######################################
-#######################################
-Disketo_Utils::logit("find_missing_required_metas");
-
-my $command8a = {"requires" => ["foo meta", "bar meta", "lorem meta"]};
-my $produced8a = ["lorem meta", "ipsum meta"];
-my $missing8a = Disketo_Analyser::find_missing_required_metas($command8a, $produced8a);
-print(Dumper($missing8a));
-
-#######################################
-Disketo_Utils::logit("fill_requireds");
-
-my $program9a = Disketo_Analyser::fill_requireds($program7a, $commands);
-print(Dumper($program9a));
-
-my $file9b = "test/scripts/with-requires.ds";
-my $script9b = Disketo_Parser::parse($file9b);
-my $program9b = Disketo_Analyser::compute_instructions($script9b, $commands);
-$program9b = Disketo_Analyser::fill_requireds($program9b, $commands);
-print(Dumper($program9b));
-
-#######################################
-Disketo_Utils::logit("TODO");
-
-#Disketo_Utils::logit("print_program");
-#Disketo_Analyser::print_program($program7a_ref, \@program_args_6a);
-
-
-
-
