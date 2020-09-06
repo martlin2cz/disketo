@@ -174,10 +174,14 @@ sub commands() {
 			[ "printer" ],
 			{ "printer" => "(printer function)" }
 		);
+	
+	my $print_with_counts = op("print-with-counts", \&Disketo_Instructions::print_with_counts, ["files counts"], [], 
+			"Prints each resource and number of its children.",
+			[], {});
 		
 	# -- print composite operations ---------------------------------
 	
-	my $print_files = op("print_files", \&Disketo_Instructions::print_files, [], [],
+	my $print_files = op("print-files", \&Disketo_Instructions::print_files, [], [],
 		"Prints files.",
 		[ "how" ],
 		{ "how" => {
@@ -186,12 +190,13 @@ sub commands() {
 			"custom" => $print_custom }
 		});
 				
-	my $print_dirs = op("print_files", \&Disketo_Instructions::print_dirs, [], [],
+	my $print_dirs = op("print-dirs", \&Disketo_Instructions::print_dirs, [], [],
 		"Prints dirs.",
 		[ "how" ],
 		{ "how" => {
 			"simply" => $print_simply, #TODO reuse from print_files
 			"only-name" => $print_only_name,
+			"with-counts" => $print_with_counts,
 			"custom" => $print_custom }
 		});
 	
@@ -212,6 +217,7 @@ sub commands() {
 
 	my %commands = (
 		"compute" => $compute,
+		# TODO group
 		"filter" => $filter,
 		"print" => $print
 		

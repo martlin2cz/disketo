@@ -166,9 +166,6 @@ sub create_operation_node($$) {
 	#return {"name" => $name, "arguments" => $children };
 }
 
-
-
-
 ########################################################################
 # PRINTS
 
@@ -182,7 +179,7 @@ sub print_inner_node($$$$$) {
 }
 
 sub print_leaf_node($$$$$$) {
-	my ($node, $stack, $param_name, $name, $value, $prepared_value, $resolved_value) = @_;
+	my ($node, $stack, $param_name, $name, $value, $prepared_value) = @_;
 	my $padding = "    " x ((scalar @$stack) - 1);
 	
 	#print("$padding [$param_name]\n");
@@ -200,67 +197,13 @@ sub print_syntax_tree($$) {
 	walk_tree($tree, $tree_number, \&print_inner_node, \&print_leaf_node);
 } 
 
-#~ sub print_syntax_forrest($) {
-	#~ my ($trees) = @_;
-	
-	#~ while (my ($i, $tree) = each @$trees) {
-		#~ my $tree_number = $i + 1;
-		
-		#~ print_syntax_tree($tree, $tree_number);
-	#~ }
-#~ }
-
-#~ sub print_syntax_tree($$) {
-	#~ my ($tree, $tree_number) = @_;
-	
-	#~ print("Statement $tree_number:\n");
-	#~ print_syntax_subree($tree, 1);
-#~ }
-
-#~ sub print_syntax_subree($$) {
-	#~ my ($sub_tree, $padding) = @_;
-	
-	#~ my $name = $sub_tree->{"name"};
-
-	#~ print(" " x $padding);
-	#~ print($name . "");
-	#~ print("\n");
-	
-	#~ if ($sub_tree->{"operation"}) {
-		#~ my $operation = $sub_tree->{"operation"};
-		#~ my @parameters = @{ $operation->{"params"} };
-		#~ my @arguments = @{ $sub_tree->{"arguments"} };
-	
-		#~ for my $i (0..(scalar @arguments - 1)) {
-			#~ my $param = $parameters[$i] or "PARAM";
-			#~ my $arg = $arguments[$i] or "ARG";
-			
-			#~ print(" " x ($padding + 1));
-			#~ print("[" . $param . "]");
-			#~ print("\n");
-		
-			#~ print_syntax_subree($arg, $padding + 4);
-		#~ }
-	#~ }
-	#~ if ($sub_tree->{"value"}) {
-		#~ my $value = $sub_tree->{"value"};
-		
-		#~ print(" " x ($padding + 2));
-		#~ print($value);
-		#~ print("\n");
-	
-	#~ }
-#~ }
-
-
-
 ########################################################################
 # UTILITIES, WALK
 
 # Walks the given tree with given functions annotated:
 # sub { my ($node, $stack, $param_name, $name, $operation, $params, $arguments) = @_; }
-# sub { my ($node, $stack, $param_name, $name, $value, $prepared_value, $resolved_value) = @_; }
-sub walk_forrest($$$$) {
+# sub { my ($node, $stack, $param_name, $name, $value, $prepared_value) = @_; }
+sub walk_forrest($$$) {
 	my ($trees, $operation_node_fn, $value_node_fn) = @_;
 	
 	while (my ($i, $tree) = each @$trees) {
@@ -284,7 +227,7 @@ sub walk_tree($$$$) {
 # Walks the given tree node.
 sub walk_tree_node($$$$) {
 	my ($node, $stack, $param_name, $operation_node_fn, $value_node_fn) = @_;
-	
+
 	my $name = $node->{"name"};
 	if ($node->{"operation"}) {
 		my $operation = $node->{"operation"};
@@ -304,9 +247,8 @@ sub walk_tree_node($$$$) {
 	} elsif ($node->{"value"}) {
 		my $value = $node->{"value"};
 		my $prepared_value = $node->{"prepared_value"};
-		my $resolved_value = $node->{"resolved_value"};
 
-		$value_node_fn->($node, $stack, $param_name, $name, $value, $prepared_value, $resolved_value);
+		$value_node_fn->($node, $stack, $param_name, $name, $value, $prepared_value);
 	} else {
 		die("Unknown node.");
 	}
