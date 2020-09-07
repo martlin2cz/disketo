@@ -218,6 +218,8 @@ sub commands() {
 	my %commands = (
 		"compute" => $compute,
 		# TODO group
+		# TODO execute once
+		# TODO print (debug) stats
 		"filter" => $filter,
 		"print" => $print
 		

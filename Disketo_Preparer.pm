@@ -13,8 +13,30 @@ use Disketo_Instruction_Set;
 use Disketo_Analyser;
 
 ########################################################################
+# The module laying between the Analyser and Interpreter.
+# Enhances the syntax forrest with some additonal semantic informations,
+# and prepares to be actually executed.
+#
+
+########################################################################
+# PREPARE
+
+sub prepare_to_execute($$) {
+	my ($program, $arguments) = @_;
+	
+	prepare_values($program);
+	my $remaining_arguments = resolve_values($program, $arguments);
+	
+	verify_dependencies($program); #TODO replace by fill_missing_dependencies
+	
+	return $remaining_arguments;
+}
+
+########################################################################
 # RESOLVE VALUES
 
+# Prepares the values (strips, evaluates, converts and so).
+# Adds 'prepared_value' to each value node in the given program forrest.
 sub prepare_values($) {
 	my ($program) = @_;
 
@@ -28,6 +50,7 @@ sub prepare_values($) {
 	);
 }
 
+# Prepares the given value.
 sub prepare_value($) {
 	my ($value) = @_;
 	
@@ -62,6 +85,9 @@ sub prepare_value($) {
 ########################################################################
 # RESOLVE VALUES
 
+# Resolves the '$$' values.
+# Adds each first of the arguments as 'prepared_value' field to each
+# value node with value '$$'. Returns the remaining (unused) arguments.
 sub resolve_values($$) {
 	my ($program, $arguments) = @_;
 
@@ -75,6 +101,7 @@ sub resolve_values($$) {
 	return $remaining_arguments;
 }
 
+# Collects all the (value) nodes with the '$$' marker as the value.
 sub collect_nodes_with_marker($) {
 	my ($program) = @_;
 
@@ -92,6 +119,9 @@ sub collect_nodes_with_marker($) {
 	return \@nodes;
 }
 
+# Resolves the given nodes with '$$' marker with the given arguments.
+# Puts each of the value from the arguments to the nodes as a 
+# 'prepared_value' field. Returns the remaining, unused arguments.
 sub resolve_marker_values($$) {
 	my ($nodes, $arguments) = @_;
 
@@ -103,8 +133,6 @@ sub resolve_marker_values($$) {
 	
 	return \@arguments;
 }
-
-
 
 ########################################################################
 # VERIFY MISSING METAS
