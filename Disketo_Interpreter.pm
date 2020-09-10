@@ -4,7 +4,7 @@ use strict;
 BEGIN { unshift @INC, "."; }
 
 package Disketo_Interpreter;
-my $VERSION=2.2.0;
+my $VERSION=3.0.0;
 
 use Data::Dumper;
 use Disketo_Utils;
@@ -94,6 +94,9 @@ sub print_program($$) {
 			my $padding = "    " x ((scalar @$stack) - 1);
 			if ($value eq '$$') {
 				print("$padding where [$param_name] $name will be '$value', which is actually '$prepared_value'\n");
+			} elsif ($value eq '$$$') {
+				my $joined = join(", ", @$prepared_value);
+				print("$padding where [$param_name] $name will be '$value', which is actually '$joined'\n");
 			} elsif ($value =~ /sub *\{(.+)\}/) {
 				my $sub = $value; #TODO shorten and onelinify
 				print("$padding where [$param_name] $name will be '$sub'\n");

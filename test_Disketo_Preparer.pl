@@ -72,11 +72,31 @@ my $is8b = Disketo_Preparer::produces($instruction6compute, "files stats");
 print(Dumper($is8b));
 
 #######################################
-Disketo_Utils::logit("verify_produceds");
+Disketo_Utils::logit("verify_dependencies #1");
+
+print("Skipped, may fail\n");
+#Disketo_Preparer::verify_dependencies($program1a);
+
+print("Skipped, may fail\n");
+#Disketo_Preparer::verify_dependencies($program5a);
+
+#######################################
+Disketo_Utils::logit("insert_load");
+
+Disketo_Preparer::insert_load($program1a);
+#print(Dumper($program1a));
+my $instruction9load = $program1a->[0];
+my $produceds9a = Disketo_Preparer::compute_produceds($instruction9load);
+print(Dumper($produceds9a));
+my $is9a = Disketo_Preparer::produces($instruction9load, "resources");
+print(Dumper($is9a));
+
+
+#######################################
+Disketo_Utils::logit("verify_dependencies #2");
+
 Disketo_Preparer::verify_dependencies($program1a);
 
-print("Skipped, may fail");
-#Disketo_Preparer::verify_dependencies($program5a);
 
 #~ #######################################
 #~ Disketo_Utils::logit("find_missing_required_metas");

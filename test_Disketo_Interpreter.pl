@@ -22,7 +22,7 @@ Disketo_Utils::logit("(prepare program)");
 my $file0a = "test/scripts/simple.ds";
 my $script0a = Disketo_Parser::parse($file0a);
 my $program0a = Disketo_Analyser::analyse($script0a);
-my @arguments0a = ["foo", "bar", "baz"];
+my @arguments0a = ("foo", "test");
 Disketo_Preparer::prepare_to_execute($program0a, \@arguments0a);
 
 #print(Dumper($program0a));
@@ -30,7 +30,7 @@ Disketo_Preparer::prepare_to_execute($program0a, \@arguments0a);
 Disketo_Utils::logit("print_usage");
 
 #TODO FIXME
-my @arguments1a = ("foo");
+my @arguments1a = ("foo", "bar");
 #my $usage1a = Disketo_Interpreter::create_usage($file0a, $program0a, \@arguments1a);
 #print($usage1a);
 

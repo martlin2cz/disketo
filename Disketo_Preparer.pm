@@ -24,9 +24,12 @@ use Disketo_Analyser;
 sub prepare_to_execute($$) {
 	my ($program, $arguments) = @_;
 	
-	prepare_values($program);
-	my $remaining_arguments = resolve_values($program, $arguments);
+	insert_load($program); #FIXMe use the fill_missing_dependencies for it
 	
+	prepare_values($program);
+
+	my $remaining_arguments = resolve_values($program, $arguments);
+
 	verify_dependencies($program); #TODO replace by fill_missing_dependencies
 	
 	return $remaining_arguments;
@@ -63,8 +66,8 @@ sub prepare_value($) {
 		# if just number, keep
 		return $value;
 	}
-	if ($value eq '$$') {
-		# if $$ placeholder, leave empty
+	if ($value eq '$$' or $value eq '$$$') {
+		# if $$ or $$$ placeholder, leave empty
 		return undef;
 	}
 	
@@ -91,26 +94,28 @@ sub prepare_value($) {
 sub resolve_values($$) {
 	my ($program, $arguments) = @_;
 
-	my $nodes_with_marker = collect_nodes_with_marker($program);
+	my $nodes_with_marker = collect_nodes_with_value($program, '$$');
 	if ((scalar @$nodes_with_marker) > (scalar @$arguments)) {
 		die("Expected at least " . (scalar @$nodes_with_marker) . " script arguments, "
 			. "given " . (scalar @$arguments));
 	}
 	
 	my $remaining_arguments = resolve_marker_values($nodes_with_marker, $arguments);
-	return $remaining_arguments;
+	
+	my $nodes_with_hypermarker = collect_nodes_with_value($program, '$$$');
+	resolve_hypermarker_values($nodes_with_hypermarker, $remaining_arguments);
 }
 
-# Collects all the (value) nodes with the '$$' marker as the value.
-sub collect_nodes_with_marker($) {
-	my ($program) = @_;
+# Collects all the (value) nodes with the given value.
+sub collect_nodes_with_value($$) {
+	my ($program, $expected_value) = @_;
 
 	my @nodes = ();
 	Disketo_Analyser::walk_forrest($program, sub {},
 		sub { 
 			my ($node, $stack, $param_name, $name, $value, $prepared_value) = @_; 
 		
-			if ($value eq '$$') {
+			if ($value eq $expected_value) {
 				push @nodes, $node;
 			}
 		}
@@ -126,6 +131,7 @@ sub resolve_marker_values($$) {
 	my ($nodes, $arguments) = @_;
 
 	my @arguments = @$arguments;
+
 	for my $node (@$nodes) {
 		my $arg = shift @arguments;
 		$node->{"prepared_value"} = $arg;
@@ -134,8 +140,36 @@ sub resolve_marker_values($$) {
 	return \@arguments;
 }
 
+# Resolves the given nodes with '$$$' marker with the given arguments.
+# Puts the arguments (string array) as a 'prepared_value' field to each
+# of them.
+sub resolve_hypermarker_values($$) {
+	my ($nodes, $arguments) = @_;
+
+	my @arguments = @$arguments;
+	for my $node (@$nodes) {
+		$node->{"prepared_value"} = $arguments;
+	}
+	
+	return \@arguments;
+}
+
+
 ########################################################################
 # VERIFY MISSING METAS
+
+sub insert_load($) {
+	my ($program) = @_;
+
+	my $commands = Disketo_Instruction_Set::commands();
+	my $operation = $commands->{"load"};
+	
+	my $value = Disketo_Analyser::create_value_node('$$$', "(the roots)");
+	my $children = [$value];
+	my $instruction = Disketo_Analyser::create_operation_node($operation, $children);
+	
+	unshift @$program, $instruction;
+}
 
 #~ #DEPRECATED
 #~ # Inserts instructions producing required metas
@@ -217,7 +251,7 @@ sub is_produced_by($$$) {
 	my ($program, $meta_name, $up_to_instruction_index) = @_;
 	
 	my $i;
-	for ($i = $up_to_instruction_index; $i > 0; $i--) {
+	for ($i = $up_to_instruction_index; $i >= 0; $i--) {
 			my $instruction = $program->[$i];
 			
 			if (produces($instruction, $meta_name)) {

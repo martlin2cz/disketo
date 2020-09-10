@@ -32,14 +32,20 @@ sub op($$$$$$$) {
 
 
 sub commands() {
+	# -- compute primitive operations ----------------------------------
+	
+	my $load = op("load", \&Disketo_Instructions::load, [], ["resources"], 
+			"Loads the resources from the specified root folder or the file.",
+			["roots"], { "roots" => "(the root resources)" });
+
 
 	# -- compute primitive operations ----------------------------------
 	
-	my $count_files = op("count-files", \&Disketo_Instructions::count_files, [], ["files counts"], 
+	my $count_files = op("count-files", \&Disketo_Instructions::count_files, ["resources"], ["files counts"], 
 			"Counts of files in each dir.",
 			[], {});
 	
-	my $files_stats = op("files-stats", \&Disketo_Instructions::files_stats, [], ["files stats"], 
+	my $files_stats = op("files-stats", \&Disketo_Instructions::files_stats, ["resources"], ["files stats"], 
 			"Obtains the stats of the files.",
 			[], {});
 		
@@ -52,7 +58,7 @@ sub commands() {
 			  "by" => "(computer function)" 
 		});
 		
-	my $for_each_file = op("for-each-file", \&Disketo_Instructions::for_each_file, [], [],
+	my $for_each_file = op("for-each-file", \&Disketo_Instructions::for_each_file, ["resources"], [],
 		"For each file.",
 		[ "what" ],
 		{ "what" => {
@@ -60,7 +66,7 @@ sub commands() {
 			"custom" => $compute_custom }
 		});
 		
-	my $for_each_dir = op("for-each-dir", \&Disketo_Instructions::for_each_dir, [], [],
+	my $for_each_dir = op("for-each-dir", \&Disketo_Instructions::for_each_dir, ["resources"], [],
 		"For each dir.",
 		[ "what" ],
 		{ "what" => {
@@ -130,7 +136,7 @@ sub commands() {
 				}
 		});
 
-	my $filter_files = op("filter-files", \&Disketo_Instructions::filter_files, [], [], 
+	my $filter_files = op("filter-files", \&Disketo_Instructions::filter_files, ["resources"], [], 
 			"Filters files by given criteria",
 			[ "matching" ],
 			{ "matching" => {
@@ -140,7 +146,7 @@ sub commands() {
 			}
 		});
 
-	my $filter_dirs = op("filter-dirs", \&Disketo_Instructions::filter_dirs, [], [], 
+	my $filter_dirs = op("filter-dirs", \&Disketo_Instructions::filter_dirs, ["resources"], [], 
 			"Filters dirs by given criteria",
 			[ "matching" ],
 			{ "matching" => {
@@ -179,9 +185,14 @@ sub commands() {
 			"Prints each resource and number of its children.",
 			[], {});
 		
+		
+	my $print_stats = op("stats", \&Disketo_Instructions::stats, [], [], 
+			"Prints the current context stats.",
+			[], {});
+
 	# -- print composite operations ---------------------------------
 	
-	my $print_files = op("print-files", \&Disketo_Instructions::print_files, [], [],
+	my $print_files = op("print-files", \&Disketo_Instructions::print_files, ["resources"], [],
 		"Prints files.",
 		[ "how" ],
 		{ "how" => {
@@ -190,7 +201,7 @@ sub commands() {
 			"custom" => $print_custom }
 		});
 				
-	my $print_dirs = op("print-dirs", \&Disketo_Instructions::print_dirs, [], [],
+	my $print_dirs = op("print-dirs", \&Disketo_Instructions::print_dirs, ["resources"], [],
 		"Prints dirs.",
 		[ "how" ],
 		{ "how" => {
@@ -205,7 +216,8 @@ sub commands() {
 		[ "what" ],
 		{ "what" => {
 			"files" => $print_files,
-			"dirs" => $print_dirs }
+			"dirs" => $print_dirs,
+			"stats" => $print_stats }
 		});
 
 	
@@ -216,6 +228,7 @@ sub commands() {
 	# -- all together -------------------------------------------------
 
 	my %commands = (
+		"load" => $load,
 		"compute" => $compute,
 		# TODO group
 		# TODO execute once
@@ -293,7 +306,7 @@ sub prepending_instruction($$) {
 	if ($prepending_command->{"name"} eq "load") {
 		$prepending_arguments = [];
 
-	} elsif ($params ~~ $prepending_params) {
+	} elsif ($params eq $prepending_params) { #TODO FIXME operator intersection
 		$prepending_arguments = $arguments;
 
 	#TODO arguments := if $prepending_instruction takes XYZ, then pick from $instruction
