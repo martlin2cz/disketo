@@ -2,7 +2,7 @@
 use strict;
 
 package Disketo_Instructions; 
-my $VERSION=2.0.0;
+my $VERSION=3.0.0;
 
 use Data::Dumper;
 use File::Basename;
@@ -177,12 +177,62 @@ sub _compute_files_of_dir_matching($$) {
 
 ########################################################################
 ########################################################################
-# The remaining instructions
+# The instructions itself:
 
 sub load($$) {
-	my ($context, $roots) = @_;
+	my ($context, $roots_node) = @_;
+	my $roots = $roots_node->{"prepared_value"};
 	Disketo_Engine::load($roots, $context);
 }
+
+sub filter($$) {
+	my ($context, $filterer_node) = @_;
+	my $filterer_name = $filterer_node->{"name"};
+	my $filter_what_node = $filterer_node->{"arguments"}[0];
+	
+	my $filter_what_name = $filter_what_node->{"operation"}->{"name"};
+	my $filter_what_method = $filter_what_node->{"operation"}->{"method"};
+	
+	if ($filterer_name eq "filter-files") {
+		print("filter files\n"); #TODO
+	} elsif ($filterer_name eq "filter-dirs") {
+		print("filter dirs\n"); #TODO
+	} else {
+		die("Unsupported: $filterer_name");
+	}
+}
+
+sub compute($$) {
+	my ($context, $computer_node) = @_;
+	my $computer_name = $computer_node->{"name"};
+	my $compute_for_what_node = $computer_node->{"arguments"}[0];
+	
+	if ($computer_name eq "for-each-file") {
+		print("compute for files\n"); #TODO
+	} elsif ($computer_name eq "for-each-dir") {
+		print("compute for dirs\n"); #TODO
+	} else {
+		die("Unsupported: $computer_name");
+	}
+}
+
+sub print($$) {
+	my ($context, $printer_node) = @_;
+	my $printer_name = $printer_node->{"name"};
+	my $print_what_node = $printer_node->{"arguments"}[0];
+	
+	my $print_what_name = $print_what_node->{"operation"}->{"name"};
+	my $print_what_method = $print_what_node->{"operation"}->{"method"};
+	
+	if ($printer_name eq "print-files") {
+		print("print files\n"); #TODO
+	} elsif ($printer_name eq "print-dirs") {
+		print("print dirs\n"); #TODO
+	} else {
+		die("Unsupported: $printer_name");
+	}
+}
+
 
 sub context_stats($) {
 	my ($context) = @_;

@@ -2,7 +2,7 @@
 use strict;
 
 package Disketo_Engine; 
-my $VERSION=2.0.0;
+my $VERSION=3.0.0;
 
 use Disketo_Utils; 
 use Disketo_Core;

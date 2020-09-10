@@ -205,15 +205,14 @@ sub run_program($) {
 		my $human_name = $name; #TODO human name
 		Disketo_Utils::logit("Will execute $human_name ...");
 		
-		Disketo_Analyser::walk_tree($instruction, $human_name, sub { 
-			my ($node, $stack, $param_name, $name, $operation, $params, $arguments) = @_; 
-			
-			my $method = $operation->{"method"};
-			my $method_args = prepare_method_arguments($operation, $params, $arguments, $context);
-			
-			$method->(@$method_args);
-			
-		}, sub {});
+		my $operation = $instruction->{"operation"};
+		my $params = $operation->{"params"};
+		my $arguments = $instruction->{"arguments"};
+		
+		my $method = $operation->{"method"};
+		my $method_args = prepare_method_arguments($operation, $params, $arguments, $context);
+		
+		$method->(@$method_args);
 		
 		Disketo_Utils::logit("Executed $human_name!");
 	}
