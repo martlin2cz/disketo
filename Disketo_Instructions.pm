@@ -179,59 +179,6 @@ sub _compute_files_of_dir_matching($$) {
 ########################################################################
 # The instructions itself:
 
-sub load($$) {
-	my ($context, $roots_node) = @_;
-	my $roots = $roots_node->{"prepared_value"};
-	Disketo_Engine::load($roots, $context);
-}
-
-sub filter($$) {
-	my ($context, $filterer_node) = @_;
-	my $filterer_name = $filterer_node->{"name"};
-	my $filter_what_node = $filterer_node->{"arguments"}[0];
-	
-	my $filter_what_name = $filter_what_node->{"operation"}->{"name"};
-	my $filter_what_method = $filter_what_node->{"operation"}->{"method"};
-	
-	if ($filterer_name eq "filter-files") {
-		print("filter files\n"); #TODO
-	} elsif ($filterer_name eq "filter-dirs") {
-		print("filter dirs\n"); #TODO
-	} else {
-		die("Unsupported: $filterer_name");
-	}
-}
-
-sub compute($$) {
-	my ($context, $computer_node) = @_;
-	my $computer_name = $computer_node->{"name"};
-	my $compute_for_what_node = $computer_node->{"arguments"}[0];
-	
-	if ($computer_name eq "for-each-file") {
-		print("compute for files\n"); #TODO
-	} elsif ($computer_name eq "for-each-dir") {
-		print("compute for dirs\n"); #TODO
-	} else {
-		die("Unsupported: $computer_name");
-	}
-}
-
-sub print($$) {
-	my ($context, $printer_node) = @_;
-	my $printer_name = $printer_node->{"name"};
-	my $print_what_node = $printer_node->{"arguments"}[0];
-	
-	my $print_what_name = $print_what_node->{"operation"}->{"name"};
-	my $print_what_method = $print_what_node->{"operation"}->{"method"};
-	
-	if ($printer_name eq "print-files") {
-		print("print files\n"); #TODO
-	} elsif ($printer_name eq "print-dirs") {
-		print("print dirs\n"); #TODO
-	} else {
-		die("Unsupported: $printer_name");
-	}
-}
 
 
 sub context_stats($) {
@@ -474,3 +421,235 @@ sub filter_duplicate_dirs_with_common_files_by_custom_comparer($$) {
 	#TODO
 	die("TODO: filter_duplicate_dirs_with_common_files_by_custom_comparer");
 }
+
+########################################################################
+########################################################################
+sub value_of_node($) {
+	my ($value_node) = @_;
+	if (not $value_node->{"value"}) {
+		die("Not a value node! " . Dumper($value_node));
+	}
+	
+	return $value_node->{"prepared_value"} 
+		or die("Nah, foolish me! Forgot to specify the value!");
+}
+
+sub child_of_node($$) {
+	my ($operation_node, $index) = @_;
+	
+	my $children = $operation_node->{"arguments"};
+	return $children->[$index];
+}
+
+sub delegate_to_node($) {
+	my ($to_node) = @_;
+	
+	my $to_operation = $to_node->{"operation"};
+	if (not $to_operation) {
+		die("Not an operation node!");
+	}
+	
+	my $to_method = $to_operation->{"method"};
+	$to_method->($to_node);
+}
+
+########################################################################
+
+sub value($$) {
+	my ($node, $child_index) = @_;
+	my $child = child_of_node($node, $child_index);
+	return value_of_node($child);
+}
+
+
+sub delegate($$) {
+	my ($node, $child_index) = @_;
+	my $child = child_of_node($node, $child_index);
+	return delegate_to_node($child);
+}
+
+sub is($$$) {
+	my ($node, $child_index, $opname) = @_;
+	my $child = child_of_node($node, $child_index);
+	return $child->{"name"} eq $opname;
+}
+
+########################################################################
+########################################################################
+sub load($) {
+	my ($load_node) = @_;
+	my $roots = value($load_node, 0);
+	
+	return sub($) {
+		my ($context) = @_;
+		Disketo_Engine::load($roots, $context);
+	}
+}
+
+########################################################################
+
+sub filter($) {
+	my ($filter_node) = @_;
+	return delegate($filter_node, 0);
+}
+
+sub filter_files($) {
+	my ($filter_files_node) = @_;
+
+	my $predicate = delegate($filter_files_node, 0);
+	return sub($) {
+		my ($context) = @_;
+		Disketo_Engine::filter_files($predicate, $context);
+	};
+}
+
+sub filter_dirs($) {
+	my ($filter_dirs_node) = @_;
+
+	my $predicate = delegate($filter_dirs_node, 0);
+	return sub($) {
+		my ($context) = @_;
+		Disketo_Engine::filter_dirs($predicate, $context);
+	};
+}
+
+sub matching_pattern($) {
+	my ($matching_pattern_node) = @_;
+
+	my $pattern = value($matching_pattern_node, 0);
+	
+	if (is($matching_pattern_node, 1, "case-sensitive")) {
+		return sub($) {
+			my ($resource, $context) = @_;
+			return ($resource =~ /$pattern/); #TODO
+		};
+	}
+	
+	if (is($matching_pattern_node, 1, "case-insensitive")) {
+		return sub($) {
+			my ($resource, $context) = @_;
+			return ($resource =~ /$pattern/); #TODO
+		};
+	}
+	
+	die("Unsupported.");
+}
+
+
+sub having_files($) {
+	my ($having_files_node) = @_;
+	
+	my $amount = delegate($having_files_node, 0);
+	my $condition = delegate($having_files_node, 1);
+	
+	return sub($$) {
+		my ($dir, $context) = @_;
+		my $files_matching = $condition->($dir, $context);
+		return $amount->($files_matching, $context)
+	};
+}
+
+
+sub more_than($) {
+	my ($more_than_node) = @_;
+	my $count = value($more_than_node, 0);
+	
+	return sub($$) {
+		my ($files, $context) = @_;
+		return (scalar @$files) > $count;
+	};
+}
+
+
+########################################################################
+
+sub compute($) {
+	my ($compute_node) = @_;
+	return delegate($compute_node, 0);
+}
+
+sub compute_for_each_file($) {
+	my ($compute_for_each_file_node) = @_;
+
+	return delegate($compute_for_each_file_node, 0);
+	#~ my $function = delegate($compute_for_each_file_node, 0);
+	#~ my $meta_name = value($compute_for_each_file_node, 1);
+	
+	#~ return sub($) {
+		#~ my ($context) = @_;
+		#~ Disketo_Engine::calculate_for_each_file($function, $meta_name, $context);
+	#~ };
+}
+
+sub compute_for_each_dir($) {
+	my ($compute_for_each_dir_node) = @_;
+	return delegate($compute_for_each_dir_node, 0);
+	
+	#~ my $function = delegate($compute_for_each_dir_node, 0);
+	#~ my $meta_name = value($compute_for_each_dir_node, 1);
+	
+	#~ return sub($) {
+		#~ my ($context) = @_;
+		#~ Disketo_Engine::calculate_for_each_dir($function, $meta_name, $context);
+	#~ };
+}
+
+sub compute_custom($) {
+	my ($compute_custom_node) = @_;
+	
+	my $meta_name = value($compute_custom_node, 0);
+	my $computer = value($compute_custom_node, 1);
+	
+	my $function = sub($$) {
+		my ($resource, $context) = @_;
+		return $computer->($resource, $context);
+	};
+	
+	return sub($) {
+		my ($context) = @_;
+		Disketo_Engine::calculate_for_each_dir($function, $meta_name, $context);
+	};
+}
+
+
+########################################################################
+
+
+sub print($) {
+	my ($print_node) = @_;
+	return delegate($print_node, 0);
+}
+
+sub print_files($) {
+	my ($print_files_node) = @_;
+
+	my $printer = delegate($print_files_node, 0);
+	return sub($) {
+		my ($context) = @_;
+		Disketo_Engine::print_files($printer, $context);
+	};
+}
+
+sub print_dirs($) {
+	my ($print_dirs_node) = @_;
+
+	my $printer = delegate($print_dirs_node, 0);
+	return sub($) {
+		my ($context) = @_;
+		Disketo_Engine::print_dirs($printer, $context);
+	};
+}
+
+sub print_simply($) {
+	my ($print_simply_node) = @_;
+
+	return sub($$) {
+		my ($resource, $context) = @_;
+		return $resource;
+	};
+}
+
+
+########################################################################
+
+#TODO all the remaining ...

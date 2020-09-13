@@ -58,7 +58,7 @@ sub commands() {
 			  "by" => "(computer function)" 
 		});
 		
-	my $for_each_file = op("for-each-file", \&Disketo_Instructions::for_each_file, ["resources"], [],
+	my $for_each_file = op("for-each-file", \&Disketo_Instructions::compute_for_each_file, ["resources"], [],
 		"For each file.",
 		[ "what" ],
 		{ "what" => {
@@ -66,7 +66,7 @@ sub commands() {
 			"custom" => $compute_custom }
 		});
 		
-	my $for_each_dir = op("for-each-dir", \&Disketo_Instructions::for_each_dir, ["resources"], [],
+	my $for_each_dir = op("for-each-dir", \&Disketo_Instructions::compute_for_each_dir, ["resources"], [],
 		"For each dir.",
 		[ "what" ],
 		{ "what" => {

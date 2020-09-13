@@ -202,18 +202,19 @@ sub run_program($) {
 	
 	for my $instruction (@$program) {
 		my $name = $instruction->{"name"};
+		Disketo_Utils::logit("Preparing $name ...");
+		
 		my $human_name = $name; #TODO human name
-		Disketo_Utils::logit("Will execute $human_name ...");
 		
 		my $operation = $instruction->{"operation"};
 		my $params = $operation->{"params"};
 		my $arguments = $instruction->{"arguments"};
 		
 		my $method = $operation->{"method"};
-		my $method_args = prepare_method_arguments($operation, $params, $arguments, $context);
-		
-		$method->(@$method_args);
-		
+		my @method_args = ($instruction, $context);
+
+		Disketo_Utils::logit("Will execute $human_name ...");
+		$method->(@method_args);
 		Disketo_Utils::logit("Executed $human_name!");
 	}
 	

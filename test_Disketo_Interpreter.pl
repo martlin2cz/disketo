@@ -25,7 +25,7 @@ my $program0a = Disketo_Analyser::analyse($script0a);
 my @arguments0a = ("foo", "test");
 Disketo_Preparer::prepare_to_execute($program0a, \@arguments0a);
 
-#print(Dumper($program0a));
+print(Dumper($program0a));
 #######################################
 Disketo_Utils::logit("print_usage");
 
