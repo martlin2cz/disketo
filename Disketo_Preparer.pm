@@ -24,6 +24,7 @@ use Disketo_Analyser;
 sub prepare_to_execute($$) {
 	my ($program, $arguments) = @_;
 	
+
 	insert_load($program); #FIXMe use the fill_missing_dependencies for it
 	
 	prepare_values($program);
@@ -59,7 +60,7 @@ sub prepare_value($) {
 	
 	if ($value =~ "\"(.*)\"") {
 		# if "string in quotes", strip
-		my ($group) = ($value =~ /"([^"]*)"/);
+		my ($group) = ($value =~ /\"([^\"]*)\"/);
 		return $group;
 	}
 	if ($value =~ "[0-9].*") {

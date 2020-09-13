@@ -426,12 +426,16 @@ use Disketo_Engine;
 ########################################################################
 sub value_of_node($) {
 	my ($value_node) = @_;
-	if (not $value_node->{"value"}) {
+	if (not exists($value_node->{"value"})) {
 		die("Not a value node! " . Dumper($value_node));
 	}
 	
-	return $value_node->{"prepared_value"} 
-		or die("Nah, foolish me! Forgot to specify the value!");
+	my $value = $value_node->{"prepared_value"} ;
+	if (not defined($value)) {
+		die("Nah, foolish me! Forgot to specify the value!");
+	}
+	
+	return $value;
 }
 
 sub child_of_node($$) {
@@ -555,7 +559,7 @@ sub having_extension($) {
 	return sub($$) {
 		my ($file, $context) = @_;
 		
-		return $file.ends_with(". " . $extension);
+		return ends_with($file, "." . $extension);
 	};
 }
 
@@ -700,7 +704,7 @@ sub print_stats($) {
 
 	return sub($) {
 		my ($context) = @_;
-		Disketo_Engine::print_stats($context);
+		Disketo_Engine::context_stats($context);
 	};
 }
 
@@ -727,7 +731,7 @@ sub print_with_counts($) {
 
 	return sub($$) {
 		my ($resource, $context) = @_;
-		my $count = $context->{"files counts"}->{$resource};
+		my $count = $context->{"files count"}->{$resource};
 		return "$resource	$count";
 	};
 }
@@ -735,3 +739,12 @@ sub print_with_counts($) {
 ########################################################################
 
 #TODO all the remaining ...
+
+########################################################################
+# utils
+
+sub ends_with($$) {
+	my ($text, $suffix) = @_;
+
+	return ($suffix eq substr($text, -length($suffix)));
+}

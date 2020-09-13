@@ -17,6 +17,24 @@ use Disketo_Instruction_Set;
 # the instructions, or runs the program itself.
 # This includes the processing of the actual script arguments.
 
+
+########################################################################
+
+# Runs the given program. What else?
+sub run_program($) {
+	my ($program) = @_;
+	
+	compute_actual_methods($program);
+	run_the_program_or_dry($program);
+}
+
+# Dry-runs the given program. Prints all as usual, but no work is done.
+sub dry_run_program($) {
+	my ($program) = @_;
+	
+	run_the_program_or_dry($program);
+}
+
 ########################################################################
 
 # Creates (as string) usage of the app with script specified. 
@@ -71,8 +89,8 @@ sub create_usage($$$) {
 ########################################################################
 
 # Prints the program (with arguments)
-sub print_program($$) {
-	my ($program, $program_args) = @_;
+sub print_program($) {
+	my ($program) = @_;
 #	my @program_args = @{ $program_args };
 
 #	my ($use_args, $dirs_to_list) = extract_dirs_to_list($program, $program_args);	
@@ -194,27 +212,37 @@ sub print_program($$) {
 
 ########################################################################
 
-# Runs the given program. What else?
-sub run_program($) {
+sub compute_actual_methods($) {
+	my ($program) = @_;
+
+	for my $instruction (@$program) {
+		
+		my $operation = $instruction->{"operation"};
+		my $method = $operation->{"method"};
+		my @method_args = ($instruction);
+		
+		my $actual_method = $method->(@method_args);
+		$instruction->{"actual method"} = $actual_method;
+	}
+}
+
+sub run_the_program_or_dry($) {
 	my ($program) = @_;
 
 	my $context = Disketo_Engine::create_context();
 	
 	for my $instruction (@$program) {
 		my $name = $instruction->{"name"};
-		Disketo_Utils::logit("Preparing $name ...");
-		
 		my $human_name = $name; #TODO human name
 		
-		my $operation = $instruction->{"operation"};
-		my $params = $operation->{"params"};
-		my $arguments = $instruction->{"arguments"};
-		
-		my $method = $operation->{"method"};
-		my @method_args = ($instruction, $context);
-
 		Disketo_Utils::logit("Will execute $human_name ...");
-		$method->(@method_args);
+				
+		my $actual_method = $instruction->{"actual method"};
+		if ($actual_method) {
+			my @method_args = ($context);
+			$actual_method->(@method_args);
+		}
+		
 		Disketo_Utils::logit("Executed $human_name!");
 	}
 	

@@ -10,6 +10,8 @@ use Disketo_Instruction_Set;
 use Disketo_Scripter;
 
 #######################################
+print("Deprecated");
+
 my $dry_run = 0;
 
 # check help

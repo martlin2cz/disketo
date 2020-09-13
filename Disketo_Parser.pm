@@ -90,8 +90,8 @@ sub tokenize($) {
 		(\# [^\n]* \n) /gx;
 		
 	my @filtered = grep /(.+)|(\n)/, @parts;
-	my @cleaned = map { $_ =~ s/^\"([^\"]*)\"$/\1/r } @filtered;
-	my @collapsed = collapse_subs(@cleaned);
+	#my @cleaned = map { $_ =~ s/^\"([^\"]*)\"$/\1/r } @filtered;
+	my @collapsed = collapse_subs(@filtered);
 
 	return @collapsed;
 }

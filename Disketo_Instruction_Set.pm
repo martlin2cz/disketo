@@ -122,7 +122,7 @@ sub commands() {
 				}
 		});
 		
-	my $having_files = 	my $having_extension = op("having-files", \&Disketo_Instructions::having_files, [], [], 
+	my $having_files = 	op("having-files", \&Disketo_Instructions::having_files, [], [], 
 			"Directories having specified amount of files matching some condition.",
 			[ "amount", "condition" ],
 			{	"amount" => {

@@ -66,14 +66,23 @@ sub build_syntax_tree($$$) {
 	my $statement_spec = "statement $statement_number";
 	my $stack = [$statement_spec];
 	my $allowed_commands = $commands;
-	return process_next_token($statement, $stack, $commands);
-	#TODO if stack not empty ...
+	
+	my $tree = process_next_token($statement, $stack, $commands);
+	
+	if ((scalar @$statement) > 0) {
+		die("Extra tokens '" . join(" ", @$statement) . "' at the end of the statement $statement_number.");
+	}
+	
+	return $tree;
 }
 
 # Consumes first token from the statement
 # and produces new syntax tree node.
 sub process_next_token($$$) {
 	my ($statement, $stack, $allowed_commands) = @_;
+	if ((scalar @$statement) == 0) {
+		die("Missing some token(s) in: " . ( join(" -> ", @$stack)) . ". ");
+	}
 	
 	my $next_token = shift @{ $statement };
 
@@ -229,7 +238,7 @@ sub walk_tree_node($$$$) {
 	my ($node, $stack, $param_name, $operation_node_fn, $value_node_fn) = @_;
 
 	my $name = $node->{"name"};
-	if ($node->{"operation"}) {
+	if (exists($node->{"operation"})) {
 		my $operation = $node->{"operation"};
 		my $params = $operation->{"params"};
 		my $arguments = $node->{"arguments"};
@@ -244,12 +253,13 @@ sub walk_tree_node($$$$) {
 			walk_tree_node($child_node, \@sub_stack, $param_name, $operation_node_fn, $value_node_fn);
 		}
 		
-	} elsif ($node->{"value"}) {
+	} elsif (exists($node->{"value"})) {
 		my $value = $node->{"value"};
 		my $prepared_value = $node->{"prepared_value"};
 
 		$value_node_fn->($node, $stack, $param_name, $name, $value, $prepared_value);
 	} else {
+		#print(Dumper($node));
 		die("Unknown node.");
 	}
 }
@@ -269,6 +279,25 @@ sub walk_program($$) {
 		$instruction_runner->
 			($instruction, $command_name, $command, $args, $resolved_args);
 	}
+}
+
+# In the given forrest finds the parent node of the given node.
+sub parent($$) {
+	my ($program, $child_node) = @_;
+
+	my $parent = undef;
+	walk_forrest($program,
+		sub { 
+			my ($node, $stack, $param_name, $name, $operation, $params, $arguments) = @_; 
+			for my $child (@$arguments) {
+				if ($child eq $child_node) {
+					$parent = $node;
+				}
+			}
+		},
+		sub {});
+	
+	return $parent;
 }
 
 ########################################################################

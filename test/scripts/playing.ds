@@ -1,0 +1,5 @@
+compute for-each-dir count-files
+print stats
+filter files having-extension $$
+print stats
+print files simply

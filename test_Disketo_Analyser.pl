@@ -69,3 +69,13 @@ print(Dumper($program7a));
 Disketo_Analyser::print_syntax_forrest($program7a);
 
 #######################################
+#######################################
+Disketo_Utils::logit("parent");
+my $node8a = $program7a->[1]->{"arguments"}->[0]->{"arguments"}->[0]->{"arguments"}->[0];
+print(Dumper($node8a));
+my $node8b = Disketo_Analyser::parent($program7a, $node8a);
+print(Dumper($node8b));
+
+#######################################
+#######################################
+

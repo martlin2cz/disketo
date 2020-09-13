@@ -2,7 +2,10 @@
 use strict;
 
 package Disketo_Utils; 
-my $VERSION=1.2.2;
+my $VERSION=3.00.0;
+
+# The version to be printed by --version.
+use constant VERSION => "3.00.0";
 
 # How offten (in seconds) tu orint the current orogress?
 use constant PROGRESS_PERIOD => 60;
@@ -12,9 +15,79 @@ use Data::Dumper;
 
 
 #############################################################
+
+sub check_args($$$$$$$) {
+	my ($ARGV, $program_command, $program_name, 
+		$program_description, $parameters_explanation,
+		$required_args_count, $required_min_args_count) = @_;
+	
+	check_help($ARGV, $program_command, $program_name, $program_description, $parameters_explanation);
+	check_version($ARGV, $program_name);
+	check_actual_args($ARGV, $program_command, $parameters_explanation, $required_args_count, $required_min_args_count);
+}
+
+sub check_help($$$$) {
+	my ($ARGV, $program_command, $program_name, $program_description, $parameters_explanation) = @_;
+	
+	if (scalar @$ARGV != 1) {
+		return;
+	}
+	
+	if (not ($ARGV->[0] eq "-h") and not ($ARGV->[0] eq "--help")) {
+		return;
+	}
+	
+	print("$program_name\n");
+	print("$program_description\n");
+	print("Usage $program_command $parameters_explanation\n");
+	die("\n");
+
+}
+
+sub check_version($$) {
+	my ($ARGV, $program_name) = @_;
+
+	if (scalar @$ARGV != 1) {
+		return;
+	}
+	
+	if (not ($ARGV->[0] eq "-v") and not ($ARGV->[0] eq "--version")) {
+		return;
+	}
+	
+	print("$program_name " . VERSION . "\n");
+	die("\n");
+}	
+
+sub check_actual_args($$$) {
+	my ($ARGV, $program_command, $parameters_explanation, $required_args_count, $required_min_args_count) = @_;
+	my $count = scalar @$ARGV;
+	
+	if (defined($required_args_count)) {
+		if ($required_args_count == $count) {
+			return;
+		} else {
+			print STDERR ("Expected $required_args_count arguments, given $count.\n");
+		}
+	}
+
+	if (defined($required_min_args_count)) {
+		if ($required_min_args_count <= $count) {
+			return;
+		} else {
+			print STDERR ("Expected at least $required_min_args_count arguments, given $count.\n");
+		}	
+	}
+	
+	print STDERR ("Usage $program_command $parameters_explanation\n");
+	die("\n");
+}
+
+#############################################################
 # Prints specified info about app arguments
 # if no args given
 # and dies
+# DEPRECATED
 sub usage($$) {
 	my $ARGV_ref = shift @_;
 	my $info = shift @_;
