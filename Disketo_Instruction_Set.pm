@@ -102,11 +102,11 @@ sub commands() {
 			{ "number" => "(count)",
 		});
 		
-	my $case_sensitive = op("case-sensitive", \&Disketo_Instructions::case_sensitive, [], [], 
+	my $case_sensitive = op("case-sensitive", undef, [], [], 
 			"Matches the pattern respecing the case",
 			[], {});
 
-	my $case_insensitive = op("case-insensitive", \&Disketo_Instructions::case_insensitive, [], [], 
+	my $case_insensitive = op("case-insensitive", undef, [], [], 
 			"Matches the pattern ignoring the case",
 			[], {});
 
@@ -186,7 +186,7 @@ sub commands() {
 			[], {});
 		
 		
-	my $print_stats = op("stats", \&Disketo_Instructions::stats, [], [], 
+	my $print_stats = op("stats", \&Disketo_Instructions::print_stats, [], [], 
 			"Prints the current context stats.",
 			[], {});
 
