@@ -24,7 +24,7 @@ sub create_context() {
 # Performs the load resources of the given folders/from the given files
 # into the given context.
 sub load($$) {
-	print("*** load \n");
+	#print("*** load \n");
 	my ($roots, $context) = @_;
 	my %resources = ();
 	foreach my $root (@$roots) {
@@ -41,7 +41,7 @@ sub load($$) {
 # Performs the calculation of the given function($dir,$context) 
 # to obtain given identifier over the dirs in the given context.
 sub calculate_for_each_dir($$$) {
-	print("*** calculate_for_each_dir \n");
+	#print("*** calculate_for_each_dir \n");
 	my ($function, $identifier, $context) = @_;
 
 	my %values = ();
@@ -60,7 +60,7 @@ sub calculate_for_each_dir($$$) {
 # Performs the calculation of the given function($file,$context) 
 # to obtain given identifier over the files in the given context.
 sub calculate_for_each_file($$$) {
-	print("*** calculate_for_each_file \n");
+	#print("*** calculate_for_each_file \n");
 	my ($function, $identifier, $context) = @_;
 
 	my %values = ();
@@ -79,7 +79,7 @@ sub calculate_for_each_file($$$) {
 # Performs the aggregation by the given groupper($dir,$context) 
 # to obtain groups for the dirs in the given context.
 sub group_dirs($$$) {
-	print("*** group_dirs \n");
+	#print("*** group_dirs \n");
 	my ($groupper, $identifier, $context) = @_;
 
 	my %values = ();
@@ -97,7 +97,7 @@ sub group_dirs($$$) {
 # Performs the aggregation by the given groupper($file,$context) 
 # to obtain groups for the files in the given context.
 sub group_files($$$) {
-	print("*** group_files \n");
+	#print("*** group_files \n");
 	my ($groupper, $identifier, $context) = @_;
 
 	my %values = ();
@@ -116,7 +116,7 @@ sub group_files($$$) {
 ########################################################################
 # Performs the filtration based on the predicate($dir,$context) 
 sub filter_dirs($$) {
-	print("*** filter_dirs \n");
+	#print("*** filter_dirs \n");
 	my ($predicate, $context) = @_;
 	my %resources = %{ $context->{"resources"} };
 	
@@ -137,7 +137,7 @@ sub filter_dirs($$) {
 ########################################################################
 # Performs the filtration based on the predicate($file,$context) 
 sub filter_files($$) {
-	print("*** filter_files \n");
+	#print("*** filter_files \n");
 	my ($predicate, $context) = @_;
 
 	my %new_resources = ();
@@ -156,7 +156,7 @@ sub filter_files($$) {
 ########################################################################
 # Performs the print based on the printer($dir,$context) 
 sub print_dirs($$) {
-	print("*** print_dirs \n");
+	#print("*** print_dirs \n");
 	my ($printer, $context) = @_;
 
 	Disketo_Utils::iterate_dirs($context, sub($$) {
@@ -169,7 +169,7 @@ sub print_dirs($$) {
 ########################################################################
 # Performs the print based on the printer($file,$context) 
 sub print_files($$) {
-	print("*** print_files \n");
+	#print("*** print_files \n");
 	my ($printer, $context) = @_;
 
 	Disketo_Utils::iterate_files($context, sub($$$$) {
@@ -183,7 +183,7 @@ sub print_files($$) {
 ########################################################################
 # Prints the statistics about the context.
 sub context_stats($) {
-	print("*** context_stats \n");
+	#print("*** context_stats \n");
 	my ($context) = @_;
 	
 	print(Dumper($context)); # XXX

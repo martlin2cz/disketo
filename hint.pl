@@ -16,18 +16,19 @@ Disketo_Utils::check_args(\@ARGV,
 	"Disketo statements hint tool",
 	"Displays hints for the disketo script statements.",
 	"<STATEMENT> or <TOKEN 1> ... [TOKEN n]\n"
-	."Place the \"???\" (with quotes) instead of the identifier/command/value you want, to get help about that.",
+	."Place the \"WTF\" (What This Forms?) (with quotes) instead of the identifier/command/value you want, to get help about that.",
 	undef, 1);
 	
 my $statement = join(" ", @ARGV);
 
 my $program = Disketo_Scripter::parse_statement($statement);
 
-my $nodes = Disketo_Preparer::collect_nodes_with_value($program, '???');
+my $nodes = Disketo_Preparer::collect_nodes_with_value($program, "WTF");
 if (scalar @$nodes > 1) {
-	die("Please, specify only one \"???\" indicator.");
+	die("Please, specify only one \"WTF\" indicator.");
 }
 if (scalar @$nodes < 1) {
+	print("The statement specified is valid.\n");
 	exit;
 }
 
@@ -41,7 +42,7 @@ my @params = @{ $parent->{"operation"}->{"params"} };
 my $param_index = firstidx { $_ eq $node } @params;
 my $param_name = $params[$param_index];
 
-print("The \"???\" is at position, where the '$value_name' for the '$param_name' parameter of the '$command_name' command is expected.\n");
+print("The \"WTF\" is at position, where the '$value_name' for the '$param_name' parameter of the '$command_name' command is expected.\n");
 
 ########################################################################
 

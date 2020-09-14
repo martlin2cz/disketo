@@ -81,14 +81,15 @@ sub build_syntax_tree($$$) {
 sub process_next_token($$$) {
 	my ($statement, $stack, $allowed_commands) = @_;
 	if ((scalar @$statement) == 0) {
-		die("Missing some token(s) in: " . ( join(" -> ", @$stack)) . ". ");
+		print STDERR ("Missing some token(s) in: " . ( join(" -> ", @$stack)) . ".\n");
 	}
 	
 	my $next_token = shift @{ $statement };
 
 	my $expected_operation = ref($allowed_commands) eq "HASH";
 	my $is_operation = is_operation($next_token);
-	
+
+	#print("Token: '$next_token', is it operation? $is_operation. Expected operation? $expected_operation.\n");
 	if ($expected_operation and $is_operation) {
 		# operation where expected, fine
 		my $operation_name = $next_token;
@@ -321,7 +322,7 @@ sub tree_subtree_usage($$) {
 	my %args = %{ $command->{"valid-args"} };
 	my $padded = ("  " x (3 * $padding));
 	
-	my $name = $command->{"name"};
+	my $command_name = $command->{"name"};
 	my $doc = $command->{"doc"};
 	my $params_list = join(" ", @params);
 	
@@ -344,9 +345,9 @@ sub tree_subtree_usage($$) {
 	}
 	
 	if ($params_spec eq "") {
-		return "$padded$name  $params_list\n$padded  $doc\n";
+		return "$padded$command_name  $params_list\n$padded  $doc\n";
 	} else {
-		return "$padded$name  $params_list\n$padded  $doc\n$padded  WHERE:\n$params_spec";
+		return "$padded$command_name  $params_list\n$padded  $doc\n$padded  WHERE:\n$params_spec";
 	}
 }
 

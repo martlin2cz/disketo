@@ -232,8 +232,7 @@ sub run_the_program_or_dry($) {
 	my $context = Disketo_Engine::create_context();
 	
 	for my $instruction (@$program) {
-		my $name = $instruction->{"name"};
-		my $human_name = $name; #TODO human name
+		my $human_name = human_name($instruction);
 		
 		Disketo_Utils::logit("Will execute $human_name ...");
 				
@@ -259,6 +258,31 @@ sub run_the_program_or_dry($) {
 	#~ });
 }
 
+sub human_name($) {
+	my ($instruction) = @_;
+	
+	my $result = "";
+	
+	Disketo_Analyser::walk_tree($instruction, "",
+		sub { 
+			my ($node, $stack, $param_name, $name, $operation, $params, $arguments) = @_;
+			my $command_name = $operation->{"name"};
+				$result .= "$command_name ";
+		},
+		sub { 
+			my ($node, $stack, $param_name, $name, $value, $prepared_value) = @_; 
+			
+			if (length($value) < 20) {
+				$result .= "$value ";
+			} else {
+				$result .= "(...) ";
+			}
+		});
+	
+	return $result;
+}
+
+# DEPRECATED
 # Prepares the arguments to the command method.
 sub prepare_method_arguments($$$$) {
 	my ($operation, $params, $arguments, $context) = @_;

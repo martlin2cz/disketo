@@ -525,14 +525,14 @@ sub matching_pattern($) {
 	if (is($matching_pattern_node, 1, "case-sensitive")) {
 		return sub($) {
 			my ($resource, $context) = @_;
-			return ($resource =~ /$pattern/); #TODO
+			return ($resource =~ /$pattern/);
 		};
 	}
 	
 	if (is($matching_pattern_node, 1, "case-insensitive")) {
 		return sub($) {
 			my ($resource, $context) = @_;
-			return ($resource =~ /$pattern/); #TODO
+			return ($resource =~ /$pattern/i);
 		};
 	}
 	
@@ -540,14 +540,13 @@ sub matching_pattern($) {
 }
 
 sub matching_custom_matcher($) {
-	my ($having_extension_node) = @_;
+	my ($matching_custom_matcher_node) = @_;
 
-	my $predicate = value($having_extension_node, 0);
+	my $predicate = value($matching_custom_matcher_node, 0);
 	
 	return sub($$) {
 		my ($resource, $context) = @_;
-		
-		return $predicate->($resource);
+		return $predicate->($resource, $context);
 	};
 }
 
@@ -571,7 +570,7 @@ sub having_files($) {
 	
 	return sub($$) {
 		my ($dir, $context) = @_;
-		my $files_matching = $condition->($dir, $context);
+		my $files_matching = files_of_dir_matching($dir, $condition, $context);
 		return $amount->($files_matching, $context)
 	};
 }
@@ -598,27 +597,30 @@ sub compute($) {
 sub compute_for_each_file($) {
 	my ($compute_for_each_file_node) = @_;
 
-	return delegate($compute_for_each_file_node, 0);
-	#~ my $function = delegate($compute_for_each_file_node, 0);
-	#~ my $meta_name = value($compute_for_each_file_node, 1);
+###	return delegate($compute_for_each_file_node, 0);
+
+	my $info = delegate($compute_for_each_file_node, 0);
+	my $function = $info->{"function"};
+	my $meta_name = $info->{"meta_name"};
 	
-	#~ return sub($) {
-		#~ my ($context) = @_;
-		#~ Disketo_Engine::calculate_for_each_file($function, $meta_name, $context);
-	#~ };
+	return sub($) {
+		my ($context) = @_;
+		Disketo_Engine::calculate_for_each_file($function, $meta_name, $context);
+	};
 }
 
 sub compute_for_each_dir($) {
 	my ($compute_for_each_dir_node) = @_;
-	return delegate($compute_for_each_dir_node, 0);
+###	return delegate($compute_for_each_dir_node, 0);
 	
-	#~ my $function = delegate($compute_for_each_dir_node, 0);
-	#~ my $meta_name = value($compute_for_each_dir_node, 1);
+	my $info = delegate($compute_for_each_dir_node, 0);
+	my $function = $info->{"function"};
+	my $meta_name = $info->{"meta_name"};
 	
-	#~ return sub($) {
-		#~ my ($context) = @_;
-		#~ Disketo_Engine::calculate_for_each_dir($function, $meta_name, $context);
-	#~ };
+	return sub($) {
+		my ($context) = @_;
+		Disketo_Engine::calculate_for_each_dir($function, $meta_name, $context);
+	};
 }
 
 
@@ -631,10 +633,7 @@ sub count_files($) {
 		return scalar @children;
 	};
 	
-	return sub($) {
-		my ($context) = @_;
-		Disketo_Engine::calculate_for_each_dir($function, "files count", $context);
-	};
+	return {"function" => $function, "meta_name" => "files count"};
 }
 
 sub files_stats($) {
@@ -646,10 +645,7 @@ sub files_stats($) {
 		return {"file" => $file, "size" => 42}; #TODO
 	};
 	
-	return sub($) {
-		my ($context) = @_;
-		Disketo_Engine::calculate_for_each_file($function, "files stats", $context);
-	};
+	return {"function" => $function, "meta_name" => "files stats"};
 }
 
 
@@ -664,10 +660,7 @@ sub compute_custom($) {
 		return $computer->($resource, $context);
 	};
 	
-	return sub($) {
-		my ($context) = @_;
-		Disketo_Engine::calculate_for_each_dir($function, $meta_name, $context); # TODO for each file or dir?
-	};
+	return {"function" => $function, "meta_name" => $meta_name};
 }
 
 
@@ -736,6 +729,16 @@ sub print_with_counts($) {
 	};
 }
 
+sub print_custom($) {
+	my ($print_custom_node) = @_;
+
+	my $printer = value($print_custom_node, 0);
+	return sub($$) {
+		my ($resource, $context) = @_;
+		return $printer->($resource, $context);
+	};
+}
+
 ########################################################################
 
 #TODO all the remaining ...
@@ -747,4 +750,12 @@ sub ends_with($$) {
 	my ($text, $suffix) = @_;
 
 	return ($suffix eq substr($text, -length($suffix)));
+}
+
+sub files_of_dir_matching($$$) {
+	my ($dir, $condition, $context) = @_;
+	
+	my $children = $context->{"resources"}->{$dir};
+	my @matching = grep { $condition->($_, $context) } @$children;
+	return \@matching;
 }

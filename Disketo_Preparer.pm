@@ -25,7 +25,7 @@ sub prepare_to_execute($$) {
 	my ($program, $arguments) = @_;
 	
 
-	insert_load($program); #FIXMe use the fill_missing_dependencies for it
+	insert_load($program); #FIXME use the fill_missing_dependencies for it
 	
 	prepare_values($program);
 
@@ -58,30 +58,32 @@ sub prepare_values($) {
 sub prepare_value($) {
 	my ($value) = @_;
 	
-	if ($value =~ "\"(.*)\"") {
+	if ($value =~ /^\"(.*)\"$/) {
 		# if "string in quotes", strip
 		my ($group) = ($value =~ /\"([^\"]*)\"/);
 		return $group;
 	}
-	if ($value =~ "[0-9].*") {
+	if ($value =~ /^[0-9](.*)$/) {
 		# if just number, keep
 		return $value;
 	}
 	if ($value eq '$$' or $value eq '$$$') {
-		# if $$ or $$$ placeholder, leave empty
+		# if $$ or $$$ placeholder, leave empty for now
 		return undef;
 	}
-	
-	if ($value =~ "sub ?\{(.*)\}") {
+	if ($value =~ /^sub ?\{/) {
 		# if sub { ... }, eval
 		my $evaluated = eval($value);
-		#TODO handle error
+
+		if ($@) {
+			die("Syntax error $@ in $value");
+		}
 		return $evaluated;
 	}
 	
 #	# otherwise just raise internal error
 #	die("Unknown value type of: $value");
-	
+
 	# otherwise return it as it is
 	return $value;
 }
@@ -96,6 +98,7 @@ sub resolve_values($$) {
 	my ($program, $arguments) = @_;
 
 	my $nodes_with_marker = collect_nodes_with_value($program, '$$');
+
 	if ((scalar @$nodes_with_marker) > (scalar @$arguments)) {
 		die("Expected at least " . (scalar @$nodes_with_marker) . " script arguments, "
 			. "given " . (scalar @$arguments));

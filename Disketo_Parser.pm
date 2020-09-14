@@ -82,8 +82,8 @@ sub tokenize($) {
 		(\" [^\"]* \") | 
 		(?# regular text, including the numbers and dash)
 		( [\w\-]+ ) | 
-		(?# the $$ marker)
-		( \$\$ ) | 
+		(?# the $$ marker and $$$ hypermarker)
+		( \$\$\$? ) | 
 		(?# pass newlines too)
 		( \n ) |
 		(?# comments)
