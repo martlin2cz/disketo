@@ -13,6 +13,7 @@ use Disketo_Analyser;
 use Disketo_Preparer;
 use Disketo_Instruction_Set;
 use Disketo_Interpreter;
+use Disketo_Help;
 
 ########################################################################
 
@@ -81,8 +82,12 @@ sub parse_statement($) {
 	return $program;
 }
 
-# Prints the tree of the allowed commands.
+# Prints the tree of all he allowed commands
 sub print_commands_tree() {
-	my $usage = Disketo_Analyser::tree_usage();
-	print($usage);
+	Disketo_Help::print_tree_usage();
+}
+
+# Prints the list of all the valid statements
+sub print_all_statements() {
+	Disketo_Help::print_linear_usage();
 }

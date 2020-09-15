@@ -21,8 +21,18 @@ use Disketo_Instruction_Set;
 ########################################################################
 # TREE USAGE
 
-sub tree_usage() {
+# Prints the tree usage
+sub print_tree_usage() {
 	my $commands = Disketo_Instruction_Set::commands();
+	
+	my $usage = tree_usage($commands);
+	
+	print($usage);
+}
+
+# Computes the tree usage for the given commands
+sub tree_usage($) {
+	my ($commands) = @_;
 	
 	my $usage = "";
 	for my $command (values %$commands) {
@@ -33,6 +43,7 @@ sub tree_usage() {
 	return $usage;
 }
 
+# Computes the tree usage for the given command node
 sub tree_subtree_usage($$) {
 	my ($command, $padding) = @_;
 	my @params = @{ $command->{"params"} };
@@ -72,85 +83,99 @@ sub tree_subtree_usage($$) {
 ########################################################################
 # LINEAR USAGE
 
-
-sub linear_usage() {
+# Prints the "linear usage" (all the valid statements)
+sub print_linear_usage() {
 	my $commands = Disketo_Instruction_Set::commands();
 
-	#~ my @usage = [];
-	#~ for my $command (values %$commands) {
-		
-		#~ my $command_usages = valid_arg_value_usage($command);
-		#~ push (@usage, @$command_usages);
-	#~ }
+	my $usage = linear_usage($commands);
 	
-	#~ return \@usage;
+	print(join("\n", @$usage) . "\n");
+}
+
+# Computes the "linear usage"
+sub linear_usage($) {
+	my ($commands) = @_;
+
 	return valid_arg_value_usage($commands);
 }
+
+# Computes the linear usage for the "valid arg value" field 
+# (a value of $command->{"valid-args"} )
 sub valid_arg_value_usage($) {
 	my ($valid_arg_value) = @_;
 	
 	if (ref($valid_arg_value) eq "HASH") {
+		# if the valid arg value is operations ...
+		
 		my %commands = %$valid_arg_value;
 		
 		my @result = ();
 		
-		for my $command_name (keys %commands) {
-			#print("-> $command_name\n");
-			#push @result, "[$command_name]";
-			
-			my $command = %commands{$command_name};
-			my $child_usage = linear_subtree_usage($command);
-			my @sub_usage = map { "$command_name $_" } @$child_usage;
-#print(Dumper($command_name, $child_usage, \@sub_usage));
-			push (@result, @sub_usage);
+		for my $command (values %commands) {
+			# for each of the valid "child command"
+			# compute its possible arguments usage
+			my $sub_usage = linear_subtree_usage($command);
+
+			push (@result, @$sub_usage);
 		} 
 
 		return \@result;
 	} else {
+		# else it's just an atomic value
 		my $value_name = $valid_arg_value;
 		return [ $value_name ];
 	}
-	
 }
 
+# Computes the linear usage for the given command node
 sub linear_subtree_usage($) {
 	my ($command) = @_;
 	
+	my $command_name = $command->{"name"};
+	
 	my @params_names = @{ $command->{"params"} };
-	if (scalar (@params_names) == 0) { 
-		return [ "" ];
+	if (scalar (@params_names) == 0) {
+		# if has no params at all,
+		# the usage of that command is just its name
+		return [ $command_name ];
 	}
 	
+	# compute the usages of all its params and combine them each by each
 	my @params_usages = map { param_usages($command, $_) } @params_names;
 	my $combinations = combine(\@params_usages);
-	#print(Dumper(\@params_usages, \));
-	return $combinations;
+	my @with_command_name = map { "$command_name $_" } @$combinations;
+	
+	return \@with_command_name;
 }
 
+# Computes the usages array for the given param of the given command
 sub param_usages($$) {
 	my ($command, $param_name) = @_;
 	
-	my $name = $command->{"name"};
 	my $child = $command->{"valid-args"}->{$param_name};
-	
 	my $child_usages = valid_arg_value_usage($child);
-#print(Dumper($name, $child_usages));
+
 	return $child_usages;
 }
 
+# Combines the arrays of the given arrays by concatenation
+# i.e. [[X,Y], [0,1]] => [X0, X1, Y0, Y1]
 sub combine($) {
-	my ($params_usages) = @_;
+	my ($sets) = @_;
+	
+	my @sets = @$sets;
+	my $first_set = shift @sets;
+	if ((scalar @sets) == 0) {
+		return $first_set;
+	}
 	
 	my @result = ();
-	# TODO generalise!
-	for my $param1 (@{ $params_usages->[0] }) {
-			if ((scalar @$params_usages) > 1) {
-				for my $param2 (@{ $params_usages->[1]}) {
-					push @result, "$param1 $param2";
-				}
-			} else {
-				push @result, $param1;
-			}
+	for my $item (@$first_set) {
+
+		my $sub_result = combine(\@sets);
+		my @sub_result_with_item = map { "$item $_" } @$sub_result;
+		
+		push (@result, @sub_result_with_item);
 	}
 	return \@result;
 }
