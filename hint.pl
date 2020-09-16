@@ -7,7 +7,7 @@ my $VERSION=3.00.0;
 
 use Disketo_Utils;
 use Disketo_Scripter;
-use List::MoreUtils qw{ firstidx };
+
 
 ########################################################################
 
@@ -33,16 +33,9 @@ if (scalar @$nodes < 1) {
 }
 
 my $node = $nodes->[0];
-my $parent = Disketo_Analyser::parent($program, $node);
+my $spec = Disketo_Scripter::value_node_specification($program, $node);
 
-my $value_name = $node->{"name"};
-my $command_name = $parent->{"name"};
-
-my @params = @{ $parent->{"operation"}->{"params"} };
-my $param_index = firstidx { $_ eq $node } @params;
-my $param_name = $params[$param_index];
-
-print("The \"WTF\" is at position, where the '$value_name' for the '$param_name' parameter of the '$command_name' command is expected.\n");
+print("The \"WTF\" is at position, where $spec is expected.\n");
 
 ########################################################################
 

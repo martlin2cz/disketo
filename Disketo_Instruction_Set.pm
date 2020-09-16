@@ -14,14 +14,11 @@ use Data::Dumper;
 # statements and particular perl functions.
 ########################################################################
 
-sub TODO() {
-	die("TODO");
-}
-
-sub op($$$$$$$) {
-	my ($name, $method, $requires, $produces, $doc, $params, $valid_arguments) = @_;
+sub op($$$$$$$$) {
+	my ($id, $name, $method, $requires, $produces, $doc, $params, $valid_arguments) = @_;
 	
-	return {"name" => $name, 
+	return {"ID" => $id,
+			"name" => $name, 
 			"method" => $method,
 			"requires" => $requires,
 			"produces" => $produces,
@@ -34,31 +31,31 @@ sub op($$$$$$$) {
 sub commands() {
 	# -- compute primitive operations ----------------------------------
 	
-	my $load = op("load", \&Disketo_Instructions::load, [], ["resources"], 
+	my $load = op("load", "load", \&Disketo_Instructions::load, [], ["resources"], 
 			"Loads the resources from the specified root folder or the file.",
 			["roots"], { "roots" => "(the root resources)" });
 
 
 	# -- compute primitive operations ----------------------------------
 	
-	my $count_files = op("count-files", \&Disketo_Instructions::count_files, ["resources"], ["files counts"], 
+	my $count_files = op("count-files", "count-files", \&Disketo_Instructions::count_files, ["resources"], ["files counts"], 
 			"Counts of files in each dir.",
 			[], {});
 	
-	my $files_stats = op("files-stats", \&Disketo_Instructions::files_stats, ["resources"], ["files stats"], 
+	my $files_stats = op("files-stats", "files-stats", \&Disketo_Instructions::files_stats, ["resources"], ["files stats"], 
 			"Obtains the stats of the files.",
 			[], {});
 		
 	# -- compute composite operations ---------------------------------
 	
-	my $compute_custom = op("compute-custom", \&Disketo_Instructions::compute_custom, [], ["(user specified)"], 
+	my $compute_custom = op("compute-custom", "custom", \&Disketo_Instructions::compute_custom, [], ["(user specified)"], 
 			"Computes the custom meta.",
 			[ "as-meta", "by" ],
 			{ "as-meta" => "(meta name)",
 			  "by" => "(computer function)" 
 		});
 		
-	my $for_each_file = op("for-each-file", \&Disketo_Instructions::compute_for_each_file, ["resources"], [],
+	my $for_each_file = op("for-each-file", "for-each-file", \&Disketo_Instructions::compute_for_each_file, ["resources"], [],
 		"For each file.",
 		[ "what" ],
 		{ "what" => {
@@ -66,7 +63,7 @@ sub commands() {
 			"custom" => $compute_custom }
 		});
 		
-	my $for_each_dir = op("for-each-dir", \&Disketo_Instructions::compute_for_each_dir, ["resources"], [],
+	my $for_each_dir = op("for-each-dir", "for-each-dir", \&Disketo_Instructions::compute_for_each_dir, ["resources"], [],
 		"For each dir.",
 		[ "what" ],
 		{ "what" => {
@@ -74,7 +71,7 @@ sub commands() {
 			"count-files" => $count_files }
 		});
 	
-	my $compute = op("compute", \&Disketo_Instructions::compute, [], ["(user specified)"], 
+	my $compute = op("compute", "compute", \&Disketo_Instructions::compute, [], ["(user specified)"], 
 		"Computes a meta.",
 		[ "for-what" ],
 		{ "for-what" => {
@@ -84,35 +81,35 @@ sub commands() {
 
 # -- filter primitive operations ---------------------------------
 	
-	my $matching_custom_matcher = op("matching-custom-matcher", \&Disketo_Instructions::matching_custom_matcher, [], [], 
+	my $matching_custom_matcher = op("matching-custom-matcher", "matching-custom-matcher", \&Disketo_Instructions::matching_custom_matcher, [], [], 
 			"Filters by specified matcher function",
 			[ "by" ],
 			{ "by" => "(matcher function)",
 		});
 		
-	my $having_extension = op("having-extension", \&Disketo_Instructions::having_extension, [], [], 
+	my $having_extension = op("having-extension", "having-extension", \&Disketo_Instructions::having_extension, [], [], 
 			"Files having the specified extension.",
 			[ "extension" ],
 			{ "extension" => "(extension)",
 		});
 		
-	my $more_than = op("more-than", \&Disketo_Instructions::more_than, [], [], 
+	my $more_than = op("more-than", "more-than", \&Disketo_Instructions::more_than, [], [], 
 			"Files having more than specified number of files matching the condition.",
 			[ "number" ],
 			{ "number" => "(count)",
 		});
 		
-	my $case_sensitive = op("case-sensitive", undef, [], [], 
+	my $case_sensitive = op("case-sensitive", "case-sensitive", undef, [], [], 
 			"Matches the pattern respecing the case",
 			[], {});
 
-	my $case_insensitive = op("case-insensitive", undef, [], [], 
+	my $case_insensitive = op("case-insensitive", "case-insensitive", undef, [], [], 
 			"Matches the pattern ignoring the case",
 			[], {});
 
 # -- filter composite operations ---------------------------------
 
-	my $matching_pattern = op("matching-pattern", \&Disketo_Instructions::matching_pattern, [], [], 
+	my $matching_pattern = op("matching-pattern", "matching-pattern", \&Disketo_Instructions::matching_pattern, [], [], 
 			"Matches the given pattern specified way",
 			[ "pattern", "how" ],
 			{	"pattern" => "(the pattern)",
@@ -122,7 +119,7 @@ sub commands() {
 				}
 		});
 		
-	my $having_files = 	op("having-files", \&Disketo_Instructions::having_files, [], [], 
+	my $having_files = 	op("having-files", "having-files", \&Disketo_Instructions::having_files, [], [], 
 			"Directories having specified amount of files matching some condition.",
 			[ "amount", "condition" ],
 			{	"amount" => {
@@ -136,7 +133,7 @@ sub commands() {
 				}
 		});
 
-	my $filter_files = op("filter-files", \&Disketo_Instructions::filter_files, ["resources"], [], 
+	my $filter_files = op("filter-files", "files", \&Disketo_Instructions::filter_files, ["resources"], [], 
 			"Filters files by given criteria",
 			[ "matching" ],
 			{ "matching" => {
@@ -146,7 +143,7 @@ sub commands() {
 			}
 		});
 
-	my $filter_dirs = op("filter-dirs", \&Disketo_Instructions::filter_dirs, ["resources"], [], 
+	my $filter_dirs = op("filter-dirs", "dirs", \&Disketo_Instructions::filter_dirs, ["resources"], [], 
 			"Filters dirs by given criteria",
 			[ "matching" ],
 			{ "matching" => {
@@ -156,7 +153,7 @@ sub commands() {
 			}
 		});
 
-	my $filter = op("filter", \&Disketo_Instructions::filter, [], [], 
+	my $filter = op("filter", "filter", \&Disketo_Instructions::filter, [], [], 
 			"Filters by given criteria",
 			[ "what" ],
 			{ "what" => {
@@ -167,32 +164,32 @@ sub commands() {
 
 	# -- print primitive operations ----------------------------------
 	
-	my $print_simply = op("print-simply", \&Disketo_Instructions::print_simply, [], [], 
+	my $print_simply = op("print-simply", "print-simply", \&Disketo_Instructions::print_simply, [], [], 
 			"Prints each resource by its complete path.",
 			[], {});
 		
-	my $print_only_name = op("print-only-name", \&Disketo_Instructions::print_only_name, [], [], 
+	my $print_only_name = op("print-only-name", "print-only-name", \&Disketo_Instructions::print_only_name, [], [], 
 			"Prints only the name of the resource.",
 			[], {});
 	
-	my $print_custom = op("print-custom", \&Disketo_Instructions::print_custom, [], [], 
+	my $print_custom = op("print-custom", "print-custom", \&Disketo_Instructions::print_custom, [], [], 
 			"Prints each resource by the given function.",
 			[ "printer" ],
 			{ "printer" => "(printer function)" }
 		);
 	
-	my $print_with_counts = op("print-with-counts", \&Disketo_Instructions::print_with_counts, ["files counts"], [], 
+	my $print_with_counts = op("print-with-counts", "print-with-counts", \&Disketo_Instructions::print_with_counts, ["files counts"], [], 
 			"Prints each resource and number of its children.",
 			[], {});
 		
 		
-	my $print_stats = op("stats", \&Disketo_Instructions::print_stats, [], [], 
+	my $print_stats = op("print-stats", "stats", \&Disketo_Instructions::print_stats, [], [], 
 			"Prints the current context stats.",
 			[], {});
 
 	# -- print composite operations ---------------------------------
 	
-	my $print_files = op("print-files", \&Disketo_Instructions::print_files, ["resources"], [],
+	my $print_files = op("print-files", "files", \&Disketo_Instructions::print_files, ["resources"], [],
 		"Prints files.",
 		[ "how" ],
 		{ "how" => {
@@ -201,7 +198,7 @@ sub commands() {
 			"custom" => $print_custom }
 		});
 				
-	my $print_dirs = op("print-dirs", \&Disketo_Instructions::print_dirs, ["resources"], [],
+	my $print_dirs = op("print-dirs", "dirs", \&Disketo_Instructions::print_dirs, ["resources"], [],
 		"Prints dirs.",
 		[ "how" ],
 		{ "how" => {
@@ -211,7 +208,7 @@ sub commands() {
 			"custom" => $print_custom }
 		});
 	
-	my $print = op("print", \&Disketo_Instructions::print, [], [], 
+	my $print = op("print", "print", \&Disketo_Instructions::print, [], [], 
 		"Prints given.",
 		[ "what" ],
 		{ "what" => {

@@ -10,7 +10,7 @@ use Data::Dumper;
 use Disketo_Utils;
 use Disketo_Extras;
 use Disketo_Instruction_Set;
-
+use List::MoreUtils qw{ firstidx };
 
 ########################################################################
 # Implements the functions related to help, usage, list all commands
@@ -180,5 +180,35 @@ sub combine($) {
 	return \@result;
 }
 
+########################################################################
+# VALUE NODE specification
+
+sub compute_arguments_description($) {
+	my ($program) = @_;
+	
+	my $nodes_with_marker = Disketo_Preparer::collect_nodes_with_value($program, '$$');
+	
+	my $result = "";
+	for my $node (@$nodes_with_marker) {
+		my $node_spec = value_node_specification($program, $node);
+		$result .= "  $node_spec\n";
+	}
+	return $result;
+}
+
+sub value_node_specification($$) {
+	my ($program, $value_node) = @_;
+		
+	my $parent = Disketo_Analyser::parent($program, $value_node);
+
+	my $value_name = $value_node->{"name"};
+	my $command_name = $parent->{"name"};
+
+	my @params = @{ $parent->{"operation"}->{"params"} };
+	my $param_index = firstidx { $_ eq $value_node } @params;
+	my $param_name = $params[$param_index];
+
+	return "$value_name for the '$param_name' parameter of the '$command_name' command";
+}
 
 ########################################################################

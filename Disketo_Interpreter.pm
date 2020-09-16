@@ -39,6 +39,7 @@ sub dry_run_program($) {
 
 # Creates (as string) usage of the app with script specified. 
 # If program_args specified, checks its count as well.
+# DEPRECATED: implemented in Disketo_Scripter
 sub create_usage($$$) {
 	my ($script_name, $program, $program_args) = @_;
 	my @program_args = @{ $program_args } if $program_args;
@@ -110,7 +111,9 @@ sub print_program($) {
 			my ($node, $stack, $param_name, $name, $value, $prepared_value) = @_;
 			
 			my $padding = "    " x ((scalar @$stack) - 1);
-			if ($value eq '$$') {
+			if (not defined($prepared_value)) {
+				print("$padding where [$param_name] $name will be '$value'\n");
+			} elsif ($value eq '$$') {
 				print("$padding where [$param_name] $name will be '$value', which is actually '$prepared_value'\n");
 			} elsif ($value eq '$$$') {
 				my $joined = join(", ", @$prepared_value);

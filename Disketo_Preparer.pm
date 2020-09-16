@@ -23,7 +23,6 @@ use Disketo_Analyser;
 
 sub prepare_to_execute($$) {
 	my ($program, $arguments) = @_;
-	
 
 	insert_load($program); #FIXME use the fill_missing_dependencies for it
 	
@@ -34,6 +33,16 @@ sub prepare_to_execute($$) {
 	verify_dependencies($program); #TODO replace by fill_missing_dependencies
 	
 	return $remaining_arguments;
+}
+
+sub prepare_to_print($) {
+	my ($program) = @_;
+
+	insert_load($program); #FIXME use the fill_missing_dependencies for it
+	
+	prepare_values($program);
+
+	verify_dependencies($program); #TODO replace by fill_missing_dependencies
 }
 
 ########################################################################
@@ -100,8 +109,14 @@ sub resolve_values($$) {
 	my $nodes_with_marker = collect_nodes_with_value($program, '$$');
 
 	if ((scalar @$nodes_with_marker) > (scalar @$arguments)) {
-		die("Expected at least " . (scalar @$nodes_with_marker) . " script arguments, "
-			. "given " . (scalar @$arguments));
+		my $expected_count = (scalar @$nodes_with_marker) + 1;
+		my $actual_count = (scalar @$arguments);
+		my $args_desc = Disketo_Help::compute_arguments_description($program);
+		die("Expected at least $expected_count script arguments, "
+			. "given $actual_count. "
+			. "The required script arguments are:\n"
+			. "$args_desc"
+			. "  [ROOT DIR OR FILE 1] ... [ROOT DIR OR FILE n]");
 	}
 	
 	my $remaining_arguments = resolve_marker_values($nodes_with_marker, $arguments);

@@ -54,8 +54,11 @@ sub print_program($$) {
 	
 	my $script = Disketo_Parser::parse($script_file);
 	my $program = Disketo_Analyser::analyse($script);
-	
-	Disketo_Preparer::prepare_to_execute($program, $program_arguments);
+	if ((scalar @$program_arguments) == 0) {
+		Disketo_Preparer::prepare_to_print($program);
+	} else {
+		Disketo_Preparer::prepare_to_execute($program, $program_arguments);
+	}
 	Disketo_Interpreter::print_program($program);
 	
 	return $program;
@@ -90,4 +93,10 @@ sub print_commands_tree() {
 # Prints the list of all the valid statements
 sub print_all_statements() {
 	Disketo_Help::print_linear_usage();
+}
+
+# Returns the context of the given value node
+sub value_node_specification($$) {
+	my ($program, $value_node) = @_;
+	return Disketo_Help::value_node_specification($program, $value_node);
 }

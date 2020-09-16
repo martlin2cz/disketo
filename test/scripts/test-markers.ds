@@ -1,0 +1,5 @@
+filter dirs matching-pattern $$ case-insensitive
+compute for-each-file custom $$ sub {
+	my ($resource, $context) = @_;
+	return "whatever, $resource";
+}
