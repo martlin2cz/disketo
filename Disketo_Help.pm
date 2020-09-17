@@ -8,7 +8,6 @@ my $VERSION=3.00.0;
 
 use Data::Dumper;
 use Disketo_Utils;
-use Disketo_Extras;
 use Disketo_Instruction_Set;
 use List::MoreUtils qw{ firstidx };
 

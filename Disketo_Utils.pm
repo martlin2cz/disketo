@@ -84,24 +84,6 @@ sub check_actual_args($$$) {
 }
 
 #############################################################
-# Prints specified info about app arguments
-# if no args given
-# and dies
-# DEPRECATED
-sub usage($$) {
-	my $ARGV_ref = shift @_;
-	my $info = shift @_;
-
-	if (scalar @{ $ARGV_ref } == 0) {
-		my $cmd = $0;
-
-		die("Usage: $cmd $info\n");
-	}
-}
-
-
-
-#############################################################
 # Prints the given message to stderr
 # in format TIMESTAMP # MESSAGE
 sub logit($) {

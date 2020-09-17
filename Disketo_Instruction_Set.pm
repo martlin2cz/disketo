@@ -164,21 +164,21 @@ sub commands() {
 
 	# -- print primitive operations ----------------------------------
 	
-	my $print_simply = op("print-simply", "print-simply", \&Disketo_Instructions::print_simply, [], [], 
+	my $print_simply = op("print-simply", "simply", \&Disketo_Instructions::print_simply, [], [], 
 			"Prints each resource by its complete path.",
 			[], {});
 		
-	my $print_only_name = op("print-only-name", "print-only-name", \&Disketo_Instructions::print_only_name, [], [], 
+	my $print_only_name = op("print-only-name", "only-name", \&Disketo_Instructions::print_only_name, [], [], 
 			"Prints only the name of the resource.",
 			[], {});
 	
-	my $print_custom = op("print-custom", "print-custom", \&Disketo_Instructions::print_custom, [], [], 
+	my $print_custom = op("print-custom", "custom", \&Disketo_Instructions::print_custom, [], [], 
 			"Prints each resource by the given function.",
 			[ "printer" ],
 			{ "printer" => "(printer function)" }
 		);
 	
-	my $print_with_counts = op("print-with-counts", "print-with-counts", \&Disketo_Instructions::print_with_counts, ["files counts"], [], 
+	my $print_with_counts = op("print-with-counts", "with-counts", \&Disketo_Instructions::print_with_counts, ["files counts"], [], 
 			"Prints each resource and number of its children.",
 			[], {});
 		
@@ -238,81 +238,4 @@ sub commands() {
 	
 	return \%commands;
 
-	# -- filters ------------------------------------------------------
-	#~ my $file_filters = {
-		#~ "with-extension" => $file_with_extension,
-		#~ "matching-pattern" => $matching_patern,
-		#~ "matching-custom" => $matching_custom, 
-		#~ "by-meta" => $meta_spec };
-	
-	#~ my $dir_having_files = {
-		#~ "amount_specifier"  => { # TODO FIXME
-			#~ "at-least-than" => $at_least_than,
-			#~ "no-more-than" => $no_more_than }, 
-		
-		#~ "matching" => $file_filters };
-	
-	#~ my $dirs_filters = {
-		#~ "matching-pattern" => $matching_patern,
-		#~ "matching-custom" => $matching_custom,
-		#~ "having" => $dir_having_files };
-	
-	#~ my $filters = {
-		#~ "files" => $file_filters,
-		#~ "dirs" => $dirs_filters };
-
-	#~ # -- prints --------------------------------------------------------
-	#~ my $file_printers = {
-		#~ "simply" => $print_simply,
-		#~ "custom" => $print_custom };
-		
-	#~ my $dirs_printers = {
-		#~ "simply" => $print_simply,
-		#~ "custom" => $print_custom };
-	
-	#~ my $prints = {
-		#~ "files" => $file_printers,
-		#~ "dirs" => $dirs_printers };
-
-	#~ # -- does ----------------------------------------------------------
-	#~ my $does = {
-		#~ "something" => $do_custom };
-
-	#~ # -- the actual table-----------------------------------------------
-	#~ my %table = (
-		#~ "load" => $loads,
-		#~ "compute" => $computes,
-		#~ "filter" => $filters,
-		#~ "print" => $prints,
-		#~ "do" => $does
-	#~ );
-	
-	#~ return \%table;
 }
-
-sub prepending_instruction($$) {
-	my ($instruction, $prepending_command) = @_;
-	 
-	my $command = $instruction->{"command"};
-	my $arguments = $instruction->{"arguments"};
-	
-	my $params = $command->{"params"};
-	my $prepending_params = $prepending_command->{"params"};
-	
-	my $prepending_arguments; 
-	if ($prepending_command->{"name"} eq "load") {
-		$prepending_arguments = [];
-
-	} elsif ($params eq $prepending_params) { #TODO FIXME operator intersection
-		$prepending_arguments = $arguments;
-
-	#TODO arguments := if $prepending_instruction takes XYZ, then pick from $instruction
-
-	} else {
-		print(Dumper($prepending_command, $command));
-		die("Unimplemented prepend of " . $prepending_command->{"name"} . " before " . $command->{"name"});
-	}
-	
-	return {"command" => $prepending_command, "arguments" => $prepending_arguments };
-}
-

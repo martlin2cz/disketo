@@ -5,9 +5,9 @@ package Disketo_Engine;
 my $VERSION=3.0.0;
 
 use Disketo_Utils; 
-use Disketo_Core;
 use Data::Dumper;
 use File::Basename;
+
 ########################################################################
 # The core, engine, base functions for the particular operations over
 # the resources. Specifies the abstract functions, with all the

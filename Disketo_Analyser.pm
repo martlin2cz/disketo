@@ -8,7 +8,6 @@ my $VERSION=3.0.0;
 
 use Data::Dumper;
 use Disketo_Utils;
-use Disketo_Extras;
 use Disketo_Instruction_Set;
 
 ########################################################################
@@ -262,23 +261,6 @@ sub walk_tree_node($$$$) {
 	} else {
 		#print(Dumper($node));
 		die("Unknown node.");
-	}
-}
-
-# DEPRECATED
-# Utility method for simplified walking throught an program.
-sub walk_program($$) {
-	my ($program, $instruction_runner) = @_;
-
-	for my $instruction (@{ $program }) {
-		my $command = $instruction->{"command"};
-		my $args = $instruction->{"arguments"};
-		my $resolved_args = $instruction->{"resolved_args"};
-		
-		my $command_name = $command->{"name"};
-	
-		$instruction_runner->
-			($instruction, $command_name, $command, $args, $resolved_args);
 	}
 }
 

@@ -8,6 +8,7 @@ my $VERSION=3.0.0;
 
 use Data::Dumper;
 use Disketo_Utils;
+
 ########################################################################
 
 # Implements the parsing procedure. The parsing procedure converts the 
@@ -90,7 +91,6 @@ sub tokenize($) {
 		(\# [^\n]* \n) /gx;
 		
 	my @filtered = grep /(.+)|(\n)/, @parts;
-	#my @cleaned = map { $_ =~ s/^\"([^\"]*)\"$/\1/r } @filtered;
 	my @collapsed = collapse_subs(@filtered);
 
 	return @collapsed;
