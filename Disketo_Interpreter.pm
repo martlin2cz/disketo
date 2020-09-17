@@ -96,7 +96,11 @@ sub run_the_program_or_dry($) {
 		my $human_name = human_name($instruction);
 		
 		my $count = scalar keys %{ $context->{"resources"} };
-		Disketo_Utils::logit("Executing ${human_name}on $count directories ...");
+		if ($count == 0) {
+			Disketo_Utils::logit("Executing ${human_name}...");
+		} else {
+			Disketo_Utils::logit("Executing ${human_name}on $count directories ...");
+		}
 				
 		my $actual_method = $instruction->{"actual method"};
 		if ($actual_method) {

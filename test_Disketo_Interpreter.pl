@@ -41,22 +41,8 @@ my $arguments1b = undef;
 #######################################
 Disketo_Utils::logit("print_program");
 
-Disketo_Interpreter::print_program($program0a, \@arguments1a);
+Disketo_Interpreter::print_program($program0a);
 
-
-#######################################
-Disketo_Utils::logit("prepare_method_arguments");
-
-my $instruction3a = $program0a->[0];
-my $operation3a = $instruction3a->{"operation"};
-my $params3a = $operation3a->{"params"};
-my $arguments3a = $instruction3a->{"arguments"};
-my $context3a = {"con" => "text"}; #TODO just testing ...
-
-#$operation, $params, $arguments, $context
-my $arguments3a = Disketo_Interpreter::prepare_method_arguments($operation3a, $params3a, $arguments3a, $context3a);
-
-print(Dumper($arguments3a));
 #######################################
 Disketo_Utils::logit("run_program");
 

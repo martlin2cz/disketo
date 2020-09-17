@@ -28,14 +28,14 @@ if (scalar @$nodes > 1) {
 	die("Please, specify only one \"WTF\" indicator.");
 }
 if (scalar @$nodes < 1) {
-	print("The statement specified is valid.\n");
+	print STDERR ("The statement specified is valid and has no \"WTF\" indicator.\n");
 	exit;
 }
 
 my $node = $nodes->[0];
 my $spec = Disketo_Scripter::value_node_specification($program, $node);
 
-print("The \"WTF\" is at position, where $spec is expected.\n");
+print STDERR ("The \"WTF\" is at position, where $spec is expected.\n");
 
 ########################################################################
 

@@ -4,7 +4,8 @@ use strict;
 package Disketo_Engine; 
 my $VERSION=3.0.0;
 
-use Disketo_Utils; 
+use Disketo_Utils;
+use Disketo_IO;
 use Data::Dumper;
 use File::Basename;
 
@@ -29,7 +30,7 @@ sub load($$) {
 	my %resources = ();
 	foreach my $root (@$roots) {
 		#print("-> $root\n");
-		my %sub_resources = %{ load_resources_from($root) };
+		my %sub_resources = %{ Disketo_IO::list($root) };
 		%resources = (%resources, %sub_resources);
 	}
 	
@@ -186,7 +187,7 @@ sub context_stats($) {
 	#print("*** context_stats \n");
 	my ($context) = @_;
 	
-	print(Dumper($context)); # XXX
+#	print(Dumper($context)); # XXX
 	
 	for my $name (keys %$context) {
 		my $value = $context->{$name};
@@ -198,6 +199,8 @@ sub context_stats($) {
 		} elsif (ref($value) eq "ARRAY") {
 			$desc = scalar @{ $value };
 		}
+		
+		#TODO print something more usefull for the "resources"
 		
 		print("\t $name: $desc \n");
 	}

@@ -18,15 +18,6 @@ my $script1a = Disketo_Parser::parse($file1a);
 Disketo_Utils::logit("(commands)");
 my $commands = Disketo_Instruction_Set::commands();
 
-#######################################
-Disketo_Utils::logit("tree_usage");
-
-print(Disketo_Analyser::tree_usage());
-
-#~ #######################################
-#~ Disketo_Utils::logit("linear_usage");
-
-#~ print(join("\n", @{ Disketo_Analyser::linear_usage() }));
 
 #######################################
 Disketo_Utils::logit("compute_instruction");

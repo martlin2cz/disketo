@@ -7,6 +7,7 @@ my $VERSION=3.0.0;
 use Data::Dumper;
 use File::Basename;
 use Disketo_Utils; 
+use Disketo_IO;
  
 ########################################################################
 # The implementing module of the Engine. Implements the particular 
@@ -231,7 +232,7 @@ sub files_stats($) {
 	my $function = sub($$) {
 		my ($file, $context) = @_;
 		
-		return {"file" => $file, "size" => 42}; #TODO
+		return Disketo_IO::load_stats_for_file($file);
 	};
 	
 	return {"function" => $function, "meta_name" => "files stats"};
