@@ -1,7 +1,9 @@
 #!/usr/bin/perl
 
 use strict;
-BEGIN { unshift @INC, "."; }
+
+use FindBin qw($Bin); 
+use lib "$Bin/../module"; 
 
 use Data::Dumper;
 use Disketo_Utils;

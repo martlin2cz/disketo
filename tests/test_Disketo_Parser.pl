@@ -1,7 +1,9 @@
 #!/usr/bin/perl
 
 use strict;
-BEGIN { unshift @INC, "."; }
+
+use FindBin qw($Bin); 
+use lib "$Bin/../module"; 
 
 use Data::Dumper;
 use Disketo_Utils;
@@ -11,7 +13,7 @@ use Disketo_Parser;
 #######################################
 Disketo_Utils::logit("load_file");
 
-my $file1 = "test/lorem/foo/file-2.txt";
+my $file1 = "$Bin/testing-scripts/simple.ds";
 my $content1 = Disketo_Parser::load_file($file1);
 print ">>> $content1 <<<\n";
 
@@ -45,7 +47,6 @@ print Dumper(\@collapsed8a);
 
 #######################################
 Disketo_Utils::logit("parse");
-my $file7a = "test/scripts/simple.ds";
-my ($script7a_ref) = Disketo_Parser::parse($file7a);
+my ($script7a_ref) = Disketo_Parser::parse($file1);
 print Dumper($script7a_ref);
 

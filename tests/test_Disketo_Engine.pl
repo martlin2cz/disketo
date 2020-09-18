@@ -1,7 +1,9 @@
 #!/usr/bin/perl
 
 use strict;
-BEGIN { unshift @INC, "."; }
+
+use FindBin qw($Bin); 
+use lib "$Bin/../module"; 
 
 use Data::Dumper;
 use List::Util;
@@ -15,7 +17,7 @@ my $context = Disketo_Engine::create_context();
 #Disketo_Engine::context_stats($context);
 #######################################
 
-my $roots = ["test/dolor", "test/ipsum", "test/lsof.txt"];
+my $roots = ["$Bin/testing-resources/dolor", "$Bin/testing-resources/ipsum", "$Bin/testing-resources/lsof.txt"];
 
 Disketo_Engine::load($roots, $context);
 #Disketo_Engine::context_stats($context);

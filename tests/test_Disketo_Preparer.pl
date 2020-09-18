@@ -1,7 +1,9 @@
 #!/usr/bin/perl
 
 use strict;
-BEGIN { unshift @INC, "."; }
+
+use FindBin qw($Bin); 
+use lib "$Bin/../module"; 
 
 use Data::Dumper;
 use Disketo_Utils;
@@ -12,7 +14,7 @@ use Disketo_Preparer;
 
 #######################################
 Disketo_Utils::logit("(parsing the file)");
-my $file1a = "test/scripts/simple.ds";
+my $file1a = "$Bin/testing-scripts/simple.ds";
 my $script1a = Disketo_Parser::parse($file1a);
 my $program1a = Disketo_Analyser::analyse($script1a);
 Disketo_Analyser::print_syntax_forrest($program1a);
@@ -42,7 +44,7 @@ print("Skipped, may fail.\n");
 #######################################
 Disketo_Utils::logit("(parsing the second file)");
 
-my $file5a = "test/scripts/with-requires.ds";
+my $file5a = "$Bin/testing-scripts/with-requires.ds";
 my $script5a = Disketo_Parser::parse($file5a);
 my $program5a = Disketo_Analyser::analyse($script5a);
 Disketo_Analyser::print_syntax_forrest($program5a);

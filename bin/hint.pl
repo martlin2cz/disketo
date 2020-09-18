@@ -1,9 +1,10 @@
 #!/usr/bin/perl
 
 use strict;
-BEGIN { unshift @INC, "."; }
-
 my $VERSION=3.00.0;
+
+use FindBin qw($Bin); 
+use lib "$Bin/../module"; 
 
 use Disketo_Utils;
 use Disketo_Scripter;

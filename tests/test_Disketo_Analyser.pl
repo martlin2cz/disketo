@@ -1,7 +1,9 @@
 #!/usr/bin/perl
 
 use strict;
-BEGIN { unshift @INC, "."; }
+
+use FindBin qw($Bin); 
+use lib "$Bin/../module"; 
 
 use Data::Dumper;
 use Disketo_Utils;
@@ -11,7 +13,7 @@ use Disketo_Instruction_Set;
 
 #######################################
 Disketo_Utils::logit("(parsing the file)");
-my $file1a = "test/scripts/simple.ds";
+my $file1a = "$Bin/testing-scripts/simple.ds";
 my $script1a = Disketo_Parser::parse($file1a);
 
 #######################################
