@@ -302,7 +302,7 @@ sub print_command_node_in_markdown($$$$$$$) {
 				my $child_operation_id = $child_operation->{"ID"};
 				my $child_operation_name = $child_operation->{"name"};
 				
-				$valid_args_spec .= " [$name](#$id) ";
+				$valid_args_spec .= " [$child_operation_name](#$child_operation_id) ";
 			}
 		} else {
 			$valid_args_spec = $param_valid_args;

@@ -5,7 +5,7 @@
  Each statement has to start with any of this commands:
 
 
-[load](#load) [filter](#filter) [print](#print) [compute](#compute)
+[filter](#filter) [print](#print) [load](#load) [compute](#compute)
 
  After that, continue with its declared parameter's values or (sub)commands.
 
@@ -45,7 +45,7 @@ Computes a meta.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| for-what |  [compute](#compute)  [compute](#compute)  |
+| for-what |  [for-each-file](#for-each-file)  [for-each-dir](#for-each-dir)  |
 
 **Requires:** _nothing_ 
 **Produces:** (user specified) 
@@ -102,7 +102,7 @@ Filters by given criteria
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what |  [filter](#filter)  [filter](#filter)  |
+| what |  [files](#filter-files)  [dirs](#filter-dirs)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -116,7 +116,7 @@ Filters dirs by given criteria
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| matching |  [dirs](#filter-dirs)  [dirs](#filter-dirs)  [dirs](#filter-dirs)  |
+| matching |  [matching-custom-matcher](#matching-custom-matcher)  [matching-pattern](#matching-pattern)  [having-files](#having-files)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
@@ -130,7 +130,7 @@ Filters files by given criteria
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| matching |  [files](#filter-files)  [files](#filter-files)  [files](#filter-files)  |
+| matching |  [matching-custom-matcher](#matching-custom-matcher)  [having-extension](#having-extension)  [matching-pattern](#matching-pattern)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
@@ -144,7 +144,7 @@ For each dir.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what |  [for-each-dir](#for-each-dir)  [for-each-dir](#for-each-dir)  |
+| what |  [custom](#compute-custom)  [count-files](#count-files)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
@@ -158,7 +158,7 @@ For each file.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what |  [for-each-file](#for-each-file)  [for-each-file](#for-each-file)  |
+| what |  [custom](#compute-custom)  [files-stats](#files-stats)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
@@ -186,8 +186,8 @@ Directories having specified amount of files matching some condition.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| amount |  [having-files](#having-files)  |
-| condition |  [having-files](#having-files)  [having-files](#having-files)  [having-files](#having-files)  |
+| amount |  [more-than](#more-than)  |
+| condition |  [having-extension](#having-extension)  [matching-custom-matcher](#matching-custom-matcher)  [matching-pattern](#matching-pattern)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -230,7 +230,7 @@ Matches the given pattern specified way
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
 | pattern | (the pattern) |
-| how |  [matching-pattern](#matching-pattern)  [matching-pattern](#matching-pattern)  |
+| how |  [case-sensitive](#case-sensitive)  [case-insensitive](#case-insensitive)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -258,7 +258,7 @@ Prints given.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what |  [print](#print)  [print](#print)  [print](#print)  |
+| what |  [files](#print-files)  [dirs](#print-dirs)  [stats](#print-stats)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -286,7 +286,7 @@ Prints dirs.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| how |  [dirs](#print-dirs)  [dirs](#print-dirs)  [dirs](#print-dirs)  [dirs](#print-dirs)  |
+| how |  [custom](#print-custom)  [with-counts](#print-with-counts)  [only-name](#print-only-name)  [simply](#print-simply)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
@@ -300,7 +300,7 @@ Prints files.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| how |  [files](#print-files)  [files](#print-files)  [files](#print-files)  |
+| how |  [custom](#print-custom)  [simply](#print-simply)  [only-name](#print-only-name)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
