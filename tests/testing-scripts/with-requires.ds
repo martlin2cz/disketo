@@ -1,0 +1,3 @@
+# Some script testing the 'requires' mechanism
+compute for-each-file files-stats
+print dirs with-counts

@@ -1,5 +1,0 @@
-# Lists directories containing at least given number of given files.
-# but firstly filters directories against the given pattern
-filter_dirs_matching_pattern $$
-filter_dirs_with_files_matching_pattern $$ $$
-print_dirs_simply

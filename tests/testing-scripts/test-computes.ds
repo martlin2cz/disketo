@@ -1,0 +1,19 @@
+# tests compute for-each-file ...
+compute for-each-file files-stats 
+compute for-each-file custom "file path length" sub {
+	my ($file, $context) = @_;
+	return length($file); 
+}
+
+# test compute for-each-dir ...
+compute for-each-dir count-files
+compute for-each-dir custom "dir path length" sub {
+	my ($dir, $context) = @_;
+	return length($dir);
+}
+
+# print it
+print stats
+
+
+ 

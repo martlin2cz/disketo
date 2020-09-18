@@ -1,0 +1,9 @@
+# simple script
+filter dirs matching-pattern "(text)|(doc)" case-insensitive
+compute for-each-file custom "files matching" sub { 
+	my ($file, $context) = @_;
+
+	return ($file =~ /(\.xlsx?)|(\.docx?)/);
+}
+filter dirs having-files more-than $$ matching-pattern "(\.xlsx?)|(\.docx?)" case-sensitive
+print files simply

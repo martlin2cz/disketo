@@ -1,0 +1,17 @@
+# test the print files ...
+print files simply
+print files only-name
+print files custom sub {
+	my ($file, $context) = @_;
+	return "F: $file $context";
+}
+
+# test the print dirs ...
+print dirs simply
+print dirs only-name
+compute for-each-dir count-files
+print dirs with-counts
+print dirs custom sub {
+	my ($dirs, $context) = @_;
+	return "D: $dirs $context";
+}

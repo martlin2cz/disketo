@@ -1,0 +1,61 @@
+# test filter files ...
+load $$$
+filter files matching-pattern "foo" case-insensitive
+print files simply
+
+load $$$
+filter files matching-pattern "foo" case-sensitive
+print files simply
+
+load $$$
+filter files matching-custom-matcher sub {
+	my ($file, $context) = @_;
+	return (length($file) > 25);
+}
+print files simply
+
+load $$$
+filter files having-extension "txt"
+print files simply
+
+# test filter dirs ...
+load $$$
+filter dirs matching-pattern "o" case-insensitive
+print dirs simply
+
+load $$$
+filter dirs matching-pattern "o" case-sensitive
+print dirs simply
+
+load $$$
+filter dirs matching-custom-matcher sub {
+	my ($file, $context) = @_;
+	return (length($file) > 20);
+}
+print dirs simply
+
+# test filter dirs having files ...
+load $$$
+filter dirs having-files more-than 1 matching-pattern "foo" case-insensitive
+print dirs simply
+
+load $$$
+filter dirs having-files more-than 1 matching-pattern "foo" case-sensitive
+print dirs simply
+
+load $$$
+filter dirs having-files more-than 1 matching-custom-matcher sub {
+	my ($file, $context) = @_;
+	return (length($file) > 25);
+}
+print dirs simply
+
+load $$$
+filter dirs having-files more-than 1 having-extension "txt"
+print dirs simply
+
+
+
+
+
+

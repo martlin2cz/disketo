@@ -1,3 +1,0 @@
-# Lists directories matching given pattern
-filter_dirs_matching_pattern $$
-print_dirs_simply

@@ -1,0 +1,3 @@
+# Prints directories having at least specified number of files with the specified extension
+filter dirs having-files more-than $$ having-extension $$
+print dirs simply
