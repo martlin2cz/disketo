@@ -10,6 +10,7 @@ use Data::Dumper;
 use Disketo_Utils;
 use Disketo_Instruction_Set;
 use List::MoreUtils qw{ firstidx };
+use Set::Scalar;
 
 ########################################################################
 # Implements the functions related to help, usage, list all commands
@@ -159,6 +160,7 @@ sub param_usages($$) {
 
 # Combines the arrays of the given arrays by concatenation
 # i.e. [[X,Y], [0,1]] => [X0, X1, Y0, Y1]
+# TODO move to Utils module
 sub combine($) {
 	my ($sets) = @_;
 	
@@ -182,6 +184,7 @@ sub combine($) {
 ########################################################################
 # VALUE NODE specification
 
+# Computes the usage description of all the nodes with the '$$' marker 
 sub compute_arguments_description($) {
 	my ($program) = @_;
 	
@@ -195,6 +198,9 @@ sub compute_arguments_description($) {
 	return $result;
 }
 
+# Computes the usage description/specification of the given value node 
+# of the given program. Names its value name, name of the parent 
+# operation and the param name.
 sub value_node_specification($$) {
 	my ($program, $value_node) = @_;
 		
@@ -211,3 +217,109 @@ sub value_node_specification($$) {
 }
 
 ########################################################################
+# LIST COMMANDS
+
+sub print_list_of_commands_in_markdown() {
+	my $commands = Disketo_Instruction_Set::commands();
+	my $nodes = collect_all_commands_nodes($commands, \&print_command_node_in_markdown);
+	
+	print_commands_nodes($nodes, \&print_command_node_in_markdown);
+}
+
+sub collect_all_commands_nodes($$) {
+	my ($commands, $node_printer) = @_;
+	
+	my $result = Set::Scalar->new();
+	collect_command_sub_nodes($commands, $result);
+	
+	my @result_list = $result->elements;
+	my @sorted = sort { $a->{"ID"} cmp $b->{"ID"} } @result_list;
+	return \@sorted;
+}
+
+sub collect_command_sub_nodes($$) {
+	my ($valid_args, $result) = @_;
+	
+	for my $command (values %$valid_args) {
+		$result->insert($command);
+		
+		my $child_params_valids = $command->{"valid-args"};
+		for my $child_param_valids (values %$child_params_valids) {
+			if (ref($child_param_valids) eq "HASH") {
+				collect_command_sub_nodes($child_param_valids, $result);
+			}
+		}
+	}
+}
+
+# Call with:
+# sub ($$$$$$$) {
+# my ($id, $name, $produces, $requires, $doc, $params, $valid_args) = @_;
+# (...)
+# }
+sub print_commands_nodes($$) {
+	my ($nodes, $printer) = @_;
+#print(Dumper($nodes));
+	for my $node (@$nodes) {
+		my $id = $node->{"ID"};
+		my $name = $node->{"name"};
+		my $produces = $node->{"produces"};
+		my $requires = $node->{"requires"};
+		my $doc = $node->{"doc"};
+		my $params = $node->{"params"};
+		my $valid_args = $node->{"valid-args"};
+		
+		my $print = $printer->($id, $name, $produces, $requires, $doc, $params, $valid_args);
+		print($print);
+	}
+}
+
+sub print_command_node_in_markdown($$$$$$$) {
+	my ($id, $name, $produces, $requires, $doc, $params, $valid_args) = @_;
+
+	my $rslt = "";
+	my $params_spec = join(" ", @$params);
+	
+	$rslt .= "# $id\n";
+	$rslt .= "**Usage:** `$name $params_spec`\n\n";
+	$rslt .= "$doc\n\n";
+	$rslt .= "\n";
+	
+	$rslt .= "| Parameter | Possible value(s) |\n";
+	$rslt .= "| --------- | ----------------- |\n";
+	if (scalar (@$params) == 0) {
+		$rslt .= "| _no params_ | _no_value(s)_ |\n";
+	}
+	
+	for my $param_name (@$params) {
+		my $param_valid_args = $valid_args->{$param_name};
+		my $valid_args_spec;
+		
+		if (ref($param_valid_args) eq "HASH") {
+			$valid_args_spec = "";
+			
+			for my $child_operation (values %$param_valid_args) {
+				my $child_operation_id = $child_operation->{"ID"};
+				my $child_operation_name = $child_operation->{"name"};
+				
+				$valid_args_spec .= " [$name](#$id) ";
+			}
+		} else {
+			$valid_args_spec = $param_valid_args;
+		}
+		$rslt .= "| $param_name | $valid_args_spec |\n"
+	}
+	$rslt .= "\n";
+	
+	my $requires_spec = (scalar (@$requires) > 0) ? join(" ", @$requires) : "_nothing_";
+	my $produces_spec = (scalar (@$produces) > 0) ? join(" ", @$produces) : "_nothing_";
+	
+	$rslt .= "**Requires:** $requires_spec \n";
+	$rslt .= "**Produces:** $produces_spec \n";
+	$rslt .= "\n\n";
+
+	return $rslt;
+}
+
+########################################################################
+

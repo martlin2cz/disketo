@@ -7,15 +7,26 @@ my $VERSION=3.00.0;
 # The version to be printed by --version.
 use constant VERSION => "3.00.0";
 
-# How offten (in seconds) tu orint the current orogress?
+# How offten (in seconds) tu print the current orogress?
 use constant PROGRESS_PERIOD => 60;
 
 use DateTime;
 use Data::Dumper;
 
+########################################################################
+# Implements all the general utilities for the whole application.
+########################################################################
 
-#############################################################
+########################################################################
+# ARGS
 
+# Checks whether the given ARGS matches the specific criteria and prints
+# particular output if yes.
+# In particular, checks whether the ARGS has the help or version flag. 
+# If so, by help of program_command, program_name, program_description 
+# and parameters_explanation and VERSION prints so.
+# Otherwise checks whether ARGS has required_args_count or required_min_args_count
+# (only one of them can be specified).
 sub check_args($$$$$$$) {
 	my ($ARGV, $program_command, $program_name, 
 		$program_description, $parameters_explanation,
@@ -26,6 +37,8 @@ sub check_args($$$$$$$) {
 	check_actual_args($ARGV, $program_command, $parameters_explanation, $required_args_count, $required_min_args_count);
 }
 
+# Checks whether the given ARGV has the help flag and if so,
+# prints the help and usage and dies.
 sub check_help($$$$) {
 	my ($ARGV, $program_command, $program_name, $program_description, $parameters_explanation) = @_;
 	
@@ -44,6 +57,8 @@ sub check_help($$$$) {
 
 }
 
+# Checks whether the given ARGV has the version flag and if so,
+# prints the version and dies.
 sub check_version($$) {
 	my ($ARGV, $program_name) = @_;
 
@@ -59,6 +74,8 @@ sub check_version($$) {
 	die("\n");
 }	
 
+# Checks whether the given ARGV has the specified args counts and if not,
+# dies with the error message and usage.
 sub check_actual_args($$$) {
 	my ($ARGV, $program_command, $parameters_explanation, $required_args_count, $required_min_args_count) = @_;
 	my $count = scalar @$ARGV;
@@ -92,14 +109,13 @@ sub logit($) {
 	print STDERR DateTime->now->hms . " # " . $message . "\n";
 }
 
-#############################################################
-#############################################################
-#############################################################
+########################################################################
+# PRINT PROGRESS
+
 # The last time progress have been printed
 my $last_printed_at = 0;
 my $loop_started_at = 0;
 
-#############################################################
 # Iterates over the context's dirs, applying given function;
 # each PROGRESS_PERIOD seconds prints percentage of done.
 sub iterate_dirs($$) {
@@ -118,7 +134,6 @@ sub iterate_dirs($$) {
 	}
 }
 
-#############################################################
 # Iterates over the context's files, applying given function;
 # each PROGRESS_PERIOD seconds prints percentage of done.
 sub iterate_files($$) {
@@ -144,7 +159,6 @@ sub iterate_files($$) {
 }
 
 
-#############################################################
 # (Re)initializes the progress running, resets the indicators.
 sub start_progress($) {
 	my $total = shift @_;
@@ -155,7 +169,6 @@ sub start_progress($) {
 	$loop_started_at = time();
 }
 
-#############################################################
 # If more than PROGRESS_PERIOD since last print_progress, 
 # prints_progress with given i (and total).
 sub check_progress($$) {
@@ -169,7 +182,6 @@ sub check_progress($$) {
 		$last_printed_at = $now_at;
 	}
 }
-############################################################
 # Prints given i out of total as a percentage 
 # or only i if total is none
 sub print_progress($$) {
@@ -193,9 +205,10 @@ sub print_progress($$) {
 		printf (STDERR "\t%d \r", $i); 
 	}
 }
-#############################################################
-#############################################################
-#############################################################
+
+########################################################################
+# THE REST
+
 # Intersects given two array refs by given equality fn
 sub intersect($$$) {
 	my @left = @{ shift @_ };

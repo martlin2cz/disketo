@@ -16,11 +16,10 @@ use Disketo_Interpreter;
 use Disketo_Help;
 
 ########################################################################
-
 # Just the fascade wrapping all the parser, analyser and interpreter 
 # stuff.
-
 ########################################################################
+
 # Runs the script.
 sub run_script($$) {
 	my ($script_file, $program_arguments) = @_;
@@ -100,3 +99,6 @@ sub value_node_specification($$) {
 	my ($program, $value_node) = @_;
 	return Disketo_Help::value_node_specification($program, $value_node);
 }
+
+########################################################################
+

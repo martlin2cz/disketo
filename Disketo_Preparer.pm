@@ -15,11 +15,12 @@ use Disketo_Analyser;
 # The module laying between the Analyser and Interpreter.
 # Enhances the syntax forrest with some additonal semantic informations,
 # and prepares to be actually executed.
-#
+########################################################################
 
 ########################################################################
 # PREPARE
 
+# Prepares the given program to be executed with the given arguments.
 sub prepare_to_execute($$) {
 	my ($program, $arguments) = @_;
 
@@ -34,6 +35,7 @@ sub prepare_to_execute($$) {
 	return $remaining_arguments;
 }
 
+# Prepares the given program to be just printed.
 sub prepare_to_print($) {
 	my ($program) = @_;
 
@@ -176,6 +178,9 @@ sub resolve_hypermarker_values($$) {
 ########################################################################
 # VERIFY MISSING METAS
 
+# Inserts the load instruction at the very beggining of the given program.
+# No f****s given about already existing load instruction at the 
+# beggining of the program, or its unnecessarity.
 sub insert_load($) {
 	my ($program) = @_;
 

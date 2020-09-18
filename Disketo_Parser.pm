@@ -10,10 +10,8 @@ use Data::Dumper;
 use Disketo_Utils;
 
 ########################################################################
-
 # Implements the parsing procedure. The parsing procedure converts the 
 # disketo script file to the disketo script.
-
 ########################################################################
 
 # Parses given file. Returns the reference to the script.

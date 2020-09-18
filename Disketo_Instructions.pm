@@ -12,8 +12,14 @@ use Disketo_IO;
 ########################################################################
 # The implementing module of the Engine. Implements the particular 
 # functions, which may be then mapped to instructions.
+# Each of the function returns the sub, but what particular sub it is
+# (printer, filter, matcher, computer, actual method, ...) is up to 
+# their parent node (caller), unfortunatelly.
 ########################################################################
+# UTILS
 
+# Returns the value of the given node.
+# Do not use directly, call value(node, index) instead.
 sub value_of_node($) {
 	my ($value_node) = @_;
 	if (not exists($value_node->{"value"})) {
@@ -28,6 +34,7 @@ sub value_of_node($) {
 	return $value;
 }
 
+# Returns the child (argument) node of the given index.
 sub child_of_node($$) {
 	my ($operation_node, $index) = @_;
 	
@@ -35,6 +42,8 @@ sub child_of_node($$) {
 	return $children->[$index];
 }
 
+# Calls the "method" on the given node with that node.
+# Do call directly, use the delegate(node, index) instead.
 sub delegate_to_node($) {
 	my ($to_node) = @_;
 	
@@ -49,19 +58,22 @@ sub delegate_to_node($) {
 
 ########################################################################
 
+# Returns the value of the child_index-th argument of the given node.
 sub value($$) {
 	my ($node, $child_index) = @_;
 	my $child = child_of_node($node, $child_index);
 	return value_of_node($child);
 }
 
-
+# Call the "method" of the child_index-th argument of the given node.
 sub delegate($$) {
 	my ($node, $child_index) = @_;
 	my $child = child_of_node($node, $child_index);
 	return delegate_to_node($child);
 }
 
+# Returns 1 if the given child_index-th argument node is operation of
+# the given operation_name.
 sub is($$$) {
 	my ($node, $child_index, $opname) = @_;
 	my $child = child_of_node($node, $child_index);
@@ -70,6 +82,8 @@ sub is($$$) {
 
 ########################################################################
 ########################################################################
+# LOADS
+
 sub load($) {
 	my ($load_node) = @_;
 	my $roots = value($load_node, 0);
@@ -81,6 +95,7 @@ sub load($) {
 }
 
 ########################################################################
+# FILTERS
 
 sub filter($) {
 	my ($filter_node) = @_;
@@ -178,6 +193,7 @@ sub more_than($) {
 
 
 ########################################################################
+# COMPUTES
 
 sub compute($) {
 	my ($compute_node) = @_;
@@ -255,7 +271,7 @@ sub compute_custom($) {
 
 
 ########################################################################
-
+# PRINTS
 
 sub print($) {
 	my ($print_node) = @_;
@@ -336,12 +352,15 @@ sub print_custom($) {
 ########################################################################
 # utils
 
+# Returns 1 if given text ends with given suffix. 
 sub ends_with($$) {
 	my ($text, $suffix) = @_;
 
 	return ($suffix eq substr($text, -length($suffix)));
 }
 
+# Returns the files of the given dir in the given context, 
+# which matches the given condition.
 sub files_of_dir_matching($$$) {
 	my ($dir, $condition, $context) = @_;
 	

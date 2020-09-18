@@ -13,7 +13,19 @@ use Data::Dumper;
 # The instruction set. Creates the mapping between the disketo script
 # statements and particular perl functions.
 ########################################################################
-
+# Creates the operation by the given informations. 
+# The ID may be unique identifier of the node. Quite just for the debug purposes.
+# The name must be the same name, which gets used in the valid_arguments,
+# no need to be uniqe.
+# The requires and produces are lists of metas names, produces and required by the command.
+# The doc is just human-readable documentation, description.
+# The params is just the (ordered) list of the params names. Beware the order!
+# The valid_arguments the mapping from the param name to its valid_argument. 
+# The valid_argument is either the string (enclosed in brackets for the convience, please),
+# indicating such parameter may accept the atomic value. 
+# Or, the hash mapping the name to the any other command node. 
+# This name must be the same as the name of the node.
+# TODO rename: not operation, but command
 sub op($$$$$$$$) {
 	my ($id, $name, $method, $requires, $produces, $doc, $params, $valid_arguments) = @_;
 	
@@ -28,6 +40,7 @@ sub op($$$$$$$$) {
 }
 
 
+# Returns the comands, as a hash mapping root command names to actual command nodes.
 sub commands() {
 	# -- compute primitive operations ----------------------------------
 	

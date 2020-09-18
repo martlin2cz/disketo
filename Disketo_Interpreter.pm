@@ -12,12 +12,9 @@ use Disketo_Engine;
 use Disketo_Instruction_Set;
 
 ########################################################################
-
 # Does the actual job with the disketo program. Prints usage, prints 
 # the instructions, or runs the program itself.
 # This includes the processing of the actual script arguments.
-
-
 ########################################################################
 
 # Runs the given program. What else?
@@ -38,6 +35,7 @@ sub dry_run_program($) {
 ########################################################################
 
 # Prints the program (with arguments)
+# TODO move to Help module
 sub print_program($) {
 	my ($program) = @_;
 
@@ -73,6 +71,10 @@ sub print_program($) {
 
 ########################################################################
 
+# Computes the "actual methods" of the each instruction.
+# Triggers the instruction's operation's "method" function and obtained
+# annonymous subs stores as "actual method" field to each instruction 
+# root node.
 sub compute_actual_methods($) {
 	my ($program) = @_;
 
@@ -87,6 +89,8 @@ sub compute_actual_methods($) {
 	}
 }
 
+# Runs (or dry runs) the given program. 
+# Dry runs if the instructions has no "actual method" field specified.
 sub run_the_program_or_dry($) {
 	my ($program) = @_;
 
@@ -112,6 +116,7 @@ sub run_the_program_or_dry($) {
 	}
 }
 
+# Generates the human readable, one-lined, name of the instruction. 
 sub human_name($) {
 	my ($instruction) = @_;
 	

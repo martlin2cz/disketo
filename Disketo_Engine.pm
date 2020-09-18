@@ -57,7 +57,6 @@ sub calculate_for_each_dir($$$) {
 	return \%values;
 }
 
-########################################################################
 # Performs the calculation of the given function($file,$context) 
 # to obtain given identifier over the files in the given context.
 sub calculate_for_each_file($$$) {
@@ -94,7 +93,6 @@ sub group_dirs($$$) {
 	return \%values;
 }
 
-########################################################################
 # Performs the aggregation by the given groupper($file,$context) 
 # to obtain groups for the files in the given context.
 sub group_files($$$) {
@@ -135,7 +133,6 @@ sub filter_dirs($$) {
 	return \%new_resources;
 }
 
-########################################################################
 # Performs the filtration based on the predicate($file,$context) 
 sub filter_files($$) {
 	#print("*** filter_files \n");
@@ -167,7 +164,6 @@ sub print_dirs($$) {
 	});
 }
 
-########################################################################
 # Performs the print based on the printer($file,$context) 
 sub print_files($$) {
 	#print("*** print_files \n");
@@ -207,8 +203,3 @@ sub context_stats($) {
 }
 
 ########################################################################
-
-sub load_resources_from($) {
-	# TODO copy the core functions here?
-	return Disketo_Core::list(shift @_);
-}

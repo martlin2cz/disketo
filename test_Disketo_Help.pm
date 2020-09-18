@@ -38,4 +38,7 @@ my $combinations4a = Disketo_Help::combine($list_of_lists4a);
 print(Dumper($list_of_lists4a, $combinations4a));
 
 ########################################################################
-Disketo_Utils::logit("TODO");
+
+Disketo_Utils::logit("print_list_of_commands_in_markdown");
+
+Disketo_Help::print_list_of_commands_in_markdown();

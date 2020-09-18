@@ -1,0 +1,6 @@
+# Find photos
+filter dirs matching-pattern "$photo^" case-insensitive
+filter files having-extension "JPG"
+filter files matching-pattern "$PICT[0-9]{6}.JPG^" case-sensitive 
+print files simply
+

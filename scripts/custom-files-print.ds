@@ -1,0 +1,8 @@
+# Print files but in format "FILENAME, in directory DIR"
+print files custom sub {
+	my ($file, $context) = @_;
+	
+	my ($dir,$name) = ($file =~ /^(.*)\/([^\/]+)$/);
+	return "$name, in directory $dir";
+}
+

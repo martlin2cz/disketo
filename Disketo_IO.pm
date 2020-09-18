@@ -15,6 +15,8 @@ use Disketo_Utils;
 # The Input/Output module for the Disketo. In fact, just wrapper for the
 # native system IO (in terms of files, dirs, metadatas, stats, sizes, dates, ...).
 ########################################################################
+
+########################################################################
 # LOAD
 
 # Lists either the all the directories if the $ is directory,
@@ -94,6 +96,7 @@ sub children_of($) {
 
 	return \@result;
 }
+
 # For given input file loads all its lines
 sub load_lines($) {
 	my ($file) = @_;
@@ -166,4 +169,6 @@ sub load_stats_for_file($) {
 # FILE SIZE
 
 #TODO file size to human format
+
+########################################################################
 
