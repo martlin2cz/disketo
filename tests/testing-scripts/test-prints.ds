@@ -1,6 +1,10 @@
 # test the print files ...
 print files simply
 print files only-name
+compute for-each-file files-stats
+print stats
+print files with-size in-bytes
+print files with-size human-readable
 print files custom sub {
 	my ($file, $context) = @_;
 	return "F: $file $context";

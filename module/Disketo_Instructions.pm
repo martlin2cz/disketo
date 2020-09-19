@@ -16,6 +16,12 @@ use Disketo_IO;
 # (printer, filter, matcher, computer, actual method, ...) is up to 
 # their parent node (caller), unfortunatelly.
 ########################################################################
+# PARAMETERS
+
+# The separator of the printed values (if more on one line).
+my $SEPARATOR = "	"; #tabulator
+
+########################################################################
 # UTILS
 
 # Returns the value of the given node.
@@ -191,6 +197,18 @@ sub more_than($) {
 	};
 }
 
+########################################################################
+# EXECUTE
+sub execute($) {
+	my ($execute_node) = @_;
+	
+	my $operation = value($execute_node, 0);
+	return sub($) {
+		my ($context) = @_;
+		
+		$operation->($context);
+	}
+}
 
 ########################################################################
 # COMPUTES
@@ -239,7 +257,7 @@ sub count_files($) {
 		return scalar @children;
 	};
 	
-	return {"function" => $function, "meta_name" => "files count"};
+	return {"function" => $function, "meta_name" => Disketo_Instruction_Set::M_CHILDREN_COUNTS()};
 }
 
 sub files_stats($) {
@@ -251,7 +269,7 @@ sub files_stats($) {
 		return Disketo_IO::load_stats_for_file($file);
 	};
 	
-	return {"function" => $function, "meta_name" => "files stats"};
+	return {"function" => $function, "meta_name" => Disketo_Instruction_Set::M_FILE_STATS()};
 }
 
 
@@ -330,9 +348,44 @@ sub print_with_counts($) {
 
 	return sub($$) {
 		my ($resource, $context) = @_;
-		my $count = $context->{"files count"}->{$resource};
+		my $count = $context->{Disketo_Instruction_Set::M_CHILDREN_COUNTS()}->{$resource};
 		return "$resource	$count";
 	};
+}
+
+sub print_with_size($) {
+	my ($print_with_size_node) = @_;
+	
+	my $size_printer = delegate($print_with_size_node, 0);
+	
+	return sub($$) {
+		my ($file, $context) = @_;
+		my $stats = $context->{Disketo_Instruction_Set::M_FILE_STATS()}->{$file};
+		my $size = $stats->{"size"};
+
+		my $size_to_print = $size_printer->($size, $file, $context);
+		return "$file$SEPARATOR$size_to_print";
+	};
+}
+
+sub print_size_in_bytes($) {
+	my ($print_size_in_bytes_node) = @_;
+
+	return sub($$$) {
+		my ($size, $resource, $context) = @_;
+		return "$size B";	
+	}
+}
+
+
+sub print_size_human_readable($) {
+	my ($print_size_in_bytes_node) = @_;
+
+	return sub($$$) {
+		my ($size, $resource, $context) = @_;
+		return Disketo_IO::size_to_human_readable($size);	
+	}
+		
 }
 
 sub print_custom($) {
@@ -344,6 +397,8 @@ sub print_custom($) {
 		return $printer->($resource, $context);
 	};
 }
+	
+
 
 ########################################################################
 
@@ -364,7 +419,7 @@ sub ends_with($$) {
 sub files_of_dir_matching($$$) {
 	my ($dir, $condition, $context) = @_;
 	
-	my $children = $context->{"resources"}->{$dir};
+	my $children = $context->{Disketo_Instruction_Set::M_RESOURCES()}->{$dir};
 	my @matching = grep { $condition->($_, $context) } @$children;
 	return \@matching;
 }

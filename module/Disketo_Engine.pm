@@ -183,7 +183,7 @@ sub context_stats($) {
 	#print("*** context_stats \n");
 	my ($context) = @_;
 	
-#	print(Dumper($context)); # XXX
+	print(Dumper($context)); # XXX
 	
 	for my $name (keys %$context) {
 		my $value = $context->{$name};

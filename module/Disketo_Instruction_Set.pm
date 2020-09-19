@@ -66,50 +66,69 @@ sub sop($$$$$$$$) {
 	return operation($id, $name, $method, $requires, $produces, $doc, $params, $valid_arguments);
 }
 
+
+########################################################################
+# METAS NAMES
+
+sub M_RESOURCES() { "resources" }
+sub M_CHILDREN_COUNTS() { "children counts" }
+sub M_FILE_STATS() { "file stats" }
+sub M_USER_DEF() { "(user specified)" }
+
 ########################################################################
 # Returns the comands, as a hash mapping root command names to actual command nodes.
 sub commands() {
 	# -- compute primitive operations ----------------------------------
 	
-	my $load = sop("load", "load", \&Disketo_Instructions::load, [], ["resources"], 
+	my $load = sop("load", "load", \&Disketo_Instructions::load, [], [M_RESOURCES], 
 			"Loads the resources from the specified root folder or the file.",
 			"roots", "(the root resources)");
 
 
 	# -- compute primitive operations ----------------------------------
 	
-	my $count_files = nop("count-files", "count-files", \&Disketo_Instructions::count_files, ["resources"], ["files counts"], 
+	my $count_files = nop("count-files", "count-files", \&Disketo_Instructions::count_files, [M_RESOURCES], [M_CHILDREN_COUNTS], 
 			"Counts of files in each dir.");
 	
-	my $files_stats = nop("files-stats", "files-stats", \&Disketo_Instructions::files_stats, ["resources"], ["files stats"], 
+	my $files_stats = nop("files-stats", "files-stats", \&Disketo_Instructions::files_stats, [M_RESOURCES], [M_FILE_STATS], 
 			"Obtains the stats of the files.");
 		
 	# -- compute composite operations ---------------------------------
 	
-	my $compute_custom = op("compute-custom", "custom", \&Disketo_Instructions::compute_custom, [], ["(user specified)"], 
+	my $compute_custom = op("compute-custom", "custom", \&Disketo_Instructions::compute_custom, [], [M_USER_DEF], 
 			"Computes the custom meta.",
 			[ "as-meta", "by" ],
 			{ "as-meta" => "(meta name)",
 			  "by" => "(computer function)" 
 		});
 		
-	my $for_each_file = sop("for-each-file", "for-each-file", \&Disketo_Instructions::compute_for_each_file, ["resources"], [],
+	my $for_each_file = sop("for-each-file", "for-each-file", \&Disketo_Instructions::compute_for_each_file, [M_RESOURCES], [],
 		"For each file.",
 		"what", {
 			"files-stats" => $files_stats,
 			"custom" => $compute_custom });
 		
-	my $for_each_dir = sop("for-each-dir", "for-each-dir", \&Disketo_Instructions::compute_for_each_dir, ["resources"], [],
+	my $for_each_dir = sop("for-each-dir", "for-each-dir", \&Disketo_Instructions::compute_for_each_dir, [M_RESOURCES], [],
 		"For each dir.",
 		"what", {
 			"custom" => $compute_custom,
 			"count-files" => $count_files });
 	
-	my $compute = sop("compute", "compute", \&Disketo_Instructions::compute, [], ["(user specified)"], 
+	my $compute = sop("compute", "compute", \&Disketo_Instructions::compute, [], [M_USER_DEF], 
 		"Computes a meta.",
 		"for-what", {
 			"for-each-file" => $for_each_file,
 			"for-each-dir" => $for_each_dir });
+
+
+# -- execute primitive operations ---------------------------------
+	my $execute = sop("execute", "execute", \&Disketo_Instructions::execute, [], [], 
+		"Executes some function once during the process.",
+		"what", "(operation to perform)");
+
+# -- execute composite operations ---------------------------------
+
+# nope ...
 
 # -- filter primitive operations ---------------------------------
 	
@@ -157,14 +176,14 @@ sub commands() {
 				}
 		});
 
-	my $filter_files = sop("filter-files", "files", \&Disketo_Instructions::filter_files, ["resources"], [], 
+	my $filter_files = sop("filter-files", "files", \&Disketo_Instructions::filter_files, [M_RESOURCES], [], 
 			"Filters files by given criteria",
 			"matching", {
 				"matching-custom-matcher" => $matching_custom_matcher,
 				"having-extension" => $having_extension,
 				"matching-pattern" => $matching_pattern });
 
-	my $filter_dirs = sop("filter-dirs", "dirs", \&Disketo_Instructions::filter_dirs, ["resources"], [], 
+	my $filter_dirs = sop("filter-dirs", "dirs", \&Disketo_Instructions::filter_dirs, [M_RESOURCES], [], 
 			"Filters dirs by given criteria",
 			"matching", {
 				"matching-custom-matcher" => $matching_custom_matcher,
@@ -189,23 +208,37 @@ sub commands() {
 			"Prints each resource by the given function.",
 			"printer", "(printer function)");
 	
-	my $print_with_counts = nop("print-with-counts", "with-counts", \&Disketo_Instructions::print_with_counts, ["files counts"], [], 
+	my $print_with_counts = nop("print-with-counts", "with-counts", \&Disketo_Instructions::print_with_counts, [M_CHILDREN_COUNTS], [], 
 			"Prints each resource and number of its children.");
 		
 		
 	my $print_stats = nop("print-stats", "stats", \&Disketo_Instructions::print_stats, [], [], 
 			"Prints the current context stats.");
+	
+	
+	my $print_size_in_bytes = nop("print-size-in-bytes", "in-bytes", \&Disketo_Instructions::print_size_in_bytes, [], [], 
+			"Prints the file size in Bytes.");
+	
+	my $print_size_human_readable = nop("print-size-human-readable", "human-readable", \&Disketo_Instructions::print_size_human_readable, [], [], 
+			"Prints the file size automatically in the B, kB, MB or GB based on its actual value.");
 
 	# -- print composite operations ---------------------------------
 	
-	my $print_files = sop("print-files", "files", \&Disketo_Instructions::print_files, ["resources"], [],
+	my $print_with_size = sop("print-with-size", "with-size", \&Disketo_Instructions::print_with_size, [M_FILE_STATS], [],
+		"Prints the files and their size.",
+		"how", {
+			"in-bytes" => $print_size_in_bytes,
+			"human-readable" => $print_size_human_readable });
+	
+	my $print_files = sop("print-files", "files", \&Disketo_Instructions::print_files, [M_RESOURCES], [],
 		"Prints files.",
 		"how", {
 			"simply" => $print_simply,
 			"only-name" => $print_only_name,
+			"with-size" => $print_with_size,
 			"custom" => $print_custom });
 				
-	my $print_dirs = sop("print-dirs", "dirs", \&Disketo_Instructions::print_dirs, ["resources"], [],
+	my $print_dirs = sop("print-dirs", "dirs", \&Disketo_Instructions::print_dirs, [M_RESOURCES], [],
 		"Prints dirs.",
 		"how", {
 			"simply" => $print_simply, #TODO reuse from print_files
@@ -231,7 +264,7 @@ sub commands() {
 		"load" => $load,
 		"compute" => $compute,
 		# TODO group
-		# TODO execute once
+		"execute" => $execute,
 		# TODO print (debug) stats
 		"filter" => $filter,
 		"print" => $print
@@ -242,3 +275,4 @@ sub commands() {
 	return \%commands;
 
 }
+

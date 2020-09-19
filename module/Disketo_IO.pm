@@ -168,6 +168,22 @@ sub load_stats_for_file($) {
 ########################################################################
 # FILE SIZE
 
+sub size_to_human_readable($) {
+	my ($size) = @_;
+
+	if ($size < 1024) {
+		return "$size B";
+	}
+	$size = $size / 1024;
+	if ($size < 1024) {
+		return "$size kB";
+	}
+	$size = $size / 1024;
+	if ($size < 1024) {
+		return "$size MB";
+	}
+	return "$size GB";
+}
 #TODO file size to human format
 
 ########################################################################

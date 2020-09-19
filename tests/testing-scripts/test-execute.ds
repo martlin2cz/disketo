@@ -1,0 +1,5 @@
+# Tests the execute command
+execute sub {
+	my ($context) = @_;
+	print("Hello, world!\n");
+}

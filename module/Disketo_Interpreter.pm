@@ -29,7 +29,11 @@ sub run_program($) {
 sub dry_run_program($) {
 	my ($program) = @_;
 	
+	# TODO even during the dry-run compute the actual methods
+	# for case it would fail for some (for instance due the internal error)
+	# reason during that
 	run_the_program_or_dry($program);
+	
 }
 
 ########################################################################

@@ -5,7 +5,7 @@
  Each statement has to start with any of this commands:
 
 
-[filter](#filter) [print](#print) [load](#load) [compute](#compute)
+[load](#load) [execute](#execute) [filter](#filter) [compute](#compute) [print](#print)
 
  After that, continue with its declared parameter's values or (sub)commands.
 
@@ -77,7 +77,21 @@ Counts of files in each dir.
 | _no params_ | _no_value(s)_ |
 
 **Requires:** resources 
-**Produces:** files counts 
+**Produces:** children counts 
+
+
+# execute
+**Usage:** `execute what`
+
+Executes some function once during the process.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| what | (operation to perform) |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
 
 
 # files-stats
@@ -91,7 +105,7 @@ Obtains the stats of the files.
 | _no params_ | _no_value(s)_ |
 
 **Requires:** resources 
-**Produces:** files stats 
+**Produces:** file stats 
 
 
 # filter
@@ -130,7 +144,7 @@ Filters files by given criteria
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| matching |  [matching-custom-matcher](#matching-custom-matcher)  [having-extension](#having-extension)  [matching-pattern](#matching-pattern)  |
+| matching |  [matching-pattern](#matching-pattern)  [matching-custom-matcher](#matching-custom-matcher)  [having-extension](#having-extension)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
@@ -187,7 +201,7 @@ Directories having specified amount of files matching some condition.
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
 | amount |  [more-than](#more-than)  |
-| condition |  [having-extension](#having-extension)  [matching-custom-matcher](#matching-custom-matcher)  [matching-pattern](#matching-pattern)  |
+| condition |  [matching-pattern](#matching-pattern)  [matching-custom-matcher](#matching-custom-matcher)  [having-extension](#having-extension)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -230,7 +244,7 @@ Matches the given pattern specified way
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
 | pattern | (the pattern) |
-| how |  [case-sensitive](#case-sensitive)  [case-insensitive](#case-insensitive)  |
+| how |  [case-insensitive](#case-insensitive)  [case-sensitive](#case-sensitive)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -286,7 +300,7 @@ Prints dirs.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| how |  [custom](#print-custom)  [with-counts](#print-with-counts)  [only-name](#print-only-name)  [simply](#print-simply)  |
+| how |  [simply](#print-simply)  [only-name](#print-only-name)  [custom](#print-custom)  [with-counts](#print-with-counts)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
@@ -300,7 +314,7 @@ Prints files.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| how |  [custom](#print-custom)  [simply](#print-simply)  [only-name](#print-only-name)  |
+| how |  [simply](#print-simply)  [only-name](#print-only-name)  [with-size](#print-with-size)  [custom](#print-custom)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
@@ -324,6 +338,34 @@ Prints only the name of the resource.
 **Usage:** `simply `
 
 Prints each resource by its complete path.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# print-size-human-readable
+**Usage:** `human-readable `
+
+Prints the file size automatically in the B, kB, MB or GB based on its actual value.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# print-size-in-bytes
+**Usage:** `in-bytes `
+
+Prints the file size in Bytes.
 
 
 | Parameter | Possible value(s) |
@@ -358,7 +400,21 @@ Prints each resource and number of its children.
 | --------- | ----------------- |
 | _no params_ | _no_value(s)_ |
 
-**Requires:** files counts 
+**Requires:** children counts 
+**Produces:** _nothing_ 
+
+
+# print-with-size
+**Usage:** `with-size how`
+
+Prints the files and their size.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| how |  [in-bytes](#print-size-in-bytes)  [human-readable](#print-size-human-readable)  |
+
+**Requires:** file stats 
 **Produces:** _nothing_ 
 
 
