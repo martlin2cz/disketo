@@ -197,6 +197,33 @@ sub more_than($) {
 	};
 }
 
+sub having_meta($) {
+	my ($having_meta_node) = @_;
+
+	my $amount = delegate($having_meta_node, 0);
+	my $groupper = delegate($having_meta_node, 1);
+
+	return sub($$) {
+		my ($resource, $context) = @_;
+		my $resource_group_key = $groupper->($resource, $context);
+		my $resources = $context->{Disketo_Instruction_Set::M_FILES_GROUPS()}->{$resource_group_key};
+		return $amount->($resources, $context);
+	};
+}
+
+sub with_same_name($) {
+	return resource_to_name();
+}
+
+sub with_same_name_and_size($) {
+	return resource_to_name_and_size();
+}
+
+sub with_same_of_custom_group($) {
+	my ($with_same_of_custom_group_node) = @_;
+	return value($with_same_of_custom_group_node, 0);
+}
+
 ########################################################################
 # EXECUTE
 sub execute($) {
@@ -287,6 +314,60 @@ sub compute_custom($) {
 	return {"function" => $function, "meta_name" => $meta_name};
 }
 
+########################################################################
+# GROUP
+
+sub group($) {
+	my ($group_node) = @_;
+	return delegate($group_node, 0);
+}
+
+sub group_files($) {
+	my ($group_files_node) = @_;
+
+	my $groupper = delegate($group_files_node, 0);
+	my $meta_name = Disketo_Instruction_Set::M_FILES_GROUPS();
+	
+	return sub($) {
+		my ($context) = @_;
+		Disketo_Engine::group_files($groupper, $meta_name, $context);
+	};
+}
+
+sub group_dirs($) {
+	my ($group_dirs_node) = @_;
+
+	my $grouper = delegate($group_dirs_node, 0);
+	my $meta_name = Disketo_Instruction_Set::M_DIRS_GROUPS();
+	
+	return sub($) {
+		my ($context) = @_;
+		Disketo_Engine::group_dirs($grouper, $meta_name, $context);
+	};
+}
+
+
+sub group_by_name($) {
+	my ($group_by_name_node) = @_;
+	return resource_to_name();
+}
+
+sub group_by_name_and_size($) {
+	my ($group_by_name_and_size_node) = @_;
+	return resource_to_resource_and_size();
+}
+
+sub group_by_custom($) {
+	my ($group_by_custom_node) = @_;
+
+	my $groupper = value($group_by_custom_node, 0);
+	return sub($$) {
+		my ($resource, $context) = @_;
+		return $groupper->($resource, $context);
+	};
+}
+
+
 
 ########################################################################
 # PRINTS
@@ -336,11 +417,7 @@ sub print_simply($) {
 
 sub print_only_name($) {
 	my ($print_only_name_node) = @_;
-
-	return sub($$) {
-		my ($resource, $context) = @_;
-		return basename($resource);
-	};
+	return resource_to_name();
 }
 
 sub print_with_counts($) {
@@ -349,7 +426,7 @@ sub print_with_counts($) {
 	return sub($$) {
 		my ($resource, $context) = @_;
 		my $count = $context->{Disketo_Instruction_Set::M_CHILDREN_COUNTS()}->{$resource};
-		return "$resource	$count";
+		return "$resource$SEPARATOR$count";
 	};
 }
 
@@ -403,6 +480,27 @@ sub print_custom($) {
 ########################################################################
 
 #TODO all the remaining ...
+
+
+########################################################################
+# commons
+
+sub resource_to_name() {
+	return sub ($$) {
+		my ($resource, $context) = @_;
+		return basename($resource);
+	};
+}
+
+sub resource_to_resource_and_size() {
+	return sub ($$) {
+		my ($resource, $context) = @_;
+		my $stats = $context->{Disketo_Instruction_Set::M_FILE_STATS()}->{$resource};
+		my $size = $stats->{"size"};
+		return "$resource$SEPARATOR$size";
+	};
+}
+
 
 ########################################################################
 # utils

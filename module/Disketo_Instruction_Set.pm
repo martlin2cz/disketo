@@ -71,9 +71,12 @@ sub sop($$$$$$$$) {
 # METAS NAMES
 
 sub M_RESOURCES() { "resources" }
+sub M_USER_DEF() { "(user specified)" }
+
 sub M_CHILDREN_COUNTS() { "children counts" }
 sub M_FILE_STATS() { "file stats" }
-sub M_USER_DEF() { "(user specified)" }
+sub M_FILES_GROUPS() { "files groups" }
+sub M_DIRS_GROUPS() { "dirs groups" }
 
 ########################################################################
 # Returns the comands, as a hash mapping root command names to actual command nodes.
@@ -93,6 +96,12 @@ sub commands() {
 	my $files_stats = nop("files-stats", "files-stats", \&Disketo_Instructions::files_stats, [M_RESOURCES], [M_FILE_STATS], 
 			"Obtains the stats of the files.");
 		
+#	my $copy_of_meta = op("copy-of-meta", "copy-of-meta", \&Disketo_Instructions::copy_of_meta, [M_USER_DEF], [M_USER_DEF], 
+#			"Copies the values of one specified meta and stores them to the second one.",
+#			[ "source-meta-name", "destination-meta-name" ],
+#			{ "source-meta-name" => "(source meta name)",
+#			  "destination-meta-name" => "(destination meta name)" });
+	
 	# -- compute composite operations ---------------------------------
 	
 	my $compute_custom = op("compute-custom", "custom", \&Disketo_Instructions::compute_custom, [], [M_USER_DEF], 
@@ -105,14 +114,16 @@ sub commands() {
 	my $for_each_file = sop("for-each-file", "for-each-file", \&Disketo_Instructions::compute_for_each_file, [M_RESOURCES], [],
 		"For each file.",
 		"what", {
-			"files-stats" => $files_stats,
+			"files-stats" => $files_stats, #TODO rename to "load stats"
 			"custom" => $compute_custom });
+#			"copy-of-meta" => $copy_of_meta 
 		
 	my $for_each_dir = sop("for-each-dir", "for-each-dir", \&Disketo_Instructions::compute_for_each_dir, [M_RESOURCES], [],
 		"For each dir.",
 		"what", {
 			"custom" => $compute_custom,
 			"count-files" => $count_files });
+#			"copy-of-meta" => $copy_of_meta 
 	
 	my $compute = sop("compute", "compute", \&Disketo_Instructions::compute, [], [M_USER_DEF], 
 		"Computes a meta.",
@@ -120,6 +131,39 @@ sub commands() {
 			"for-each-file" => $for_each_file,
 			"for-each-dir" => $for_each_dir });
 
+
+# -- group primitive operations ---------------------------------
+
+
+	my $group_by_name = nop("group-by-name", "by-name", \&Disketo_Instructions::group_by_name, [], [], 
+			"Groups the resources by their name.");
+			
+	my $group_by_name_and_size = nop("group-by-name-and-size", "by-name-and-size", \&Disketo_Instructions::group_by_name_and_size, [M_FILE_STATS], [], 
+			"Groups the resources by their name and size.");
+			
+	my $group_by_custom = sop("group-by-custom", "by-custom", \&Disketo_Instructions::group_by_custom, [], [], 
+			"Groups the resources by the specified groupper function.",
+			"by", "(the groupper function)");
+
+# -- group composite operations ---------------------------------
+	my $group_files = sop("group-files", "files", \&Disketo_Instructions::group_files, [M_RESOURCES], [M_FILES_GROUPS], 
+			"Groups the files by the given groupper.",
+			"by", {
+				"by-name" => $group_by_name,
+				"by-name-and-size" => $group_by_name_and_size,
+				"by-custom" => $group_by_custom });
+
+	my $group_dirs = sop("group-dirs", "dirs", \&Disketo_Instructions::group_dirs, [M_RESOURCES], [M_DIRS_GROUPS], 
+			"Groups the dirs by the given groupper.",
+			"by", {
+				"by-name" => $group_by_name,
+				"by-custom" => $group_by_custom });
+
+	my $group = sop("group", "group", \&Disketo_Instructions::group, [], [], 
+		"Computes a some meta with the resources groupped by some groupper",
+		"what", {
+			"files" => $group_files,
+			"dirs" => $group_dirs });
 
 # -- execute primitive operations ---------------------------------
 	my $execute = sop("execute", "execute", \&Disketo_Instructions::execute, [], [], 
@@ -175,20 +219,58 @@ sub commands() {
 					"matching-pattern" => $matching_pattern 
 				}
 		});
+		
+	my $with_the_same_name = nop("with-the-same-name", "with-the-same-name", \&Disketo_Instructions::with_same_name, [M_FILES_GROUPS], [], 
+			"Matches the resources which have the same name.");
+	my $with_the_same_name_and_size = nop("with-the-same-name-and-size", "with-the-same-name-and-size", \&Disketo_Instructions::with_same_name_and_size, [M_FILES_GROUPS], [], 
+			"Matches the resources which have the same name and size.");
+	my $with_same_of_custom_group = sop("with-the-same-of-custom", "with-the-same-of-custom", \&Disketo_Instructions::with_same_of_custom_group, [M_USER_DEF], [], 
+			"Matches the resources which have the specified amount of the resources with the specified custom groupper.",
+			"groupper", "(the groupper function)");
+		
+	my $having_files_meta = op("having-files-meta", "having", \&Disketo_Instructions::having_meta, [], [], 
+			"Filters files having given computed meta or value matching given criteria.",
+			[ "criteria", "meta" ],
+			{	"criteria" => {
+					"more-than" => $more_than,
+					# TODO less-than, all-of-them, none-of-them, percentage, ...
+				},
+				"meta" => { # TODO reuse from filter_files
+					"with-the-same-name" => $with_the_same_name,
+					"with-the-same-and-size" => $with_the_same_name_and_size,
+					"with-the-same-of-custom" => $with_same_of_custom_group }
+		});
+	
+	my $having_dirs_meta = op("having-dirs-meta", "having", \&Disketo_Instructions::having_meta, [], [], 
+			"Filters dirs having given computed meta or value matching given criteria.",
+			[ "criteria", "meta" ],
+			{	"criteria" => {
+					"more-than" => $more_than,
+					# TODO less-than, all-of-them, none-of-them, percentage, ...
+				},
+				"meta" => { # TODO reuse from filter_files
+					"with-the-same-name" => $with_the_same_name,
+					"with-the-same-and-size" => $with_the_same_name_and_size,
+					"with-the-same-of-custom" => $with_same_of_custom_group }
+		});
 
 	my $filter_files = sop("filter-files", "files", \&Disketo_Instructions::filter_files, [M_RESOURCES], [], 
 			"Filters files by given criteria",
 			"matching", {
 				"matching-custom-matcher" => $matching_custom_matcher,
 				"having-extension" => $having_extension,
-				"matching-pattern" => $matching_pattern });
+				"matching-pattern" => $matching_pattern,
+					#TODO "file-named"				
+				"having" => $having_files_meta });
 
 	my $filter_dirs = sop("filter-dirs", "dirs", \&Disketo_Instructions::filter_dirs, [M_RESOURCES], [], 
 			"Filters dirs by given criteria",
 			"matching", {
 				"matching-custom-matcher" => $matching_custom_matcher,
 				"matching-pattern" => $matching_pattern, #TODO: reuse
-				"having-files" => $having_files });
+				"having-files" => $having_files, 
+				#TODO "dir-named"
+				"having" => $having_dirs_meta });
 
 	my $filter = sop("filter", "filter", \&Disketo_Instructions::filter, [], [], 
 			"Filters by given criteria",
@@ -263,7 +345,7 @@ sub commands() {
 	my %commands = (
 		"load" => $load,
 		"compute" => $compute,
-		# TODO group
+		"group" => $group,
 		"execute" => $execute,
 		# TODO print (debug) stats
 		"filter" => $filter,

@@ -1,0 +1,27 @@
+# Tests the 'group ...' command(s)
+group files by-name
+print stats
+
+compute for-each-file files-stats
+group files by-name-and-size
+print stats
+
+group files by-custom sub {
+	my ($file, $context) = @_;
+
+	return length($file);
+}
+print stats
+
+# aand dirs ...
+group dirs by-name
+print stats
+
+group dirs by-custom sub {
+	my ($dir, $context) = @_;
+
+	return length($dir);
+}
+print stats
+
+
