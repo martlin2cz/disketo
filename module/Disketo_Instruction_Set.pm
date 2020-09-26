@@ -196,6 +196,8 @@ sub commands() {
 
 # -- filter composite operations ---------------------------------
 
+# TODO 'matching only name pattern' and 'matching whole path pattern'
+
 	my $matching_pattern = op("matching-pattern", "matching-pattern", \&Disketo_Instructions::matching_pattern, [], [], 
 			"Matches the given pattern specified way",
 			[ "pattern", "how" ],
