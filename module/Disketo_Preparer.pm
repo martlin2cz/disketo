@@ -176,7 +176,7 @@ sub resolve_hypermarker_values($$) {
 
 
 ########################################################################
-# VERIFY MISSING METAS
+# VERIFY MISSING FIELDS
 
 # Inserts the load instruction at the very beggining of the given program.
 # No f****s given about already existing load instruction at the 
@@ -194,7 +194,7 @@ sub insert_load($) {
 	unshift @$program, $instruction;
 }
 
-# Computes the metas required by the given instruction.
+# Computes the fields required by the given instruction.
 sub compute_requireds($) {
 	my ($instruction) = @_;
 
@@ -212,7 +212,7 @@ sub compute_requireds($) {
 	return \@produceds;
 }
 
-# Computes the metas produced by this instruction.
+# Computes the fields produced by this instruction.
 sub compute_produceds($) {
 	my ($instruction) = @_;
 
@@ -230,23 +230,23 @@ sub compute_produceds($) {
 	return \@produceds;
 }
 
-# Returns true if the given instruction produces the given meta.
+# Returns true if the given instruction produces the given field.
 sub produces($$) {
-	my ($instruction, $meta_name) = @_;
+	my ($instruction, $field_name) = @_;
 	my $produced = compute_produceds($instruction);
 	my %produceds = map { $_ => 1 } @$produced;
-	return %produceds{$meta_name};
+	return %produceds{$field_name};
 }
 
-# Returns true if any instruction up to given index produces the specified meta.
+# Returns true if any instruction up to given index produces the specified field.
 sub is_produced_by($$$) {
-	my ($program, $meta_name, $up_to_instruction_index) = @_;
+	my ($program, $field_name, $up_to_instruction_index) = @_;
 	
 	my $i;
 	for ($i = $up_to_instruction_index; $i >= 0; $i--) {
 			my $instruction = $program->[$i];
 			
-			if (produces($instruction, $meta_name)) {
+			if (produces($instruction, $field_name)) {
 				return 1;
 			}
 	}
@@ -254,7 +254,7 @@ sub is_produced_by($$$) {
 	return 0;
 }
 
-# Verifies all the instructions gets its specified metas produced.
+# Verifies all the instructions gets its specified fields produced.
 sub verify_dependencies($) {
 	my ($program) = @_;
 	
@@ -264,7 +264,7 @@ sub verify_dependencies($) {
 		for my $required (@$requireds) {
 			my $is = is_produced_by($program, $required, $index);
 			if (not $is) {
-				die("The meta " 
+				die("The field " 
 				. "'" . $required . "' is required "
 				. "by the statement " . ($index + 1) . ", "
 				. "but none of its foregoing statements produces it.");

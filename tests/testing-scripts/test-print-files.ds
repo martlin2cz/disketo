@@ -1,0 +1,26 @@
+# test the print files ...
+compute for-each-file files-stats
+print stats
+print files with-size in-bytes
+print files with-size human-readable
+print files custom sub {
+	my ($file, $context) = @_;
+	return "F: $file $context";
+}
+#compute for-each-file files-stats
+#group files by name
+
+
+print files only-name
+print files with-meta "files stats"
+print files with-its-group of-the-same-name-and-size
+print files with-its-group custom-group sub {
+	return 
+}
+print files with-its-group of-the-same-name
+print files with-size human-readable
+print files with-size in-bytes
+print files simply
+print files custom (printer function)
+
+

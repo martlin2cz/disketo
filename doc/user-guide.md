@@ -72,7 +72,7 @@ print files custom sub {
 }
 ```
 
-_Note:_ The sub gets called with exactly two arguments. The first one is just the particular resource (file or directory) and the second is so-called _context_. The context contains informations about the resources, _metas_ and so. (More info about the context in the developper guide.) The sub may return value corresponding to its usage. See more in the description of the particular operation.
+_Note:_ The sub gets called with exactly two arguments. The first one is just the particular resource (file or directory) and the second is so-called _context_. The context contains informations about the resources, so-called _fields_ (all resources, groups, metas and so). (More info about the context in the developper guide.) The sub may return value corresponding to its usage. See more in the description of the particular operation.
 
 # Troubleshooting
 

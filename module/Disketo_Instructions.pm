@@ -197,16 +197,16 @@ sub more_than($) {
 	};
 }
 
-sub having_meta($) {
-	my ($having_meta_node) = @_;
+sub having_group($) {
+	my ($having_group_node) = @_;
 
-	my $amount = delegate($having_meta_node, 0);
-	my $groupper = delegate($having_meta_node, 1);
+	my $amount = delegate($having_group_node, 0);
+	my $groupper = delegate($having_group_node, 1);
 
 	return sub($$) {
 		my ($resource, $context) = @_;
 		my $resource_group_key = $groupper->($resource, $context);
-		my $resources = $context->{Disketo_Instruction_Set::M_FILES_GROUPS()}->{$resource_group_key};
+		my $resources = $context->{Disketo_Instruction_Set::FG_FILES_GROUPS()}->{$resource_group_key};
 		return $amount->($resources, $context);
 	};
 }
@@ -284,7 +284,7 @@ sub count_files($) {
 		return scalar @children;
 	};
 	
-	return {"function" => $function, "meta_name" => Disketo_Instruction_Set::M_CHILDREN_COUNTS()};
+	return {"function" => $function, "meta_name" => Disketo_Instruction_Set::FM_CHILDREN_COUNTS()};
 }
 
 sub files_stats($) {
@@ -296,7 +296,7 @@ sub files_stats($) {
 		return Disketo_IO::load_stats_for_file($file);
 	};
 	
-	return {"function" => $function, "meta_name" => Disketo_Instruction_Set::M_FILE_STATS()};
+	return {"function" => $function, "meta_name" => Disketo_Instruction_Set::FM_FILE_STATS()};
 }
 
 
@@ -326,11 +326,11 @@ sub group_files($) {
 	my ($group_files_node) = @_;
 
 	my $groupper = delegate($group_files_node, 0);
-	my $meta_name = Disketo_Instruction_Set::M_FILES_GROUPS();
+	my $group_name = Disketo_Instruction_Set::FG_FILES_GROUPS();
 	
 	return sub($) {
 		my ($context) = @_;
-		Disketo_Engine::group_files($groupper, $meta_name, $context);
+		Disketo_Engine::group_files($groupper, $group_name, $context);
 	};
 }
 
@@ -338,11 +338,11 @@ sub group_dirs($) {
 	my ($group_dirs_node) = @_;
 
 	my $grouper = delegate($group_dirs_node, 0);
-	my $meta_name = Disketo_Instruction_Set::M_DIRS_GROUPS();
+	my $group_name = Disketo_Instruction_Set::FG_DIRS_GROUPS();
 	
 	return sub($) {
 		my ($context) = @_;
-		Disketo_Engine::group_dirs($grouper, $meta_name, $context);
+		Disketo_Engine::group_dirs($grouper, $group_name, $context);
 	};
 }
 
@@ -425,7 +425,7 @@ sub print_with_counts($) {
 
 	return sub($$) {
 		my ($resource, $context) = @_;
-		my $count = $context->{Disketo_Instruction_Set::M_CHILDREN_COUNTS()}->{$resource};
+		my $count = $context->{Disketo_Instruction_Set::FM_CHILDREN_COUNTS()}->{$resource};
 		return "$resource$SEPARATOR$count";
 	};
 }
@@ -437,7 +437,7 @@ sub print_with_size($) {
 	
 	return sub($$) {
 		my ($file, $context) = @_;
-		my $stats = $context->{Disketo_Instruction_Set::M_FILE_STATS()}->{$file};
+		my $stats = $context->{Disketo_Instruction_Set::FM_FILE_STATS()}->{$file};
 		my $size = $stats->{"size"};
 
 		my $size_to_print = $size_printer->($size, $file, $context);
@@ -495,7 +495,7 @@ sub resource_to_name() {
 sub resource_to_resource_and_size() {
 	return sub ($$) {
 		my ($resource, $context) = @_;
-		my $stats = $context->{Disketo_Instruction_Set::M_FILE_STATS()}->{$resource};
+		my $stats = $context->{Disketo_Instruction_Set::FM_FILE_STATS()}->{$resource};
 		my $size = $stats->{"size"};
 		return "$resource$SEPARATOR$size";
 	};
@@ -517,7 +517,7 @@ sub ends_with($$) {
 sub files_of_dir_matching($$$) {
 	my ($dir, $condition, $context) = @_;
 	
-	my $children = $context->{Disketo_Instruction_Set::M_RESOURCES()}->{$dir};
+	my $children = $context->{Disketo_Instruction_Set::F_RESOURCES()}->{$dir};
 	my @matching = grep { $condition->($_, $context) } @$children;
 	return \@matching;
 }

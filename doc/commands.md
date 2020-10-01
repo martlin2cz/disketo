@@ -5,7 +5,7 @@
  Each statement has to start with any of this commands:
 
 
-[load](#load) [execute](#execute) [filter](#filter) [compute](#compute) [print](#print)
+[execute](#execute) [load](#load) [print](#print) [filter](#filter) [compute](#compute) [group](#group)
 
  After that, continue with its declared parameter's values or (sub)commands.
 
@@ -40,7 +40,7 @@ Matches the pattern respecing the case
 # compute
 **Usage:** `compute for-what`
 
-Computes a meta.
+Computes a meta field.
 
 
 | Parameter | Possible value(s) |
@@ -54,12 +54,12 @@ Computes a meta.
 # compute-custom
 **Usage:** `custom as-meta by`
 
-Computes the custom meta.
+Computes the custom meta field.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| as-meta | (meta name) |
+| as-meta | (meta field name) |
 | by | (computer function) |
 
 **Requires:** _nothing_ 
@@ -116,7 +116,7 @@ Filters by given criteria
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what |  [files](#filter-files)  [dirs](#filter-dirs)  |
+| what |  [dirs](#filter-dirs)  [files](#filter-files)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -130,7 +130,7 @@ Filters dirs by given criteria
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| matching |  [matching-custom-matcher](#matching-custom-matcher)  [matching-pattern](#matching-pattern)  [having-files](#having-files)  |
+| matching |  [matching-pattern](#matching-pattern)  [having-files](#having-files)  [matching-custom-matcher](#matching-custom-matcher)  [having](#having-dirs-group)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
@@ -144,7 +144,7 @@ Filters files by given criteria
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| matching |  [matching-pattern](#matching-pattern)  [matching-custom-matcher](#matching-custom-matcher)  [having-extension](#having-extension)  |
+| matching |  [matching-custom-matcher](#matching-custom-matcher)  [matching-pattern](#matching-pattern)  [having](#having-files-group)  [having-extension](#having-extension)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
@@ -178,6 +178,105 @@ For each file.
 **Produces:** _nothing_ 
 
 
+# group
+**Usage:** `group what`
+
+Computes a group with the resources groupped by some groupper
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| what |  [dirs](#group-dirs)  [files](#group-files)  |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# group-by-custom
+**Usage:** `by-custom by`
+
+Groups the resources by the specified groupper function.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| by | (the groupper function) |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# group-by-name
+**Usage:** `by-name `
+
+Groups the resources by their name.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# group-by-name-and-size
+**Usage:** `by-name-and-size `
+
+Groups the resources by their name and size.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** file stats 
+**Produces:** _nothing_ 
+
+
+# group-dirs
+**Usage:** `dirs by`
+
+Groups the dirs by the given groupper.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| by |  [by-name](#group-by-name)  [by-custom](#group-by-custom)  |
+
+**Requires:** resources 
+**Produces:** dirs groups 
+
+
+# group-files
+**Usage:** `files by`
+
+Groups the files by the given groupper.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| by |  [by-name-and-size](#group-by-name-and-size)  [by-custom](#group-by-custom)  [by-name](#group-by-name)  |
+
+**Requires:** resources 
+**Produces:** files groups 
+
+
+# having-dirs-group
+**Usage:** `having criteria group`
+
+Filters dirs having given group.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| criteria |  [more-than](#more-than)  |
+| group |  [with-the-same-name](#with-the-same-name)  [with-the-same-name-and-size](#with-the-same-name-and-size)  [with-the-same-of-custom](#with-the-same-of-custom)  |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
 # having-extension
 **Usage:** `having-extension extension`
 
@@ -202,6 +301,21 @@ Directories having specified amount of files matching some condition.
 | --------- | ----------------- |
 | amount |  [more-than](#more-than)  |
 | condition |  [matching-pattern](#matching-pattern)  [matching-custom-matcher](#matching-custom-matcher)  [having-extension](#having-extension)  |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# having-files-group
+**Usage:** `having criteria group`
+
+Filters files having given group.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| criteria |  [more-than](#more-than)  |
+| group |  [with-the-same-of-custom](#with-the-same-of-custom)  [with-the-same-name-and-size](#with-the-same-name-and-size)  [with-the-same-name](#with-the-same-name)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -244,7 +358,7 @@ Matches the given pattern specified way
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
 | pattern | (the pattern) |
-| how |  [case-insensitive](#case-insensitive)  [case-sensitive](#case-sensitive)  |
+| how |  [case-sensitive](#case-sensitive)  [case-insensitive](#case-insensitive)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -272,7 +386,7 @@ Prints given.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what |  [files](#print-files)  [dirs](#print-dirs)  [stats](#print-stats)  |
+| what |  [stats](#print-stats)  [dirs](#print-dirs)  [files](#print-files)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -300,7 +414,7 @@ Prints dirs.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| how |  [simply](#print-simply)  [only-name](#print-only-name)  [custom](#print-custom)  [with-counts](#print-with-counts)  |
+| how |  [only-name](#print-only-name)  [with-counts](#print-with-counts)  [custom](#print-custom)  [simply](#print-simply)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
@@ -314,7 +428,7 @@ Prints files.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| how |  [simply](#print-simply)  [only-name](#print-only-name)  [with-size](#print-with-size)  [custom](#print-custom)  |
+| how |  [simply](#print-simply)  [custom](#print-custom)  [only-name](#print-only-name)  [with-size](#print-with-size)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
@@ -415,6 +529,48 @@ Prints the files and their size.
 | how |  [in-bytes](#print-size-in-bytes)  [human-readable](#print-size-human-readable)  |
 
 **Requires:** file stats 
+**Produces:** _nothing_ 
+
+
+# with-the-same-name
+**Usage:** `with-the-same-name `
+
+Matches the resources which have the same name.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** files groups 
+**Produces:** _nothing_ 
+
+
+# with-the-same-name-and-size
+**Usage:** `with-the-same-name-and-size `
+
+Matches the resources which have the same name and size.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** files groups 
+**Produces:** _nothing_ 
+
+
+# with-the-same-of-custom
+**Usage:** `with-the-same-of-custom groupper`
+
+Matches the resources which have the specified amount of the resources with the specified custom groupper.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| groupper | (the groupper function) |
+
+**Requires:** (user specified) 
 **Produces:** _nothing_ 
 
 

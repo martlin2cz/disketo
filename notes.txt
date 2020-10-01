@@ -58,12 +58,12 @@ TODO:
 		- filter with MORE than one duplicity ?
 	
 ----
-context = resources + metas
-meta[name] = resource => whatever
+context = fields 
+fields = resources + metas + groups
 resources: dir => [files]
-stats: resource => stats
-groups: groups identifier (i.e. name) => [resources]
-duplicites: resource => [same resources]
+meta[resource] = resource => whatever
+group[name] = group_name => [resources]
+stats meta: resource => stats
 
 ----
 disketo script file = a file containing disketo skript
