@@ -87,12 +87,47 @@ sub is($$$) {
 }
 
 ########################################################################
-########################################################################
-# LOADS
+# Delegates to its first child. If has less or more, fails.
+sub pass($) {
+	my ($node) = @_;
+		
+	if (scalar @{ $node->{"arguments"} } != 1) {
+		die("Has not one child!");
+	}
+	
+	delegate($node, 0); 
+}
 
-sub load($) {
-	my ($load_node) = @_;
-	my $roots = value($load_node, 0);
+sub pass_value($) {
+	my ($node) = @_;
+	
+	if (scalar @{ $node->{"arguments"} } != 1) {
+		die("Has not one child!");
+	}
+	
+	return value($node, 0);
+}
+
+# Incidates this method may be never called.
+sub nope($) {
+	my ($node) = @_;
+	die("YOOU SHAAAL NOT ... be called!");
+}
+
+########################################################################
+########################################################################
+# LOADS atomic
+
+sub load_resources($) {
+	my ($node) = @_;
+	my $root_or_roots = value($node, 0);
+	
+	my $roots;
+	if (ref($root_or_roots) eq "ARRAY") {
+		$roots = $root_or_roots;
+	} else {
+		$roots = [ $root_or_roots ]; #FIXME TESTME
+	}
 	
 	return sub($) {
 		my ($context) = @_;
@@ -100,8 +135,504 @@ sub load($) {
 	}
 }
 
+sub load_files_stats($) {
+	my ($node) = @_;
+	
+	return sub($$) {
+		my ($file, $context) = @_;
+		
+		return Disketo_IO::load_stats_for_file($file);
+	};
+}
+
 ########################################################################
-# FILTERS
+# COMPUTES atomic
+
+sub children_count($) {
+	my ($node) = @_;
+	
+	return sub($$) {
+		my ($dir, $context) = @_;
+		my @children = @{ $context->{M_RESOURCES}->{$dir} };
+		return (scalar @children);
+	};
+}
+
+sub directories_sizes($) {
+	my ($node) = @_;
+	
+	return sub($$) {
+		my ($dir, $context) = @_;
+		my @children = @{ $context->{M_RESOURCES}->{$dir} };
+		#TODO implementme
+		return (scalar @children) . " PB";
+	};
+}
+
+sub by_appling_custom_function_to_each($) {
+	my ($node) = @_;
+
+	my $computer = value($node, 0);
+	
+	return sub($$) {
+		my ($resource, $context) = @_;
+		return $computer->($resource, $context);
+	};
+}
+
+sub compute_custom_meta($) {
+	my ($node) = @_;
+
+	my $function = value($node, 0);
+	
+	my $for_each_node = child($node, 1);
+	my $for_each = $for_each_node->{"name"};
+
+	return { "function" => $function, "for-what" => $for_each };
+}
+
+
+########################################################################
+# COMPUTE composite
+
+sub compute($) {
+	my ($node) = @_;
+
+	my $subresult = value($node, 0);
+	my $meta_name = value($node, 1);
+
+	my $function = $subresult->{"function"};
+	my $for_what = $subresult->{"for-what"};
+	
+	if ($for_what eq "for-each-file") {
+		return sub ($) {
+			my ($context) = @_;
+			Disketo_Engine::calculate_for_each_file($function, $meta_name, $context);
+		};		
+	}
+	if ($for_what eq "for-each-dir")	 {
+		return sub ($) {
+			my ($context) = @_;
+			Disketo_Engine::calculate_for_each_file($function, $meta_name, $context);
+		};
+	}
+	die("Unsupported.");	
+}
+
+########################################################################
+# GROUP atomic
+
+sub group_by_name($) {
+	my ($node) = @_;
+	return sub($) {
+		my ($resource, $context) = @_;
+		my $name = basename($resource);
+		return "$name";
+	};
+}
+
+sub group_by_name_and_size($) {
+	my ($node) = @_;
+	return sub($) {
+		my ($file, $context) = @_;
+		my $name = basename($file);
+		my $size = $context->{M_FILE_STATS}->{$file}->{"size"};
+		return "$name$SEPARATOR$size";
+	};
+}
+
+sub group_by_name_and_children_count($) {
+	my ($node) = @_;
+	return sub($) {
+		my ($dir, $context) = @_;
+		my $name = basename($dir);
+		my $count = $context->{M_CHILDREN_COUNTS}->{$dir};
+		return "$name$SEPARATOR$count";
+	};
+}
+
+sub group_by_name_and_children_size($) {
+	my ($node) = @_;
+	return sub($) {
+		my ($dir, $context) = @_;
+		my $name = basename($dir);
+		my $size = $context->{M_DIRS_SIZES}->{$dir};
+		return "$name$SEPARATOR$size";
+	};
+}
+
+sub group_by_custom($) {
+	my ($node) = @_;
+	my $function = value($node, 0);
+	return sub($) {
+		my ($resource, $context) = @_;
+		return $function->($resource, $context);
+	};
+}
+
+########################################################################
+# GROUP composite
+
+sub group_files($) {
+	my ($node) = @_;
+	my $groupper = delegate($node, 0);
+	my $meta_name = delegate($node, 1);
+	
+	sub ($) {
+		my ($context) = @_;
+		Disketo_Engine::group_files($groupper, $meta_name, $context);
+	};
+}
+
+sub group_dirs($) {
+	my ($node) = @_;
+	my $groupper = delegate($node, 0);
+	my $meta_name = delegate($node, 1);
+	
+	sub ($) {
+		my ($context) = @_;
+		Disketo_Engine::group_dirs($groupper, $meta_name, $context);
+	};
+}
+
+########################################################################
+# EXECUTE
+
+sub execute($) {
+	my ($node) = @_;
+	
+	my $operation = value($node, 0);
+	return sub($) {
+		my ($context) = @_;
+		$operation->($context);
+	}
+}
+
+########################################################################
+# FILTERS atomic
+
+sub matching_custom_matcher($) {
+	my ($node) = @_;
+	
+	my $matcher = value($node, 0);
+	return sub($) {
+		my ($resources, $context) = @_;
+		return $matcher->($resources, $context);
+	};
+}
+
+sub named($) {
+	my ($node) = @_;
+	
+	my $the_name = value($node, 0);
+	return sub($) {
+		my ($resource, $context) = @_;
+		my $name = basename($resource);
+		return $name eq $the_name;
+	};
+}
+
+sub having_extension($) {
+	my ($node) = @_;
+	
+	my $extension = value($node, 0);
+	return sub($) {
+		my ($file, $context) = @_;
+		return ends_with($file, "." . $extension);
+	};
+}
+
+sub more_than($) {
+	my ($node) = @_;
+	
+	my $number = value($node, 0);
+	return sub($$) {
+		my ($resources, $context) = @_;
+		return (scalar @$resources) > $number;
+	};
+}
+
+sub less_than($) {
+	my ($node) = @_;
+	
+	my $number = value($node, 0);
+	return sub($$) {
+		my ($resources, $context) = @_;
+		return (scalar @$resources) < $number;
+	};
+}
+
+sub none($) {
+	my ($node) = @_;
+	
+	return sub($$) {
+		my ($resources, $context) = @_;
+		return (scalar @$resources) == 0;
+	};
+}
+
+sub with_same_name($) {
+	my ($node) = @_;
+	
+	return resource_to_meta("with same name"); #TODO meta name
+}
+
+sub with_same_name_and_size($) {
+	my ($node) = @_;
+	
+	return resource_to_meta("with same name and size"); #TODO meta name
+}
+
+sub with_same_of_custom_group($) {
+	my ($node) = @_;
+	
+	return resource_to_meta("with same custom group"); #TODO meta name
+}
+
+########################################################################
+# FILTERS composite
+
+sub matching_pattern($) {
+	my ($node) = @_;
+
+	my $pattern = value($node, 0);
+	
+	if (is($node, 1, "case-sensitive")) {
+		return sub($) {
+			my ($resource, $context) = @_;
+			return ($resource =~ /$pattern/);
+		};
+	}
+	
+	if (is($node, 1, "case-insensitive")) {
+		return sub($) {
+			my ($resource, $context) = @_;
+			return ($resource =~ /$pattern/i);
+		};
+	}
+	
+	die("Unsupported.");
+}
+
+sub dirs_having_children($) {
+	my ($node) = @_;
+
+	my $matching_what = delegate($node, 0);
+	return sub($$) {
+		my ($dir, $context) = @_;
+		return files_of_dir_matching($dir, $matching_what, $context);
+	};
+}
+
+sub of_the_same($) {
+	my ($node) = @_;
+
+	my $group_name = delegate($node, 0);
+	return resource_to_meta($group_name);
+}
+
+sub having($) {
+	my ($node) = @_;
+
+	my $how_much = delegate($node, 0);
+	my $of_what = delegate($node, 1);
+	
+	return sub($$) {
+		my ($resource, $context) = @_;
+		my $items = $of_what->($resource, $context);
+		return $how_much->($items, $context);
+	};
+}
+
+sub filter_files($) {
+	my ($node) = @_;
+
+	my $matching = delegate($node, 0);
+	return sub($) {
+		my ($context) = @_;
+		Disketo_Engine::filter_files($matching, $context);
+	};
+}
+
+sub filter_dirs($) {
+	my ($node) = @_;
+
+	my $matching = delegate($node, 0);
+	return sub($) {
+		my ($context) = @_;
+		Disketo_Engine::filter_dirs($matching, $context);
+	};
+}
+
+
+########################################################################
+# PRINTS atomic
+
+
+sub print_stats($) {
+	my ($node) = @_;
+
+	return sub($) {
+		my ($context) = @_;
+		Disketo_Engine::context_stats($context);
+	};
+}
+
+sub print_stats($) {
+	my ($node) = @_;
+
+	return sub($) {
+		my ($context) = @_;
+		Disketo_Engine::context_stats_debug($context); #TODO implementme!
+	};
+}
+
+sub print_simply($) {
+	my ($node) = @_;
+
+	return sub($$) {
+		my ($resource, $context) = @_;
+		return $resource;
+	};
+}
+
+
+sub print_only_name($) {
+	my ($node) = @_;
+	return resource_to_name();
+}
+
+
+
+sub print_custom($) {
+	my ($node) = @_;
+
+	my $printer = value($node, 0);
+	return sub($$) {
+		my ($resource, $context) = @_;
+		return $printer->($resource, $context);
+	};
+}
+
+sub print_with_counts($) {
+	my ($node) = @_;
+
+	return resource_to_resource_with_meta("directory children count"); #TODO meta name
+}
+
+sub print_size_in_bytes($) {
+	my ($node) = @_;
+
+	return sub($$$) {
+		my ($size, $resource, $context) = @_;
+		return "$size B";	
+	}
+}
+
+sub print_size_human_readable($) {
+	my ($node) = @_;
+
+	return sub($$$) {
+		my ($size, $resource, $context) = @_;
+		return Disketo_IO::size_to_human_readable($size);	
+	}		
+}
+
+sub print_custom_group($) {
+	my ($node) = @_;
+ 
+	my $group_meta_name = value($node, 0);
+	return resource_to_resource_with_meta($group_meta_name);
+}
+
+sub print_of_the_same_name($) {
+	my ($node) = @_;
+ 
+	return resource_to_resource_with_meta("group meta field"); #TODO field name
+}
+
+sub print_of_the_same_name_and_size($) {
+	my ($node) = @_;
+ 
+	return resource_to_resource_with_meta("group meta field"); #TODO field name
+}
+
+sub print_of_the_same_name_and_children_size($) {
+	my ($node) = @_;
+ 
+	return resource_to_resource_with_meta("group meta field"); #TODO field name
+}
+
+sub print_of_the_same_name_and_children_count($) {
+	my ($node) = @_;
+ 
+	return resource_to_resource_with_meta("group meta field"); #TODO field name
+}
+
+
+########################################################################
+# PRINTS composite
+
+
+sub print_with_meta($) {
+	my ($node) = @_;
+	
+	my $meta_name = value($node, 0);
+	return resource_to_resource_with_meta($meta_name);
+}
+
+sub print_with_children_size($) {
+	my ($node) = @_;
+	
+	my $size_printer = delegate($node, 0);
+	return dir_to_dir_with_children_size($size_printer);
+}
+
+sub print_with_size($) {
+	my ($node) = @_;
+	
+	my $size_printer = delegate($node, 0);
+	return file_to_file_with_size($size_printer);
+}
+
+sub print_with_children($) {
+	my ($node) = @_;
+
+	my $printer = delegate($node, 0);
+	return sub($$) {
+		my ($dir, $context) = @_;
+		my $children = $context->{M_RESOURCES}->{$dir};
+		my $children_text = resources_to_names_text($children);
+		return "$dir$SEPARATOR$children_text";
+	};
+}
+
+sub print_files($) {
+	my ($node) = @_;
+
+	my $printer = delegate($node, 0);
+	return sub($) {
+		my ($context) = @_;
+		Disketo_Engine::print_files($printer, $context);
+	};
+}
+
+sub print_dirs($) {
+	my ($node) = @_;
+
+	my $printer = delegate($node, 0);
+	return sub($) {
+		my ($context) = @_;
+		Disketo_Engine::print_dirs($printer, $context);
+	};
+}
+
+
+########################################################################
+########################################################################
+########################################################################
+########################################################################
+# FOLLOWING ARE DEPRECATED till the misc/utils/commons
 
 sub filter($) {
 	my ($filter_node) = @_;
@@ -128,27 +659,7 @@ sub filter_dirs($) {
 	};
 }
 
-sub matching_pattern($) {
-	my ($matching_pattern_node) = @_;
 
-	my $pattern = value($matching_pattern_node, 0);
-	
-	if (is($matching_pattern_node, 1, "case-sensitive")) {
-		return sub($) {
-			my ($resource, $context) = @_;
-			return ($resource =~ /$pattern/);
-		};
-	}
-	
-	if (is($matching_pattern_node, 1, "case-insensitive")) {
-		return sub($) {
-			my ($resource, $context) = @_;
-			return ($resource =~ /$pattern/i);
-		};
-	}
-	
-	die("Unsupported.");
-}
 
 sub matching_custom_matcher($) {
 	my ($matching_custom_matcher_node) = @_;
@@ -224,18 +735,6 @@ sub with_same_of_custom_group($) {
 	return value($with_same_of_custom_group_node, 0);
 }
 
-########################################################################
-# EXECUTE
-sub execute($) {
-	my ($execute_node) = @_;
-	
-	my $operation = value($execute_node, 0);
-	return sub($) {
-		my ($context) = @_;
-		
-		$operation->($context);
-	}
-}
 
 ########################################################################
 # COMPUTES
@@ -275,44 +774,6 @@ sub compute_for_each_dir($) {
 }
 
 
-sub count_files($) {
-	my ($count_files_node) = @_;
-	
-	my $function = sub($$) {
-		my ($dir, $context) = @_;
-		my @children = @{ $context->{"resources"}->{$dir} };
-		return scalar @children;
-	};
-	
-	return {"function" => $function, "meta_name" => Disketo_Instruction_Set::M_CHILDREN_COUNTS()};
-}
-
-sub files_stats($) {
-	my ($files_stats_node) = @_;
-	
-	my $function = sub($$) {
-		my ($file, $context) = @_;
-		
-		return Disketo_IO::load_stats_for_file($file);
-	};
-	
-	return {"function" => $function, "meta_name" => Disketo_Instruction_Set::M_FILE_STATS()};
-}
-
-
-sub compute_custom($) {
-	my ($compute_custom_node) = @_;
-	
-	my $meta_name = value($compute_custom_node, 0);
-	my $computer = value($compute_custom_node, 1);
-	
-	my $function = sub($$) {
-		my ($resource, $context) = @_;
-		return $computer->($resource, $context);
-	};
-	
-	return {"function" => $function, "meta_name" => $meta_name};
-}
 
 ########################################################################
 # GROUP
@@ -416,37 +877,25 @@ sub print_simply($) {
 }
 
 sub print_only_name($) {
-	my ($print_only_name_node) = @_;
+	my ($node) = @_;
 	return resource_to_name();
 }
 
 sub print_with_counts($) {
-	my ($print_with_counts_node) = @_;
+	my ($node) = @_;
 
-	return sub($$) {
-		my ($resource, $context) = @_;
-		my $count = $context->{Disketo_Instruction_Set::M_CHILDREN_COUNTS()}->{$resource};
-		return "$resource$SEPARATOR$count";
-	};
+	return dir_to_dir_with_children_count();
 }
 
 sub print_with_size($) {
-	my ($print_with_size_node) = @_;
+	my ($node) = @_;
 	
-	my $size_printer = delegate($print_with_size_node, 0);
-	
-	return sub($$) {
-		my ($file, $context) = @_;
-		my $stats = $context->{Disketo_Instruction_Set::M_FILE_STATS()}->{$file};
-		my $size = $stats->{"size"};
-
-		my $size_to_print = $size_printer->($size, $file, $context);
-		return "$file$SEPARATOR$size_to_print";
-	};
+	my $size_printer = delegate($node, 0);
+	return file_to_file_with_size($size_printer);
 }
 
 sub print_size_in_bytes($) {
-	my ($print_size_in_bytes_node) = @_;
+	my ($node) = @_;
 
 	return sub($$$) {
 		my ($size, $resource, $context) = @_;
@@ -454,9 +903,8 @@ sub print_size_in_bytes($) {
 	}
 }
 
-
 sub print_size_human_readable($) {
-	my ($print_size_in_bytes_node) = @_;
+	my ($node) = @_;
 
 	return sub($$$) {
 		my ($size, $resource, $context) = @_;
@@ -466,9 +914,9 @@ sub print_size_human_readable($) {
 }
 
 sub print_custom($) {
-	my ($print_custom_node) = @_;
+	my ($node) = @_;
 
-	my $printer = value($print_custom_node, 0);
+	my $printer = value($node, 0);
 	return sub($$) {
 		my ($resource, $context) = @_;
 		return $printer->($resource, $context);
@@ -483,6 +931,7 @@ sub print_custom($) {
 
 
 ########################################################################
+########################################################################
 # commons
 
 sub resource_to_name() {
@@ -492,16 +941,47 @@ sub resource_to_name() {
 	};
 }
 
-sub resource_to_resource_and_size() {
-	return sub ($$) {
+sub resource_to_meta($) {
+	my ($meta_name) = @_;
+	
+	return sub($) {
 		my ($resource, $context) = @_;
-		my $stats = $context->{Disketo_Instruction_Set::M_FILE_STATS()}->{$resource};
+		return $context->{$meta_name}->{$resource};
+	};
+}
+
+sub file_to_file_with_size($) {
+	my ($size_printer) = @_;
+	
+	return sub ($$) {
+		my ($file, $context) = @_;
+		my $stats = $context->{Disketo_Instruction_Set::M_FILE_STATS()}->{$file};
 		my $size = $stats->{"size"};
-		return "$resource$SEPARATOR$size";
+		
+		my $size_to_print = $size_printer->($size, $file, $context);
+		return "$file$SEPARATOR$size_to_print";
+	};
+}
+
+sub dir_to_dir_with_children_size($) {
+	my ($size_printer) = @_;
+	
+	return sub ($$) {
+		my ($dir, $context) = @_;
+		my $size = $context->{Disketo_Instruction_Set::M_DIRS_SIZES()}->{$dir};
+		
+		my $size_to_print = $size_printer->($size, $dir, $context);
+		return "$dir$SEPARATOR$size_to_print";
 	};
 }
 
 
+sub resources_to_names_text($) {
+	my ($resources) = @_;
+	return "FIXME"; #TODO implementme resources -> map basename -> join
+}
+
+########################################################################
 ########################################################################
 # utils
 
@@ -521,3 +1001,7 @@ sub files_of_dir_matching($$$) {
 	my @matching = grep { $condition->($_, $context) } @$children;
 	return \@matching;
 }
+
+########################################################################
+########################################################################
+
