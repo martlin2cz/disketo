@@ -82,15 +82,19 @@ sub group_dirs($$$) {
 	#print("*** group_dirs \n");
 	my ($groupper, $identifier, $context) = @_;
 
-	my %values = ();
+	my %groups = ();
+	my %meta = ();
 	Disketo_Utils::iterate_dirs($context, sub($$) {
 		my ($dir, $i) = @_;
-		my $group = $groupper->($dir, $context);
-		push @{$values{$group}}, $dir;
+		my $group_name = $groupper->($dir, $context);
+		push @{$groups{$group_name}}, $dir;
+		
+		my $group = $groups{$group_name};
+		$meta{$dir} = $group;
 	});
 	
-	$context->{$identifier} = \%values;
-	return \%values;
+	$context->{$identifier} = \%meta;
+	return \%meta;
 }
 
 # Performs the aggregation by the given groupper($file,$context) 
@@ -99,16 +103,20 @@ sub group_files($$$) {
 	#print("*** group_files \n");
 	my ($groupper, $identifier, $context) = @_;
 
-	my %values = ();
+	my %groups = ();
+	my %meta = ();
 	Disketo_Utils::iterate_files($context, sub($$$$) {
 		my ($dir, $i, $file, $j) = @_;
 		
-		my $group = $groupper->($file, $context);
-		push @{$values{$group}}, $file;
+		my $group_name = $groupper->($file, $context);
+		push @{$groups{$group_name}}, $file;
+		
+		my $group = $groups{$group_name};
+		$meta{$file} = $group;
 	});
 	
-	$context->{$identifier} = \%values;
-	return \%values;
+	$context->{$identifier} = \%meta;
+	return \%meta;
 }
 
 
