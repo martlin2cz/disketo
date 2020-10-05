@@ -58,7 +58,7 @@ sub tree_subtree_usage($$) {
 	for my $param_name (@params) {
 		my $param_value = $args{$param_name};
 
-		$params_spec .= "$padded    $param_name:";
+		$params_spec .= "$padded    $param_name";
 		if (ref($param_value) eq "HASH") {
 			my %param_possiblities = %{ $param_value };
 			for my $possibility (values %param_possiblities) {

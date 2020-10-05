@@ -185,13 +185,17 @@ sub insert_load($) {
 	my ($program) = @_;
 
 	my $commands = Disketo_Instruction_Set::commands();
-	my $operation = $commands->{"load"};
+	my $load_op = $commands->{"load"};
+	my $load_resources_op = $load_op->{"valid-args"}->{"what?"}->{"resources"};
 	
-	my $value = Disketo_Analyser::create_value_node('$$$', "(the roots)");
-	my $children = [$value];
-	my $instruction = Disketo_Analyser::create_operation_node($operation, $children);
+	my $roots_value = Disketo_Analyser::create_value_node('$$$', "(the roots)");
+	my $load_resources_children = [$roots_value];
+	my $load_resources_op = Disketo_Analyser::create_operation_node($load_resources_op, $load_resources_children);
 	
-	unshift @$program, $instruction;
+	my $load_children = [$load_resources_op];
+	my $load_op = Disketo_Analyser::create_operation_node($load_op, $load_children);
+	
+	unshift @$program, $load_op;
 }
 
 # Computes the metas required by the given instruction.

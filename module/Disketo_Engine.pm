@@ -186,28 +186,25 @@ sub print_files($$) {
 
 
 ########################################################################
-# Prints the statistics about the context.
+# Prints the (basic) statistics about the context.
 sub context_stats($) {
 	#print("*** context_stats \n");
 	my ($context) = @_;
 	
-	print(Dumper($context)); # XXX
+	my $resources = $context->{"resources"};
+	my $count = scalar (keys %$resources);
 	
-	for my $name (keys %$context) {
-		my $value = $context->{$name};
-		
-		#print($name . " isda " . ref($value) . "\n");
-		my $desc = "ok";
-		if (ref($value) eq "HASH") {
-			$desc = scalar %{ $value };
-		} elsif (ref($value) eq "ARRAY") {
-			$desc = scalar @{ $value };
-		}
-		
-		#TODO print something more usefull for the "resources"
-		
-		print("\t $name: $desc \n");
-	}
+	my $metas_names = join(", ", keys %$context);
+	print STDERR ("Currently having metas/fields/groups named: $metas_names\n");
+	print STDERR ("The resources contains $count directories\n");
+}
+
+# Prints the (expert) statistics about the context.
+sub context_debug_stats($) {
+	#print("*** context_debug_stats \n");
+	my ($context) = @_;
+	
+	print STDERR (Dumper($context));
 }
 
 ########################################################################

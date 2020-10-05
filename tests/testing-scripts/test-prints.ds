@@ -1,21 +1,49 @@
+# prepare to print files
+load files-stats
+group files by-name as-meta "with same name"
+compute custom-meta by-appling-function sub {
+	my ($file, $context) = @_;
+	return length($file);
+} to-each-file as-meta "file length"
+
 # test the print files ...
 print files simply
 print files only-name
-compute for-each-file files-stats
-print stats
-print files with-size in-bytes
-print files with-size human-readable
+print files with size in-bytes
+print files with size human-readable
 print files custom sub {
 	my ($file, $context) = @_;
 	return "F: $file $context";
 }
+print files with with-meta "file length"
+print files with its-group of-the-same-name
+
+# prepare to print dirs
+group dirs by-name as-meta "with same name"
+compute custom-meta by-appling-function sub {
+	my ($dir, $context) = @_;
+	return length($dir);
+} to-each-dir as-meta "dir length"
+
 
 # test the print dirs ...
 print dirs simply
 print dirs only-name
-compute for-each-dir count-files
-print dirs with-counts
 print dirs custom sub {
 	my ($dirs, $context) = @_;
 	return "D: $dirs $context";
 }
+print dirs with children-names
+print dirs with children-count
+#print dirs with children-size human-readable
+#print dirs with children-size in-bytes
+
+print dirs with with-meta "dir length"
+print dirs with its-group custom-group "with same name"
+print dirs with its-group of-the-same-name
+
+# print stats
+print stats
+print debug-stats
+
+

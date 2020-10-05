@@ -1,27 +1,27 @@
 # Tests the 'group ...' command(s)
-group files by-name
+# prepare 
+load files-stats
+compute directories-sizes as-meta "dirs-sizes"
 print stats
 
-compute for-each-file files-stats
-group files by-name-and-size
-print stats
-
-group files by-custom sub {
+# test group files by ...
+group files by-custom  sub {
 	my ($file, $context) = @_;
 
 	return length($file);
-}
-print stats
+} as-meta "files groupped by length"
+group files by-name-and-size as-meta "files groupped by name and size"
+group files by-name as-meta "files groupped by name"
 
-# aand dirs ...
-group dirs by-name
-print stats
-
+# test group dirs by ...
 group dirs by-custom sub {
-	my ($dir, $context) = @_;
+        my ($dir, $context) = @_;
 
-	return length($dir);
-}
-print stats
+        return length($dir);
+} as-meta "dirs groupped by length"
+group dirs by-name-and-children-count as-meta "dirs groupped by name and children count"
+group dirs by-name-and-children-size as-meta "dirs groupped by name and children size"
+group dirs by-name as-meta "dirs groupped by name"
 
-
+# print it
+print debug-stats
