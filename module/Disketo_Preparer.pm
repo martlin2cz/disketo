@@ -4,7 +4,7 @@ use strict;
 BEGIN { unshift @INC, "."; }
 
 package Disketo_Preparer;
-my $VERSION=3.0.0;
+my $VERSION=3.1.0;
 
 use Data::Dumper;
 use Disketo_Utils;
@@ -210,9 +210,16 @@ sub compute_requireds($) {
 			my $produces = $operation->{"requires"};
 			push @produceds, (@$produces);
 		},
-		sub {}
+		sub { 
+			my ($node, $stack, $param_name, $name, $value, $prepared_value) = @_;
+
+			if ($name eq $Disketo_Instruction_Set::META_NAME_VALNAME_REQ
+			 or $name eq $Disketo_Instruction_Set::GROUP_META_NAME_VALNAME_REQ) {
+				push @produceds, $prepared_value;
+			}
+		}
 	);
-	
+
 	return \@produceds;
 }
 
@@ -228,7 +235,14 @@ sub compute_produceds($) {
 			my $produces = $operation->{"produces"};
 			push @produceds, (@$produces);
 		},
-		sub {}
+		sub { 
+			my ($node, $stack, $param_name, $name, $value, $prepared_value) = @_;
+			
+			if ($name eq $Disketo_Instruction_Set::META_NAME_VALNAME_PROD
+			 or $name eq $Disketo_Instruction_Set::GROUP_META_NAME_VALNAME_PROD) {
+				push @produceds, $prepared_value;
+			}
+		}
 	);
 	
 	return \@produceds;

@@ -2,7 +2,7 @@
 use strict;
 
 package Disketo_Instructions; 
-my $VERSION=3.0.0;
+my $VERSION=3.1.0;
 
 use Disketo_Instruction_Set;
 use Data::Dumper;
@@ -23,12 +23,15 @@ use Disketo_IO;
 my $SEPARATOR = "	"; #tabulator
 
 
-# The (custom) metas names
-sub M_RESOURCES() { "resources" };
-sub M_USER_DEF() { "(user defined)" };
-sub M_FILE_STATS() { "file-stats" };
-#sub M_CHILDREN_COUNTS() { "children-count" }; #TODO, XXX: deprecated!
-sub M_DIRS_SIZES() { "dirs-sizes" };
+# The fixed metas names
+our $M_RESOURCES = "resources";
+our $M_USER_DEF = "(user defined)";
+
+# The extra custom metas names
+our $M_FILE_STATS = "file-stats";
+#our $M_CHILDREN_COUNTS = "children-count"; #TODO, XXX: deprecated!
+our $M_DIRS_SIZES = "dirs-sizes";
+
 ########################################################################
 # UTILS
 
@@ -158,7 +161,7 @@ sub load_files_stats($) {
 	return sub($) {
 		my ($context) = @_;
 	
-		Disketo_Engine::calculate_for_each_file($computer, M_FILE_STATS(), $context);
+		Disketo_Engine::calculate_for_each_file($computer, $M_FILE_STATS, $context);
 	}
 }
 
@@ -179,7 +182,7 @@ sub directories_sizes($) {
 	
 	my $computer = sub($$) {
 		my ($dir, $context) = @_;
-		my @children = @{ $context->{M_RESOURCES()}->{$dir} };
+		my @children = @{ $context->{$M_RESOURCES}->{$dir} };
 		#TODO implementme
 		return 1024 * (scalar @children) + 0.42;
 	};
@@ -667,7 +670,7 @@ sub resource_to_name_and_size_simply_fn() {
 	return sub($$) {
 		my ($file, $context) = @_;
 		my $name = basename($file);
-		my $size = $context->{M_FILE_STATS()}->{$file}->{"size"};
+		my $size = $context->{M_FILE_STATS}->{$file}->{"size"};
 		return "$name$SEPARATOR$size";
 	};
 }
@@ -676,7 +679,7 @@ sub dir_to_name_and_children_count_fn() {
 	return sub($) {
 		my ($dir, $context) = @_;
 		my $name = basename($dir);
-		my $children = $context->{M_RESOURCES()}->{$dir};
+		my $children = $context->{M_RESOURCES}->{$dir};
 		my $count = scalar @$children;		
 		return "$name$SEPARATOR$count";
 	};
@@ -686,7 +689,7 @@ sub dir_to_name_and_children_size_fn() {
 	return sub($) {
 		my ($dir, $context) = @_;
 		my $name = basename($dir);
-		my $size = $context->{M_DIRS_SIZES()}->{$dir};
+		my $size = $context->{M_DIRS_SIZES}->{$dir};
 		return "$name$SEPARATOR$size";
 	};
 }
@@ -701,7 +704,7 @@ sub file_to_size_fn($) {
 	my ($size_printer) = @_;
 	return sub($$) {
 		my ($file, $context) = @_;
-		my $size = $context->{M_FILE_STATS()}->{$file}->{"size"};
+		my $size = $context->{M_FILE_STATS}->{$file}->{"size"};
 		my $size_to_print = $size_printer->($size);
 		return "$size_to_print";
 	};
@@ -710,7 +713,7 @@ sub file_to_size_fn($) {
 sub dir_to_children_count_fn() {
 	return sub($) {
 		my ($dir, $context) = @_;
-		my $children = $context->{M_CHILDREN_COUNTS()}->{$dir};
+		my $children = $context->{M_CHILDREN_COUNTS}->{$dir};
 		my $count = scalar @$children;		
 		return "$count";
 	};
@@ -719,7 +722,7 @@ sub dir_to_children_count_fn() {
 sub dir_to_children_size_fn() {
 	return sub($) {
 		my ($dir, $context) = @_;
-		my $size = $context->{M_DIRS_SIZES()}->{$dir};
+		my $size = $context->{M_DIRS_SIZES}->{$dir};
 		return "$size";
 	};
 }
@@ -727,7 +730,7 @@ sub dir_to_children_size_fn() {
 sub dir_to_children_names_fn() {
 	return sub($) {
 		my ($dir, $context) = @_;
-		my $children = $context->{M_RESOURCES()}->{$dir};
+		my $children = $context->{M_RESOURCES}->{$dir};
 		return resources_to_names($children); #TODO here, specify whether print-with-children or print-with-children-names
 	};
 }
@@ -769,7 +772,7 @@ sub meta_to_string($) {
 # TODO doc
 sub _dir_to_child_count($$) {
 	my ($dir, $context) = @_;
-	my @children = @{ $context->{M_RESOURCES()}->{$dir} };
+	my @children = @{ $context->{M_RESOURCES}->{$dir} };
 	return (scalar @children);
 }
 
@@ -778,7 +781,7 @@ sub _file_to_file_with_size($) {
 	
 	return sub ($$) {
 		my ($file, $context) = @_;
-		my $stats = $context->{M_FILE_STATS()}->{$file};
+		my $stats = $context->{M_FILE_STATS}->{$file};
 		my $size = $stats->{"size"};
 		
 		my $size_to_print = $size_printer->($size, $file, $context);
@@ -791,7 +794,7 @@ sub _dir_to_dir_with_children_size($) {
 	
 	return sub ($$) {
 		my ($dir, $context) = @_;
-		my $size = $context->{M_DIRS_SIZES()}->{$dir};
+		my $size = $context->{M_DIRS_SIZES}->{$dir};
 		
 		my $size_to_print = $size_printer->($size, $dir, $context);
 		return "$dir$SEPARATOR$size_to_print";
@@ -822,7 +825,7 @@ sub ends_with($$) {
 sub files_of_dir_matching($$$) {
 	my ($dir, $condition, $context) = @_;
 	
-	my $children = $context->{M_RESOURCES()}->{$dir};
+	my $children = $context->{M_RESOURCES}->{$dir};
 	my @matching = grep { $condition->($_, $context) } @$children;
 	return \@matching;
 }

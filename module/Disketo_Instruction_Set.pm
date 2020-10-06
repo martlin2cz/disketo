@@ -2,7 +2,7 @@
 use strict;
 
 package Disketo_Instruction_Set; 
-my $VERSION=3.0.0;
+my $VERSION=3.1.0;
   
 use Disketo_Instructions;
 use Switch;
@@ -147,13 +147,16 @@ sub verify_method($$) {
 
 ########################################################################
 # METAS NAMES
+# The value names of the "meta field name" or "group meta field name" 
+# parameter to be produced or required by that command
+our $META_NAME_VALNAME_PROD = "(the meta field name to be produced)";
+our $GROUP_META_NAME_VALNAME_PROD = "(the group meta field name to be produced)";
+our $META_NAME_VALNAME_REQ = "(the meta field name required)";
+our $GROUP_META_NAME_VALNAME_REQ = "(the group meta field name required)";
 
-my $M_RESOURCES = Disketo_Instructions::M_RESOURCES();
-my $M_USER_DEF = Disketo_Instructions::M_USER_DEF();
-
-
-my $M_DIRS_SIZES = Disketo_Instructions::M_DIRS_SIZES();
-my $M_FILE_STATS = Disketo_Instructions::M_FILE_STATS();
+# just an shorthand
+my $M_RESOURCES = $Disketo_Instructions::M_RESOURCES;
+my $M_USER_DEF = $Disketo_Instructions::M_USER_DEF;
 
 #######################################################################
 ########################################################################
@@ -168,7 +171,7 @@ sub commands() {
 			"what-roots?", "(the root resource or resources)");
 
 
-	my $files_stats = sop0("files-stats", "files-stats", \&Disketo_Instructions::load_files_stats, [$M_RESOURCES], [$M_FILE_STATS], 
+	my $files_stats = sop0("files-stats", "files-stats", \&Disketo_Instructions::load_files_stats, [$M_RESOURCES], [$Disketo_Instructions::M_FILE_STATS], 
 			"Loads the stats (file sizes, dates of modifications, ... ) of the files.");
 	
 	# -- load composite operations ----------------------------------
@@ -187,7 +190,7 @@ sub commands() {
 #			{ "source-meta-name" => "(source meta name)",
 #			  "destination-meta-name" => "(destination meta name)" });
 
-	my $directories_sizes = sop0("directories-sizes", "directories-sizes", \&Disketo_Instructions::directories_sizes, [$M_RESOURCES], [$M_DIRS_SIZES], 
+	my $directories_sizes = sop0("directories-sizes", "directories-sizes", \&Disketo_Instructions::directories_sizes, [$M_RESOURCES], [$Disketo_Instructions::M_DIRS_SIZES], 
 			"Counts of files in each dir.");
 			
 	my $to_each_file = sop0("to-each-file", "to-each-file", \&Disketo_Instructions::nope, [$M_RESOURCES], [],
@@ -200,18 +203,18 @@ sub commands() {
 		"Computes the meta field by applying the specified function to each of the resources.",
 		"what-function?", "(the function)");
 
-	my $compute_as_meta = sop1("compute-as-meta", "as-meta", \&Disketo_Instructions::pass_value, [], [], 
+	my $compute_as_meta = sop1("compute-as-meta", "as-meta", \&Disketo_Instructions::pass_value, [], [$M_USER_DEF], 
 		"Computes the meta field with specified name.",
-		"what-meta?", "(the meta field name)");
+		"what-meta?", $META_NAME_VALNAME_PROD);
 
 	# -- compute composite operations ---------------------------------
 	
-	my $compute_custom_meta = sop2("compute-custom-meta", "custom-meta", \&Disketo_Instructions::compute_custom_meta, [], [$M_USER_DEF], 
+	my $compute_custom_meta = sop2("compute-custom-meta", "custom-meta", \&Disketo_Instructions::compute_custom_meta, [], [], 
 			"Computes the custom meta field.",
 			"how?", [$applying_function],
 			"for-each?", [$to_each_file, $to_each_dir]);
 	
-	my $compute = sop2("compute", "compute", \&Disketo_Instructions::compute, [], [$M_USER_DEF], 
+	my $compute = sop2("compute", "compute", \&Disketo_Instructions::compute, [], [], 
 		"Computes a meta field.",
 		"what?", [$directories_sizes, $compute_custom_meta],
 		"as-what-meta?", [$compute_as_meta]);
@@ -223,31 +226,31 @@ sub commands() {
 	my $group_by_name = sop0("group-by-name", "by-name", \&Disketo_Instructions::group_by_name, [], [], 
 			"Groups the resources by their name.");
 			
-	my $group_by_name_and_size = sop0("group-by-name-and-size", "by-name-and-size", \&Disketo_Instructions::group_by_name_and_size, [$M_FILE_STATS], [], 
+	my $group_by_name_and_size = sop0("group-by-name-and-size", "by-name-and-size", \&Disketo_Instructions::group_by_name_and_size, [$Disketo_Instructions::M_FILE_STATS], [], 
 			"Groups the resources by their name and size.");
 	
 	my $group_by_name_and_children_count = sop0("group-by-name-and-children-count", "by-name-and-children-count", \&Disketo_Instructions::group_by_name_and_children_count, [], [], 
 			"Groups the directoctories by their name and number of children.");
 	
-	my $group_by_name_and_children_size = sop0("group-by-name-and-children-size", "by-name-and-children-size", \&Disketo_Instructions::group_by_name_and_children_size, [$M_DIRS_SIZES], [], 
+	my $group_by_name_and_children_size = sop0("group-by-name-and-children-size", "by-name-and-children-size", \&Disketo_Instructions::group_by_name_and_children_size, [$Disketo_Instructions::M_DIRS_SIZES], [], 
 			"Groups the directoctories by their name and the size.");
 	
 	my $group_by_custom = sop1("group-by-custom", "by-custom", \&Disketo_Instructions::group_by_custom, [], [], 
 			"Groups the resources by the specified groupper function.",
 			"by-what-groupper?", "(the groupper function)");
 		
-	my $group_as_meta = sop1("group-as-meta", "as-meta", \&Disketo_Instructions::pass_value, [], [], 
+	my $group_as_meta = sop1("group-as-meta", "as-meta", \&Disketo_Instructions::pass_value, [], [$M_USER_DEF], 
 		"Computes it as a group with specified name.",
-		"what-meta?", "(the group meta name)");
+		"what-meta?", $GROUP_META_NAME_VALNAME_PROD);
 
 # -- group composite operations ---------------------------------
 
-	my $group_files = sop2("group-files", "files", \&Disketo_Instructions::group_files, [$M_RESOURCES], [$M_USER_DEF], 
+	my $group_files = sop2("group-files", "files", \&Disketo_Instructions::group_files, [$M_RESOURCES], [], 
 			"Groups the files by the given groupper.",
 			"by-what?", [ $group_by_name, $group_by_name_and_size, $group_by_custom ],
 			"as-what-meta?", [ $group_as_meta ]);
 
-	my $group_dirs = sop2("group-dirs", "dirs", \&Disketo_Instructions::group_dirs, [$M_RESOURCES], [$M_USER_DEF], 
+	my $group_dirs = sop2("group-dirs", "dirs", \&Disketo_Instructions::group_dirs, [$M_RESOURCES], [], 
 			"Groups the dirs by the given groupper.",
 			"by-what?", [ $group_by_name, $group_by_name_and_children_count, $group_by_name_and_children_size, $group_by_custom ],
 			"as-what-meta?", [ $group_as_meta ]);
@@ -301,15 +304,15 @@ sub commands() {
 	my $case_insensitive = sop0("case-insensitive", "case-insensitive", \&Disketo_Instructions::nope, [], [], 
 			"Matches the pattern ignoring the case");
 
-	my $with_same_name = sop0("with-the-same-name", "name", \&Disketo_Instructions::with_same_name, [$M_USER_DEF], [], 
+	my $with_same_name = sop0("with-the-same-name", "name", \&Disketo_Instructions::with_same_name, [], [],  #TODO requires group
 			"Matches the resources which have the same name.");
 			
-	my $with_same_name_and_size = sop0("with-the-same-name-and-size", "name-and-size", \&Disketo_Instructions::with_same_name_and_size, [$M_USER_DEF], [], 
+	my $with_same_name_and_size = sop0("with-the-same-name-and-size", "name-and-size", \&Disketo_Instructions::with_same_name_and_size, [], [], #TODO requires group
 			"Matches the resources which have the same name and size.");
 			
 	my $with_same_of_custom_group = sop1("with-the-same-of-custom", "custom-group", \&Disketo_Instructions::with_same_of_custom_group, [$M_USER_DEF], [], 
 			"Matches the resources which have the specified amount of the resources with the specified custom groupper.",
-			"what-group?", "(the group meta name)");
+			"what-group?", $GROUP_META_NAME_VALNAME_REQ);
 		
 # -- filter composite operations ---------------------------------
 
@@ -384,9 +387,13 @@ sub commands() {
 	my $print_size_human_readable = sop0("print-size-human-readable", "human-readable", \&Disketo_Instructions::print_size_human_readable, [], [], 
 			"Prints the file size automatically in the B, kB, MB or GB based on its actual value.");
 
-	my $print_with_custom_group = sop1("print-custom-group", "custom-group", \&Disketo_Instructions::print_custom_group, [], [], 
+	my $print_with_meta = sop1("print-with-meta", "meta", \&Disketo_Instructions::print_with_meta, [], [$M_USER_DEF], 
+			"Prints the resource and its corresponding meta field value.",
+			"which-meta?", $META_NAME_VALNAME_REQ);
+
+	my $print_with_custom_group = sop1("print-custom-group", "custom-group", \&Disketo_Instructions::print_custom_group, [], [$M_USER_DEF], 
 			"Prints the resources with resources in the same group specified by the given groupper function.",
-			"what-group?", "(the group meta field name)");
+			"what-group?", $GROUP_META_NAME_VALNAME_REQ);
 	
 	my $print_with_same_name = sop0("print-with-same-name", "of-the-same-name", \&Disketo_Instructions::print_of_the_same_name, [], [], 
 			"Prints the resources with the same name as the current resource.");
@@ -406,26 +413,23 @@ sub commands() {
 	
 
 # -- print composite operations ---------------------------------
+	# TODO make the "print dir which children X" separated
 	
-	my $print_files_with_its_group = sop1("print-files-with-its-group", "its-group", \&Disketo_Instructions::pass, [], [$M_USER_DEF], 
+	my $print_files_with_its_group = sop1("print-files-with-its-group", "its-group", \&Disketo_Instructions::pass, [], [], 
 			"Prints the files with all the resources it same group.",
 			"what-groupper?", [$print_with_same_name, $print_with_custom_group, 
 								$print_with_same_name_and_size]);
 			
-	my $print_dirs_with_its_group = sop1("print-dirs-with-its-group", "its-group", \&Disketo_Instructions::pass, [], [$M_USER_DEF], 
+	my $print_dirs_with_its_group = sop1("print-dirs-with-its-group", "its-group", \&Disketo_Instructions::pass, [], [], 
 			"Prints the dirs with all the resources it same group.",
 			"what-groupper?", [$print_with_same_name, $print_with_custom_group, 
 								$print_with_same_name_and_children_size, $print_with_same_name_and_children_count]);
 	
-	my $print_with_meta = sop1("print-with-meta", "with-meta", \&Disketo_Instructions::print_with_meta, [], [$M_USER_DEF], 
-			"Prints the resource and its corresponding meta field value.",
-			"which-meta?", "(the meta field name)");
-	
-	my $print_with_children_size = sop1("print-with-children-size", "children-size", \&Disketo_Instructions::print_with_children_size, [$M_DIRS_SIZES], [], 
+	my $print_with_children_size = sop1("print-with-children-size", "children-size", \&Disketo_Instructions::print_with_children_size, [$Disketo_Instructions::M_DIRS_SIZES], [], 
 			"Prints each directory and size of its children.",
 			"how?", [ $print_size_in_bytes, $print_size_human_readable ]);
 	
-	my $print_with_size = sop1("print-with-size", "size", \&Disketo_Instructions::print_with_size, [$M_FILE_STATS], [],
+	my $print_with_size = sop1("print-with-size", "size", \&Disketo_Instructions::print_with_size, [$Disketo_Instructions::M_FILE_STATS], [],
 		"Prints the files and their size.",
 		"how?", [ $print_size_in_bytes, $print_size_human_readable ]);
 	
@@ -465,6 +469,8 @@ sub commands() {
 		"compute" => $compute,
 		"group" => $group,
 		"execute" => $execute,
+		#TODO reduce files to files-only/dirs-only
+		#TODO exclude hidden files/folders/resources
 		"filter" => $filter,
 		"print" => $print
 		

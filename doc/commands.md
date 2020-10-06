@@ -5,9 +5,37 @@
  Each statement has to start with any of this commands:
 
 
-[load](#load) [execute](#execute) [filter](#filter) [compute](#compute) [print](#print)
+[compute](#compute) [load](#load) [execute](#execute) [group](#group) [print](#print) [filter](#filter)
 
  After that, continue with its declared parameter's values or (sub)commands.
+
+# at-least-one
+**Usage:** `at-least-one `
+
+Having at least one resource matching the condition.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# at-least-one-more
+**Usage:** `at-least-one-more `
+
+Having at least one and one more extra (2 in total) resource matching the condition.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
 
 # case-insensitive
 **Usage:** `case-insensitive `
@@ -38,36 +66,65 @@ Matches the pattern respecing the case
 
 
 # compute
-**Usage:** `compute for-what`
+**Usage:** `compute what? as-what-meta?`
 
-Computes a meta.
-
-
-| Parameter | Possible value(s) |
-| --------- | ----------------- |
-| for-what |  [for-each-file](#for-each-file)  [for-each-dir](#for-each-dir)  |
-
-**Requires:** _nothing_ 
-**Produces:** (user specified) 
-
-
-# compute-custom
-**Usage:** `custom as-meta by`
-
-Computes the custom meta.
+Computes a meta field.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| as-meta | (meta name) |
-| by | (computer function) |
+| what? |  [directories-sizes](#directories-sizes)  [custom-meta](#compute-custom-meta)  |
+| as-what-meta? |  [as-meta](#compute-as-meta)  |
 
 **Requires:** _nothing_ 
-**Produces:** (user specified) 
+**Produces:** _nothing_ 
 
 
-# count-files
-**Usage:** `count-files `
+# compute-as-meta
+**Usage:** `as-meta what-meta?`
+
+Computes the meta field with specified name.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| what-meta? | (the meta field name to be produced) |
+
+**Requires:** _nothing_ 
+**Produces:** (user defined) 
+
+
+# compute-by-appling-custom-function
+**Usage:** `by-appling-function what-function?`
+
+Computes the meta field by applying the specified function to each of the resources.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| what-function? | (the function) |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# compute-custom-meta
+**Usage:** `custom-meta how? for-each?`
+
+Computes the custom meta field.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| how? |  [by-appling-function](#compute-by-appling-custom-function)  |
+| for-each? |  [to-each-dir](#to-each-dir)  [to-each-file](#to-each-file)  |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# directories-sizes
+**Usage:** `directories-sizes `
 
 Counts of files in each dir.
 
@@ -77,18 +134,90 @@ Counts of files in each dir.
 | _no params_ | _no_value(s)_ |
 
 **Requires:** resources 
-**Produces:** children counts 
+**Produces:** dirs-sizes 
+
+
+# dirs-having
+**Usage:** `having how-much? of-what?`
+
+Filters dirs having the specified amount of element in the given group.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| how-much? |  [none](#none)  [at-least-one-more](#at-least-one-more)  [less-than](#less-than)  [more-than](#more-than)  |
+| of-what? |  [of-the-same](#dirs-of-the-same)  [children](#dirs-having-children)  |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# dirs-having-children
+**Usage:** `children matching-what?`
+
+Filters dirs matching specified condition of its children.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| matching-what? |  [matching-custom-matcher](#matching-custom-matcher)  [having-extension](#having-extension)  [matching-pattern](#matching-pattern)  |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# dirs-of-the-same
+**Usage:** `of-the-same which-group?`
+
+Filters resources based on the group of the same resources.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| which-group? |  [name-and-size](#with-the-same-name-and-size)  [custom-group](#with-the-same-of-custom)  [name](#with-the-same-name)  |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
 
 
 # execute
-**Usage:** `execute what`
+**Usage:** `execute what?`
 
 Executes some function once during the process.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what | (operation to perform) |
+| what? | (operation to perform) |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# files-having
+**Usage:** `having how-much? of-what?`
+
+Filters files having the specified amount of element in the given group.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| how-much? |  [less-than](#less-than)  [more-than](#more-than)  [at-least-one-more](#at-least-one-more)  [at-least-one](#at-least-one)  [none](#none)  |
+| of-what? |  [of-the-same](#files-of-the-same)  |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# files-of-the-same
+**Usage:** `of-the-same which-group?`
+
+Filters files having given group.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| which-group? |  [custom-group](#with-the-same-of-custom)  [name-and-size](#with-the-same-name-and-size)  [name](#with-the-same-name)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -97,7 +226,7 @@ Executes some function once during the process.
 # files-stats
 **Usage:** `files-stats `
 
-Obtains the stats of the files.
+Loads the stats (file sizes, dates of modifications, ... ) of the files.
 
 
 | Parameter | Possible value(s) |
@@ -105,218 +234,443 @@ Obtains the stats of the files.
 | _no params_ | _no_value(s)_ |
 
 **Requires:** resources 
-**Produces:** file stats 
+**Produces:** file-stats 
 
 
 # filter
-**Usage:** `filter what`
+**Usage:** `filter what?`
 
-Filters by given criteria
+Filters the resources by given criteria.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what |  [files](#filter-files)  [dirs](#filter-dirs)  |
+| what? |  [dirs](#filter-dirs)  [files](#filter-files)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
 
 
 # filter-dirs
-**Usage:** `dirs matching`
+**Usage:** `dirs matching-what?`
 
-Filters dirs by given criteria
+Filters dirs by given criteria.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| matching |  [matching-custom-matcher](#matching-custom-matcher)  [matching-pattern](#matching-pattern)  [having-files](#having-files)  |
+| matching-what? |  [matching-pattern](#matching-pattern)  [having](#dirs-having)  [named](#named)  [matching-custom-matcher](#matching-custom-matcher)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
 
 
 # filter-files
-**Usage:** `files matching`
+**Usage:** `files matching-what?`
 
 Filters files by given criteria
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| matching |  [matching-pattern](#matching-pattern)  [matching-custom-matcher](#matching-custom-matcher)  [having-extension](#having-extension)  |
+| matching-what? |  [matching-custom-matcher](#matching-custom-matcher)  [named](#named)  [having](#files-having)  [matching-pattern](#matching-pattern)  [having-extension](#having-extension)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
 
 
-# for-each-dir
-**Usage:** `for-each-dir what`
+# group
+**Usage:** `group what?`
 
-For each dir.
+Computes a group with the resources groupped by some groupper
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what |  [custom](#compute-custom)  [count-files](#count-files)  |
+| what? |  [files](#group-files)  [dirs](#group-dirs)  |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# group-as-meta
+**Usage:** `as-meta what-meta?`
+
+Computes it as a group with specified name.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| what-meta? | (the group meta field name to be produced) |
+
+**Requires:** _nothing_ 
+**Produces:** (user defined) 
+
+
+# group-by-custom
+**Usage:** `by-custom by-what-groupper?`
+
+Groups the resources by the specified groupper function.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| by-what-groupper? | (the groupper function) |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# group-by-name
+**Usage:** `by-name `
+
+Groups the resources by their name.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# group-by-name-and-children-count
+**Usage:** `by-name-and-children-count `
+
+Groups the directoctories by their name and number of children.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# group-by-name-and-children-size
+**Usage:** `by-name-and-children-size `
+
+Groups the directoctories by their name and the size.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** dirs-sizes 
+**Produces:** _nothing_ 
+
+
+# group-by-name-and-size
+**Usage:** `by-name-and-size `
+
+Groups the resources by their name and size.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** file-stats 
+**Produces:** _nothing_ 
+
+
+# group-dirs
+**Usage:** `dirs by-what? as-what-meta?`
+
+Groups the dirs by the given groupper.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| by-what? |  [by-name](#group-by-name)  [by-name-and-children-size](#group-by-name-and-children-size)  [by-custom](#group-by-custom)  [by-name-and-children-count](#group-by-name-and-children-count)  |
+| as-what-meta? |  [as-meta](#group-as-meta)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
 
 
-# for-each-file
-**Usage:** `for-each-file what`
+# group-files
+**Usage:** `files by-what? as-what-meta?`
 
-For each file.
+Groups the files by the given groupper.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what |  [custom](#compute-custom)  [files-stats](#files-stats)  |
+| by-what? |  [by-custom](#group-by-custom)  [by-name-and-size](#group-by-name-and-size)  [by-name](#group-by-name)  |
+| as-what-meta? |  [as-meta](#group-as-meta)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
 
 
 # having-extension
-**Usage:** `having-extension extension`
+**Usage:** `having-extension which-extension?`
 
 Files having the specified extension.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| extension | (extension) |
+| which-extension? | (extension) |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
 
 
-# having-files
-**Usage:** `having-files amount condition`
+# less-than
+**Usage:** `less-than what-number?`
 
-Directories having specified amount of files matching some condition.
+Having less than specified number of resources matching the condition.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| amount |  [more-than](#more-than)  |
-| condition |  [matching-pattern](#matching-pattern)  [matching-custom-matcher](#matching-custom-matcher)  [having-extension](#having-extension)  |
+| what-number? | (count) |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
 
 
 # load
-**Usage:** `load roots`
+**Usage:** `load what?`
 
-Loads the resources from the specified root folder or the file.
+Loads specified data from the disk.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| roots | (the root resources) |
+| what? |  [resources](#load-resources)  [files-stats](#files-stats)  |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# load-resources
+**Usage:** `resources what-roots?`
+
+Loads the resources from the specified root folder(s) or the file.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| what-roots? | (the root resource or resources) |
 
 **Requires:** _nothing_ 
 **Produces:** resources 
 
 
 # matching-custom-matcher
-**Usage:** `matching-custom-matcher by`
+**Usage:** `matching-custom-matcher by-what?`
 
 Filters by specified matcher function
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| by | (matcher function) |
+| by-what? | (matcher function) |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
 
 
 # matching-pattern
-**Usage:** `matching-pattern pattern how`
+**Usage:** `matching-pattern pattern? how?`
 
-Matches the given pattern specified way
+Matches the given pattern specified way.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| pattern | (the pattern) |
-| how |  [case-insensitive](#case-insensitive)  [case-sensitive](#case-sensitive)  |
+| pattern? | (the pattern) |
+| how? |  [case-insensitive](#case-insensitive)  [case-sensitive](#case-sensitive)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
 
 
 # more-than
-**Usage:** `more-than number`
+**Usage:** `more-than what-number?`
 
-Files having more than specified number of files matching the condition.
+Having more than specified number of resources matching the condition.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| number | (count) |
+| what-number? | (count) |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# named
+**Usage:** `named what-name?`
+
+Resources having the specified name.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| what-name? | (the resource name) |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# none
+**Usage:** `none `
+
+Having exactly zero of resources matching the condition.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
 
 
 # print
-**Usage:** `print what`
+**Usage:** `print what?`
 
 Prints given.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what |  [files](#print-files)  [dirs](#print-dirs)  [stats](#print-stats)  |
+| what? |  [stats](#print-stats)  [files](#print-files)  [debug-stats](#print-debug-stats)  [dirs](#print-dirs)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
 
 
 # print-custom
-**Usage:** `custom printer`
+**Usage:** `custom how?`
 
 Prints each resource by the given function.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| printer | (printer function) |
+| how? | (printer function) |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# print-custom-group
+**Usage:** `custom-group what-group?`
+
+Prints the resources with resources in the same group specified by the given groupper function.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| what-group? | (the group meta field name required) |
+
+**Requires:** _nothing_ 
+**Produces:** (user defined) 
+
+
+# print-debug-stats
+**Usage:** `debug-stats `
+
+Prints the more precise informations about the current context.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
 
 
 # print-dirs
-**Usage:** `dirs how`
+**Usage:** `dirs how?`
 
 Prints dirs.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| how |  [simply](#print-simply)  [only-name](#print-only-name)  [custom](#print-custom)  [with-counts](#print-with-counts)  |
+| how? |  [with](#print-dirs-with)  [only-name](#print-only-name)  [simply](#print-simply)  [custom](#print-custom)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
 
 
+# print-dirs-with
+**Usage:** `with with-what?`
+
+Prints for each dir its path and specified extra information.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| with-what? |  [children-size](#print-with-children-size)  [its-group](#print-dirs-with-its-group)  [meta](#print-with-meta)  [children-names](#print-with-children-names)  [children-count](#print-with-children-count)  |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# print-dirs-with-its-group
+**Usage:** `its-group what-groupper?`
+
+Prints the dirs with all the resources it same group.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| what-groupper? |  [of-the-same-name-and-children-count](#print-with-same-name-and-children-count)  [of-the-same-name-and-children-size](#print-with-same-name-and-children-size)  [of-the-same-name](#print-with-same-name)  [custom-group](#print-custom-group)  |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
 # print-files
-**Usage:** `files how`
+**Usage:** `files how?`
 
 Prints files.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| how |  [simply](#print-simply)  [only-name](#print-only-name)  [with-size](#print-with-size)  [custom](#print-custom)  |
+| how? |  [simply](#print-simply)  [custom](#print-custom)  [with](#print-files-with)  [only-name](#print-only-name)  |
 
 **Requires:** resources 
+**Produces:** _nothing_ 
+
+
+# print-files-with
+**Usage:** `with with-what?`
+
+Prints for each file its path and specified extra information.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| with-what? |  [size](#print-with-size)  [meta](#print-with-meta)  [its-group](#print-files-with-its-group)  |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# print-files-with-its-group
+**Usage:** `its-group what-groupper?`
+
+Prints the files with all the resources it same group.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| what-groupper? |  [custom-group](#print-custom-group)  [of-the-same-name-and-size](#print-with-same-name-and-size)  [of-the-same-name](#print-with-same-name)  |
+
+**Requires:** _nothing_ 
 **Produces:** _nothing_ 
 
 
@@ -390,8 +744,8 @@ Prints the current context stats.
 **Produces:** _nothing_ 
 
 
-# print-with-counts
-**Usage:** `with-counts `
+# print-with-children-count
+**Usage:** `children-count `
 
 Prints each resource and number of its children.
 
@@ -400,21 +754,189 @@ Prints each resource and number of its children.
 | --------- | ----------------- |
 | _no params_ | _no_value(s)_ |
 
-**Requires:** children counts 
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# print-with-children-names
+**Usage:** `children-names `
+
+Prints each dir and its children names.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# print-with-children-size
+**Usage:** `children-size how?`
+
+Prints each directory and size of its children.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| how? |  [in-bytes](#print-size-in-bytes)  [human-readable](#print-size-human-readable)  |
+
+**Requires:** dirs-sizes 
+**Produces:** _nothing_ 
+
+
+# print-with-meta
+**Usage:** `meta which-meta?`
+
+Prints the resource and its corresponding meta field value.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| which-meta? | (the meta field name required) |
+
+**Requires:** _nothing_ 
+**Produces:** (user defined) 
+
+
+# print-with-same-name
+**Usage:** `of-the-same-name `
+
+Prints the resources with the same name as the current resource.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# print-with-same-name-and-children-count
+**Usage:** `of-the-same-name-and-children-count `
+
+Prints the dirs with the same name and children count as the current dir.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# print-with-same-name-and-children-size
+**Usage:** `of-the-same-name-and-children-size `
+
+Prints the dirs with the same name and children size as the current dir.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# print-with-same-name-and-size
+**Usage:** `of-the-same-name-and-size `
+
+Prints the resources with the same name and size as the current resource.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** _nothing_ 
 **Produces:** _nothing_ 
 
 
 # print-with-size
-**Usage:** `with-size how`
+**Usage:** `size how?`
 
 Prints the files and their size.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| how |  [in-bytes](#print-size-in-bytes)  [human-readable](#print-size-human-readable)  |
+| how? |  [in-bytes](#print-size-in-bytes)  [human-readable](#print-size-human-readable)  |
 
-**Requires:** file stats 
+**Requires:** file-stats 
+**Produces:** _nothing_ 
+
+
+# to-each-dir
+**Usage:** `to-each-dir `
+
+Computes the new meta for each directory.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** resources 
+**Produces:** _nothing_ 
+
+
+# to-each-file
+**Usage:** `to-each-file `
+
+Computes the new meta for each file.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** resources 
+**Produces:** _nothing_ 
+
+
+# with-the-same-name
+**Usage:** `name `
+
+Matches the resources which have the same name.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# with-the-same-name-and-size
+**Usage:** `name-and-size `
+
+Matches the resources which have the same name and size.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# with-the-same-of-custom
+**Usage:** `custom-group what-group?`
+
+Matches the resources which have the specified amount of the resources with the specified custom groupper.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| what-group? | (the group meta field name required) |
+
+**Requires:** (user defined) 
 **Produces:** _nothing_ 
 
 
