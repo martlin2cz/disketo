@@ -172,7 +172,7 @@ sub create_operation_node($$) {
 	my $name = $operation->{"name"};
 	
 	return {"name" => $name, "operation" => $operation, "arguments" => $children };
-	#return {"name" => $name, "arguments" => $children };
+	#return {"NAME" => $name, "arguments" => $children };
 }
 
 ########################################################################
@@ -237,6 +237,8 @@ sub walk_tree($$$$) {
 sub walk_tree_node($$$$) {
 	my ($node, $stack, $param_name, $operation_node_fn, $value_node_fn) = @_;
 
+#print(Dumper($node));
+
 	my $name = $node->{"name"};
 	if (exists($node->{"operation"})) {
 		my $operation = $node->{"operation"};
@@ -247,7 +249,7 @@ sub walk_tree_node($$$$) {
 		
 		my @sub_stack = @$stack;
 		push @sub_stack, $name;
-		
+
 		while (my ($i, $param_name) = each @$params) {
 			my $child_node = $arguments->[$i];
 			walk_tree_node($child_node, \@sub_stack, $param_name, $operation_node_fn, $value_node_fn);

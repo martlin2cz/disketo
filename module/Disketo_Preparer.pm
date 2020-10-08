@@ -282,13 +282,35 @@ sub verify_dependencies($) {
 		for my $required (@$requireds) {
 			my $is = is_produced_by($program, $required, $index);
 			if (not $is) {
+				my $producing_statements = compute_producing_str($required);
 				die("The meta " 
 				. "'" . $required . "' is required "
 				. "by the statement " . ($index + 1) . ", "
-				. "but none of its foregoing statements produces it.");
+				. "but none of its foregoing statements produces it. "
+				. "There are following statements, which should:\n$producing_statements\nTry to use one of them.");
 			}
 		}
 	}
+}
+
+sub compute_producing_str($) {
+	my ($meta_name) = @_;
+	my $all_statements = Disketo_Help::compute_all_statements();
+				
+	my $result = "";			
+	for my $statement (@$all_statements) {
+		#print(Disketo_Help::instruction_to_linear_string($statement) . "& $meta_name ? -> " 
+		# ." R:". join(";", @{ compute_requireds($statement) })
+		# ." P:". join(";", @{ compute_produceds($statement) })
+		# . "\n");
+		if (produces($statement, $meta_name)) {
+		#	print("HIT!\n");
+			my $stringified = Disketo_Help::instruction_to_linear_string($statement);
+			$result .= $stringified . "\n";
+		}
+	}
+	
+	return $result;
 }
 
 ########################################################################

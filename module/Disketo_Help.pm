@@ -16,7 +16,39 @@ use Set::Scalar;
 # Implements the functions related to help, usage, list all commands
 # and context, and all that related stuff.
 ########################################################################
+# INSTRUCTION TO LINE
 
+sub program_to_linear_string($) {
+	my ($program) = @_;
+	
+	my $result = "";
+	for my $instruction (@$program) {
+		$result .= instruction_to_linear_string($instruction);
+		$result .= "\n";
+	}
+	
+	return $result;
+}
+
+# Converts the given (parsed) instruction back to its original line(ar form)
+sub instruction_to_linear_string($) {
+	my ($instruction) = @_;
+	
+	my $result = "";
+	
+	Disketo_Analyser::walk_tree($instruction, "",
+		sub { 
+			my ($node, $stack, $param_name, $name, $operation, $params, $arguments) = @_;
+			my $command_name = $operation->{"name"};
+				$result .= "$command_name ";
+		},
+		sub { 
+			my ($node, $stack, $param_name, $name, $value, $prepared_value) = @_; 
+			$result .= "$value ";
+		});
+	
+	return $result;
+}
 
 ########################################################################
 # TREE USAGE
@@ -84,7 +116,7 @@ sub tree_subtree_usage($$) {
 # LINEAR USAGE
 
 # Prints the "linear usage" (all the valid statements)
-sub print_linear_usage() {
+sub XXX_print_linear_usage() {
 	my $commands = Disketo_Instruction_Set::commands();
 
 	my $usage = linear_usage($commands);
@@ -92,43 +124,46 @@ sub print_linear_usage() {
 	print(join("\n", @$usage) . "\n");
 }
 
-# Computes the "linear usage"
-sub linear_usage($) {
-	my ($commands) = @_;
-
-	return valid_arg_value_usage($commands);
+# Computes all the possible statements constructable.
+sub compute_all_statements() {
+	my $commands = Disketo_Instruction_Set::commands();
+	return compute_all_statements_for($commands);
 }
 
 # Computes the linear usage for the "valid arg value" field 
 # (a value of $command->{"valid-args"} )
-sub valid_arg_value_usage($) {
+sub compute_all_statements_for($) {
 	my ($valid_arg_value) = @_;
 	
 	if (ref($valid_arg_value) eq "HASH") {
 		# if the valid arg value is operations ...
 		
 		my %commands = %$valid_arg_value;
-		
 		my @result = ();
 		
 		for my $command (values %commands) {
 			# for each of the valid "child command"
 			# compute its possible arguments usage
-			my $sub_usage = linear_subtree_usage($command);
-
+			my $sub_usage = 
+			#[ "<THE " . $command->{"ID"} . " GOES HERE>" ];
+				valid_statements_for_command($command);
+#print(Dumper($command->{"name"}, $sub_usage, \@result));
 			push (@result, @$sub_usage);
 		} 
-
+#print(Dumper(join(",", keys %commands), scalar @result)); 
 		return \@result;
 	} else {
 		# else it's just an atomic value
 		my $value_name = $valid_arg_value;
-		return [ $value_name ];
+		my $value = $valid_arg_value;
+		my $node = Disketo_Analyser::create_value_node($value_name, $value);
+		return [ $node ];
+		#return [ "<THE " . $value . " GOES HERE>" ];
 	}
 }
 
 # Computes the linear usage for the given command node
-sub linear_subtree_usage($) {
+sub valid_statements_for_command($) {
 	my ($command) = @_;
 	
 	my $command_name = $command->{"name"};
@@ -137,29 +172,76 @@ sub linear_subtree_usage($) {
 	if (scalar (@params_names) == 0) {
 		# if has no params at all,
 		# the usage of that command is just its name
-		return [ $command_name ];
+		#return [ "<THE $command_name IS EMPTY>" ];
+		my $op = Disketo_Analyser::create_operation_node($command, []);
+		return [ $op ];
+	}
+	
+	if (scalar (@params_names) == 1) {
+		# if has one param, return statements of that, simply!
+		my $param_name = @params_names[0];
+		my $possibles = possible_statements_of_command_param($command, $param_name);
+		my @cmbs = map { [ $_ ] } @$possibles;
+		my $ops = _combinations_to_operations($command, \@cmbs);
+#print(Dumper(scalar @$possibles, scalar @$ops));		
+		return $ops;
 	}
 	
 	# compute the usages of all its params and combine them each by each
-	my @params_usages = map { param_usages($command, $_) } @params_names;
+	my @params_usages = map { possible_statements_of_command_param($command, $_) } @params_names;
 	my $combinations = combine(\@params_usages);
-	my @with_command_name = map { "$command_name $_" } @$combinations;
+	#my @with_command_name = map { Disketo_Analyser::create_operation_node($command, [ $_ ] ) } @$combinations;
+	my $with_command_name =_combinations_to_operations($command, $combinations);
+
+#print(Dumper("WITH $command_name", \@params_names, \@params_usages, $combinations, \@with_command_name));
+#if ($command_name eq "as-meta") {
+#	die("XXX debug");
+#}
+	return $with_command_name;
+}
+
+sub _combinations_to_operations($$) {
+	my ($command, $combinations) = @_;
 	
-	return \@with_command_name;
+	my @result = ();
+	for my $combination (@$combinations) {
+		#if (ref($combination) eq "ARRAY") {
+		#	$combination = ( $combination );
+		#}
+		#if (ref($combination) eq "HASH") {
+		#	$combination = [ $combination ];
+		#}
+
+#print("CCC " . Dumper($combination));
+
+#		if (scalar @$combination > 0) {
+#			my $combination = $combination->[0];
+#		}
+
+#print(Dumper($command->{"ID"}, $combination));
+		my $op = Disketo_Analyser::create_operation_node($command, $combination );
+		push @result, $op;
+	}
+	
+	return \@result;
 }
 
 # Computes the usages array for the given param of the given command
-sub param_usages($$) {
+sub possible_statements_of_command_param($$) {
 	my ($command, $param_name) = @_;
 	
 	my $child = $command->{"valid-args"}->{$param_name};
-	my $child_usages = valid_arg_value_usage($child);
-
+	my $child_usages = compute_all_statements_for($child);
+	
+#print(Dumper("The usages of ", $command->{"ID"}, 
+#				"param named:", $param_name, 
+#				"having possiblities:", $child,
+#				"gets: ", $child_usages));
 	return $child_usages;
 }
 
-# Combines the arrays of the given arrays by concatenation
-# i.e. [[X,Y], [0,1]] => [X0, X1, Y0, Y1]
+# Combines the arrays of the given arrays by creating couples
+# i.e. [[X,Y], [0,1]] => [[X0], [X1], [Y0], [Y1]]
 # TODO move to Utils module
 sub combine($) {
 	my ($sets) = @_;
@@ -174,7 +256,7 @@ sub combine($) {
 	for my $item (@$first_set) {
 
 		my $sub_result = combine(\@sets);
-		my @sub_result_with_item = map { "$item $_" } @$sub_result;
+		my @sub_result_with_item = map { [$item, $_] } @$sub_result;
 		
 		push (@result, @sub_result_with_item);
 	}

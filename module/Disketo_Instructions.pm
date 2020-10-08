@@ -32,6 +32,9 @@ our $M_FILE_STATS = "file-stats";
 #our $M_CHILDREN_COUNTS = "children-count"; #TODO, XXX: deprecated!
 our $M_DIRS_SIZES = "dirs-sizes";
 
+our $M_WITH_SAME_NAME = "with-same-name";
+our $M_WITH_SAME_NAME_AND_SIZE = "with-same-name-and-size";
+our $TODO = "TODO"; #TODO
 ########################################################################
 # UTILS
 
@@ -173,7 +176,7 @@ sub children_count($) {
 	my ($node) = @_;
 	
 	return sub($$) {
-		die("XXX");
+		die("XXX"); #TODO FIXME
 	};
 }
 
@@ -392,12 +395,12 @@ sub at_least_one_more($) {
 
 sub with_same_name($) {
 	my ($node) = @_;
-	return "with same name"; #TODO meta name
+	return $M_WITH_SAME_NAME;
 }
 
 sub with_same_name_and_size($) {
 	my ($node) = @_;
-	return "with same name and size"; #TODO meta name
+	return $M_WITH_SAME_NAME;
 }
 
 sub with_same_of_custom_group($) {
@@ -525,7 +528,7 @@ sub print_custom($) {
 sub print_with_counts($) {
 	my ($node) = @_;
 
-	return resource_to_meta_fn("directory children count"); #TODO meta name
+	return dir_to_name_and_children_count_fn();
 }
 
 sub print_size_in_bytes($) {
@@ -556,25 +559,25 @@ sub print_custom_group($) {
 sub print_of_the_same_name($) {
 	my ($node) = @_;
  
-	return resource_to_meta_fn("with same name"); #TODO field name
+	return resource_to_meta_fn($M_WITH_SAME_NAME);
 }
 
 sub print_of_the_same_name_and_size($) {
 	my ($node) = @_;
  
-	return resource_to_meta_fn("with same name and size"); #TODO field name
+	return resource_to_meta_fn($M_WITH_SAME_NAME);
 }
 
 sub print_of_the_same_name_and_children_size($) {
 	my ($node) = @_;
  
-	return resource_to_meta_fn("with same name and children size"); #TODO field name
+	return resource_to_meta_fn($TODO); #TODO field name
 }
 
 sub print_of_the_same_name_and_children_count($) {
 	my ($node) = @_;
  
-	return resource_to_meta_fn("with same name and children count"); #TODO field name
+	return resource_to_meta_fn($TODO); #TODO field name
 }
 
 
