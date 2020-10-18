@@ -5,7 +5,7 @@
  Each statement has to start with any of this commands:
 
 
-[compute](#compute) [load](#load) [execute](#execute) [group](#group) [print](#print) [filter](#filter)
+[execute](#execute) [filter](#filter) [print](#print) [compute](#compute) [group](#group) [load](#load)
 
  After that, continue with its declared parameter's values or (sub)commands.
 
@@ -66,15 +66,14 @@ Matches the pattern respecing the case
 
 
 # compute
-**Usage:** `compute what? as-what-meta?`
+**Usage:** `compute what?`
 
 Computes a meta field.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what? |  [directories-sizes](#directories-sizes)  [custom-meta](#compute-custom-meta)  |
-| as-what-meta? |  [as-meta](#compute-as-meta)  |
+| what? |  [directories-subtree-sizes](#directories-subtree-sizes)  [directories-subtree-counts](#directories-subtree-counts)  [custom-meta](#compute-custom-meta)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -109,7 +108,7 @@ Computes the meta field by applying the specified function to each of the resour
 
 
 # compute-custom-meta
-**Usage:** `custom-meta how? for-each?`
+**Usage:** `custom-meta how? for-each? as-what-meta?`
 
 Computes the custom meta field.
 
@@ -118,15 +117,16 @@ Computes the custom meta field.
 | --------- | ----------------- |
 | how? |  [by-appling-function](#compute-by-appling-custom-function)  |
 | for-each? |  [to-each-dir](#to-each-dir)  [to-each-file](#to-each-file)  |
+| as-what-meta? |  [as-meta](#compute-as-meta)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
 
 
-# directories-sizes
-**Usage:** `directories-sizes `
+# directories-subtree-counts
+**Usage:** `directories-subtree-counts `
 
-Counts of files in each dir.
+Total count of resources in the directory subtree.
 
 
 | Parameter | Possible value(s) |
@@ -134,7 +134,21 @@ Counts of files in each dir.
 | _no params_ | _no_value(s)_ |
 
 **Requires:** resources 
-**Produces:** dirs-sizes 
+**Produces:** dir-subtrees-count 
+
+
+# directories-subtree-sizes
+**Usage:** `directories-subtree-sizes `
+
+Total size of subtree of each directory.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** resources file-stats 
+**Produces:** dir-subtrees-size 
 
 
 # dirs-having
@@ -146,7 +160,7 @@ Filters dirs having the specified amount of element in the given group.
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
 | how-much? |  [none](#none)  [at-least-one-more](#at-least-one-more)  [less-than](#less-than)  [more-than](#more-than)  |
-| of-what? |  [of-the-same](#dirs-of-the-same)  [children](#dirs-having-children)  |
+| of-what? |  [children](#dirs-having-children)  [of-the-same](#dirs-of-the-same)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -174,9 +188,23 @@ Filters resources based on the group of the same resources.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| which-group? |  [name-and-size](#with-the-same-name-and-size)  [custom-group](#with-the-same-of-custom)  [name](#with-the-same-name)  |
+| which-group? |  [custom-group](#with-the-same-of-custom)  [name-and-size](#with-the-same-name-and-size)  [name](#dirs-with-the-same-name)  |
 
 **Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# dirs-with-the-same-name
+**Usage:** `name `
+
+Matches the dirs which have the same name.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** dirs-with-same-name 
 **Produces:** _nothing_ 
 
 
@@ -202,7 +230,7 @@ Filters files having the specified amount of element in the given group.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| how-much? |  [less-than](#less-than)  [more-than](#more-than)  [at-least-one-more](#at-least-one-more)  [at-least-one](#at-least-one)  [none](#none)  |
+| how-much? |  [at-least-one](#at-least-one)  [at-least-one-more](#at-least-one-more)  [none](#none)  [less-than](#less-than)  [more-than](#more-than)  |
 | of-what? |  [of-the-same](#files-of-the-same)  |
 
 **Requires:** _nothing_ 
@@ -217,7 +245,7 @@ Filters files having given group.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| which-group? |  [custom-group](#with-the-same-of-custom)  [name-and-size](#with-the-same-name-and-size)  [name](#with-the-same-name)  |
+| which-group? |  [custom-group](#with-the-same-of-custom)  [name-and-size](#with-the-same-name-and-size)  [name](#files-with-the-same-name)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -235,6 +263,20 @@ Loads the stats (file sizes, dates of modifications, ... ) of the files.
 
 **Requires:** resources 
 **Produces:** file-stats 
+
+
+# files-with-the-same-name
+**Usage:** `name `
+
+Matches the files which have the same name.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** files-with-same-name 
+**Produces:** _nothing_ 
 
 
 # filter
@@ -259,7 +301,7 @@ Filters dirs by given criteria.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| matching-what? |  [matching-pattern](#matching-pattern)  [having](#dirs-having)  [named](#named)  [matching-custom-matcher](#matching-custom-matcher)  |
+| matching-what? |  [having](#dirs-having)  [named](#named)  [matching-pattern](#matching-pattern)  [matching-custom-matcher](#matching-custom-matcher)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
@@ -273,7 +315,7 @@ Filters files by given criteria
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| matching-what? |  [matching-custom-matcher](#matching-custom-matcher)  [named](#named)  [having](#files-having)  [matching-pattern](#matching-pattern)  [having-extension](#having-extension)  |
+| matching-what? |  [matching-custom-matcher](#matching-custom-matcher)  [having-extension](#having-extension)  [matching-pattern](#matching-pattern)  [named](#named)  [having](#files-having)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
@@ -332,13 +374,13 @@ Groups the resources by their name.
 | _no params_ | _no_value(s)_ |
 
 **Requires:** _nothing_ 
-**Produces:** _nothing_ 
+**Produces:**  
 
 
 # group-by-name-and-children-count
 **Usage:** `by-name-and-children-count `
 
-Groups the directoctories by their name and number of children.
+Groups the directories by their name and the number of child resources.
 
 
 | Parameter | Possible value(s) |
@@ -346,27 +388,13 @@ Groups the directoctories by their name and number of children.
 | _no params_ | _no_value(s)_ |
 
 **Requires:** _nothing_ 
-**Produces:** _nothing_ 
-
-
-# group-by-name-and-children-size
-**Usage:** `by-name-and-children-size `
-
-Groups the directoctories by their name and the size.
-
-
-| Parameter | Possible value(s) |
-| --------- | ----------------- |
-| _no params_ | _no_value(s)_ |
-
-**Requires:** dirs-sizes 
-**Produces:** _nothing_ 
+**Produces:** dirs-with-same-name-and-children-count 
 
 
 # group-by-name-and-size
 **Usage:** `by-name-and-size `
 
-Groups the resources by their name and size.
+Groups the files by their name and size.
 
 
 | Parameter | Possible value(s) |
@@ -374,7 +402,35 @@ Groups the resources by their name and size.
 | _no params_ | _no_value(s)_ |
 
 **Requires:** file-stats 
-**Produces:** _nothing_ 
+**Produces:**  
+
+
+# group-by-name-and-subtree-count
+**Usage:** `by-name-and-subtree-count `
+
+Groups the directories by their name and the total number of ancesting resources.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** _nothing_ 
+**Produces:** dirs-with-same-name-and-subtree-count 
+
+
+# group-by-name-and-subtree-size
+**Usage:** `by-name-and-subtree-size `
+
+Groups the directories by their name and the total size of ancesting resources.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:**  
+**Produces:** dirs-with-same-name-and-subtree-size 
 
 
 # group-dirs
@@ -385,7 +441,7 @@ Groups the dirs by the given groupper.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| by-what? |  [by-name](#group-by-name)  [by-name-and-children-size](#group-by-name-and-children-size)  [by-custom](#group-by-custom)  [by-name-and-children-count](#group-by-name-and-children-count)  |
+| by-what? |  [by-name-and-children-count](#group-by-name-and-children-count)  [by-name](#group-by-name)  [by-name-and-subtree-size](#group-by-name-and-subtree-size)  [by-name-and-subtree-count](#group-by-name-and-subtree-count)  [by-custom](#group-by-custom)  |
 | as-what-meta? |  [as-meta](#group-as-meta)  |
 
 **Requires:** resources 
@@ -400,7 +456,7 @@ Groups the files by the given groupper.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| by-what? |  [by-custom](#group-by-custom)  [by-name-and-size](#group-by-name-and-size)  [by-name](#group-by-name)  |
+| by-what? |  [by-name-and-size](#group-by-name-and-size)  [by-name](#group-by-name)  [by-custom](#group-by-custom)  |
 | as-what-meta? |  [as-meta](#group-as-meta)  |
 
 **Requires:** resources 
@@ -542,7 +598,7 @@ Prints given.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what? |  [stats](#print-stats)  [files](#print-files)  [debug-stats](#print-debug-stats)  [dirs](#print-dirs)  |
+| what? |  [dirs](#print-dirs)  [files](#print-files)  [debug-stats](#print-debug-stats)  [stats](#print-stats)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -572,8 +628,8 @@ Prints the resources with resources in the same group specified by the given gro
 | --------- | ----------------- |
 | what-group? | (the group meta field name required) |
 
-**Requires:** _nothing_ 
-**Produces:** (user defined) 
+**Requires:** (user defined) 
+**Produces:** _nothing_ 
 
 
 # print-debug-stats
@@ -590,6 +646,90 @@ Prints the more precise informations about the current context.
 **Produces:** _nothing_ 
 
 
+# print-dir-with-children-count
+**Usage:** `count `
+
+Prints each directory and number of its children.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# print-dir-with-children-names
+**Usage:** `names `
+
+Prints each directory and names of its children resources.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# print-dir-with-children-paths
+**Usage:** `paths `
+
+Prints each directory paths of its children resources.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# print-dir-with-subtree
+**Usage:** `subtree subtree-what?`
+
+Prints the directory and something of its subtree
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| subtree-what? |  [size](#print-dir-with-subtree-size)  [resources-count](#print-dir-with-subtree-count)  |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# print-dir-with-subtree-count
+**Usage:** `resources-count `
+
+Prints each directory and number of resources in its subtree.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# print-dir-with-subtree-size
+**Usage:** `size how?`
+
+Prints each directory and total size of resources in its subtree.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| how? |  [in-bytes](#print-size-in-bytes)  [human-readable](#print-size-human-readable)  |
+
+**Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
 # print-dirs
 **Usage:** `dirs how?`
 
@@ -598,7 +738,7 @@ Prints dirs.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| how? |  [with](#print-dirs-with)  [only-name](#print-only-name)  [simply](#print-simply)  [custom](#print-custom)  |
+| how? |  [with](#print-dirs-with)  [only-name](#print-only-name)  [custom](#print-custom)  [simply](#print-simply)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
@@ -612,23 +752,37 @@ Prints for each dir its path and specified extra information.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| with-what? |  [children-size](#print-with-children-size)  [its-group](#print-dirs-with-its-group)  [meta](#print-with-meta)  [children-names](#print-with-children-names)  [children-count](#print-with-children-count)  |
+| with-what? |  [meta](#print-with-meta)  [subtree](#print-dir-with-subtree)  [dirs-of-the-same](#print-dirs-with-its-group)  [children](#print-with-children)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
 
 
 # print-dirs-with-its-group
-**Usage:** `its-group what-groupper?`
+**Usage:** `dirs-of-the-same what-groupper?`
 
 Prints the dirs with all the resources it same group.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what-groupper? |  [of-the-same-name-and-children-count](#print-with-same-name-and-children-count)  [of-the-same-name-and-children-size](#print-with-same-name-and-children-size)  [of-the-same-name](#print-with-same-name)  [custom-group](#print-custom-group)  |
+| what-groupper? |  [name-and-children-count](#print-with-same-name-and-children-count)  [name-and-subtree-size](#print-with-same-name-and-subtree-size)  [name-and-subtree-resources-count](#print-with-same-name-and-subtree-resources-count)  [custom-group](#print-custom-group)  [name](#print-dirs-with-same-name)  |
 
 **Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# print-dirs-with-same-name
+**Usage:** `name `
+
+Prints the dirs with the same name as the current dir.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** dirs-with-same-name 
 **Produces:** _nothing_ 
 
 
@@ -640,7 +794,7 @@ Prints files.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| how? |  [simply](#print-simply)  [custom](#print-custom)  [with](#print-files-with)  [only-name](#print-only-name)  |
+| how? |  [with](#print-files-with)  [only-name](#print-only-name)  [custom](#print-custom)  [simply](#print-simply)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
@@ -654,23 +808,65 @@ Prints for each file its path and specified extra information.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| with-what? |  [size](#print-with-size)  [meta](#print-with-meta)  [its-group](#print-files-with-its-group)  |
+| with-what? |  [size](#print-files-with-size)  [meta](#print-with-meta)  [files-of-the-same](#print-files-with-its-group)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
 
 
 # print-files-with-its-group
-**Usage:** `its-group what-groupper?`
+**Usage:** `files-of-the-same what-groupper?`
 
-Prints the files with all the resources it same group.
+Prints the files with all the files of the specified same property.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what-groupper? |  [custom-group](#print-custom-group)  [of-the-same-name-and-size](#print-with-same-name-and-size)  [of-the-same-name](#print-with-same-name)  |
+| what-groupper? |  [name-and-size](#print-files-with-same-name-and-size)  [custom-group](#print-custom-group)  [name](#print-files-with-same-name)  |
 
 **Requires:** _nothing_ 
+**Produces:** _nothing_ 
+
+
+# print-files-with-same-name
+**Usage:** `name `
+
+Prints the files with the same name as the current file.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** files-with-same-name 
+**Produces:** _nothing_ 
+
+
+# print-files-with-same-name-and-size
+**Usage:** `name-and-size `
+
+Prints the resources with the same name and size as the current resource.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:**  
+**Produces:** _nothing_ 
+
+
+# print-files-with-size
+**Usage:** `size how?`
+
+Prints the files and their size.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| how? |  [in-bytes](#print-size-in-bytes)  [human-readable](#print-size-human-readable)  |
+
+**Requires:** file-stats 
 **Produces:** _nothing_ 
 
 
@@ -744,45 +940,17 @@ Prints the current context stats.
 **Produces:** _nothing_ 
 
 
-# print-with-children-count
-**Usage:** `children-count `
+# print-with-children
+**Usage:** `children children-what?`
 
-Prints each resource and number of its children.
-
-
-| Parameter | Possible value(s) |
-| --------- | ----------------- |
-| _no params_ | _no_value(s)_ |
-
-**Requires:** _nothing_ 
-**Produces:** _nothing_ 
-
-
-# print-with-children-names
-**Usage:** `children-names `
-
-Prints each dir and its children names.
+Prints each directory and something of its children
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| _no params_ | _no_value(s)_ |
+| children-what? |  [count](#print-dir-with-children-count)  [paths](#print-dir-with-children-paths)  [names](#print-dir-with-children-names)  |
 
-**Requires:** _nothing_ 
-**Produces:** _nothing_ 
-
-
-# print-with-children-size
-**Usage:** `children-size how?`
-
-Prints each directory and size of its children.
-
-
-| Parameter | Possible value(s) |
-| --------- | ----------------- |
-| how? |  [in-bytes](#print-size-in-bytes)  [human-readable](#print-size-human-readable)  |
-
-**Requires:** dirs-sizes 
+**Requires:** resources 
 **Produces:** _nothing_ 
 
 
@@ -796,26 +964,12 @@ Prints the resource and its corresponding meta field value.
 | --------- | ----------------- |
 | which-meta? | (the meta field name required) |
 
-**Requires:** _nothing_ 
-**Produces:** (user defined) 
-
-
-# print-with-same-name
-**Usage:** `of-the-same-name `
-
-Prints the resources with the same name as the current resource.
-
-
-| Parameter | Possible value(s) |
-| --------- | ----------------- |
-| _no params_ | _no_value(s)_ |
-
-**Requires:** _nothing_ 
+**Requires:** (user defined) 
 **Produces:** _nothing_ 
 
 
 # print-with-same-name-and-children-count
-**Usage:** `of-the-same-name-and-children-count `
+**Usage:** `name-and-children-count `
 
 Prints the dirs with the same name and children count as the current dir.
 
@@ -824,49 +978,35 @@ Prints the dirs with the same name and children count as the current dir.
 | --------- | ----------------- |
 | _no params_ | _no_value(s)_ |
 
-**Requires:** _nothing_ 
+**Requires:** dirs-with-same-name-and-children-count 
 **Produces:** _nothing_ 
 
 
-# print-with-same-name-and-children-size
-**Usage:** `of-the-same-name-and-children-size `
+# print-with-same-name-and-subtree-resources-count
+**Usage:** `name-and-subtree-resources-count `
 
-Prints the dirs with the same name and children size as the current dir.
+Prints the dirs with the same name and subtree resources count as the current dir.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
 | _no params_ | _no_value(s)_ |
 
-**Requires:** _nothing_ 
+**Requires:** dirs-with-same-name-and-subtree-count 
 **Produces:** _nothing_ 
 
 
-# print-with-same-name-and-size
-**Usage:** `of-the-same-name-and-size `
+# print-with-same-name-and-subtree-size
+**Usage:** `name-and-subtree-size `
 
-Prints the resources with the same name and size as the current resource.
+Prints the dirs with the same name and subtree size as the current dir.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
 | _no params_ | _no_value(s)_ |
 
-**Requires:** _nothing_ 
-**Produces:** _nothing_ 
-
-
-# print-with-size
-**Usage:** `size how?`
-
-Prints the files and their size.
-
-
-| Parameter | Possible value(s) |
-| --------- | ----------------- |
-| how? |  [in-bytes](#print-size-in-bytes)  [human-readable](#print-size-human-readable)  |
-
-**Requires:** file-stats 
+**Requires:** dirs-with-same-name-and-subtree-size 
 **Produces:** _nothing_ 
 
 
@@ -898,31 +1038,17 @@ Computes the new meta for each file.
 **Produces:** _nothing_ 
 
 
-# with-the-same-name
-**Usage:** `name `
-
-Matches the resources which have the same name.
-
-
-| Parameter | Possible value(s) |
-| --------- | ----------------- |
-| _no params_ | _no_value(s)_ |
-
-**Requires:** _nothing_ 
-**Produces:** _nothing_ 
-
-
 # with-the-same-name-and-size
 **Usage:** `name-and-size `
 
-Matches the resources which have the same name and size.
+Matches the dirs which have the same name and size.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
 | _no params_ | _no_value(s)_ |
 
-**Requires:** _nothing_ 
+**Requires:**  
 **Produces:** _nothing_ 
 
 

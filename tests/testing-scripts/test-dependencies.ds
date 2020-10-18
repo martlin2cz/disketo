@@ -1,4 +1,6 @@
 # tests the dependencies
 compute custom-meta by-appling-function sub { length(shift @_); } to-each-file as-meta "just the file"
-
 print files with meta "just the file" 
+
+
+print dirs with its-group of-the-same-name-and-children-size

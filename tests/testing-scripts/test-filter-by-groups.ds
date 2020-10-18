@@ -1,5 +1,0 @@
-# Tests the combination of the group+filter
-
-group files by-name
-filter files having more-than 1 with-the-same-name
-print files simply

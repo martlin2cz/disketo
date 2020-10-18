@@ -46,14 +46,14 @@ sub calculate_for_each_dir($$$) {
 	my ($function, $identifier, $context) = @_;
 
 	my %values = ();
-	Disketo_Utils::iterate_dirs($context, sub($$) {
+	$context->{$identifier} = \%values; #store to context to make it usable during the computation
+
+	Disketo_Utils::iterate_dirs($context, $Disketo_Utils::ORDER_DIR_LAST, sub($$) {
 		my ($dir, $i) = @_;
 		my $value = $function->($dir, $context);
-		# TODO add only if value is not none?
 		$values{$dir} = $value;
 	});
 	
-	$context->{$identifier} = \%values;
 	return \%values;
 }
 
@@ -64,14 +64,14 @@ sub calculate_for_each_file($$$) {
 	my ($function, $identifier, $context) = @_;
 
 	my %values = ();
-	Disketo_Utils::iterate_files($context, sub($$$$) {
+	$context->{$identifier} = \%values; #store to context to make it usable during the computation
+	
+	Disketo_Utils::iterate_files($context, $Disketo_Utils::ORDER_DIR_LAST, sub($$$$) {
 		my ($dir, $i, $file, $j) = @_;
 		my $value = $function->($file, $context);
-		# TODO add only if value is not none?
 		$values{$file} = $value;
 	});
 	
-	$context->{$identifier} = \%values;
 	return \%values;
 }
 
@@ -84,7 +84,7 @@ sub group_dirs($$$) {
 
 	my %groups = ();
 	my %meta = ();
-	Disketo_Utils::iterate_dirs($context, sub($$) {
+	Disketo_Utils::iterate_dirs($context, $Disketo_Utils::UNORDERED, sub($$) {
 		my ($dir, $i) = @_;
 		my $group_name = $groupper->($dir, $context);
 		push @{$groups{$group_name}}, $dir;
@@ -105,7 +105,7 @@ sub group_files($$$) {
 
 	my %groups = ();
 	my %meta = ();
-	Disketo_Utils::iterate_files($context, sub($$$$) {
+	Disketo_Utils::iterate_files($context, $Disketo_Utils::UNORDERED, sub($$$$) {
 		my ($dir, $i, $file, $j) = @_;
 		
 		my $group_name = $groupper->($file, $context);
@@ -128,7 +128,7 @@ sub filter_dirs($$) {
 	my %resources = %{ $context->{"resources"} };
 	
 	my %new_resources = ();
-	Disketo_Utils::iterate_dirs($context, sub($$) {
+	Disketo_Utils::iterate_dirs($context, $Disketo_Utils::UNORDERED, sub($$) {
 		my ($dir, $i) = @_;
 		my $matches = $predicate->($dir, $context);
 		if ($matches) {
@@ -147,7 +147,7 @@ sub filter_files($$) {
 	my ($predicate, $context) = @_;
 
 	my %new_resources = ();
-	Disketo_Utils::iterate_files($context, sub($$$$) {
+	Disketo_Utils::iterate_files($context, $Disketo_Utils::UNORDERED, sub($$$$) {
 		my ($dir, $i, $file, $j) = @_;
 		my $matches = $predicate->($file, $context);
 		if ($matches) {
@@ -165,7 +165,7 @@ sub print_dirs($$) {
 	#print("*** print_dirs \n");
 	my ($printer, $context) = @_;
 
-	Disketo_Utils::iterate_dirs($context, sub($$) {
+	Disketo_Utils::iterate_dirs($context, $Disketo_Utils::ORDER_DIR_FIRST, sub($$) {
 		my ($dir, $i) = @_;
 		my $str = $printer->($dir, $context);
 		print("$str\n");
@@ -177,7 +177,7 @@ sub print_files($$) {
 	#print("*** print_files \n");
 	my ($printer, $context) = @_;
 
-	Disketo_Utils::iterate_files($context, sub($$$$) {
+	Disketo_Utils::iterate_files($context, $Disketo_Utils::ORDER_DIR_FIRST, sub($$$$) {
 		my ($dir, $i, $file, $j) = @_;
 		my $str = $printer->($file, $context);
 		print("$str\n");

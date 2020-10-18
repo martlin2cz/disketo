@@ -140,6 +140,7 @@ sub verify_method($$) {
 
 	try {
 		$method->(undef);
+		print STDERR ("$id: OK!\n");
 	} catch {
 		print STDERR ("$id: $_");
 	};
@@ -192,9 +193,14 @@ sub commands() {
 #			{ "source-meta-name" => "(source meta name)",
 #			  "destination-meta-name" => "(destination meta name)" });
 
-	my $directories_sizes = sop0("directories-sizes", "directories-sizes",
-		\&Disketo_Instructions::directories_sizes, [$M_RESOURCES], [$Disketo_Instructions::M_DIRS_SIZES], 
-		"Counts of files in each dir.");
+	my $directories_subtree_sizes = sop0("directories-subtree-sizes", "directories-subtree-sizes",
+		\&Disketo_Instructions::directory_subtree_size, [$M_RESOURCES, $Disketo_Instructions::M_FILE_STATS], [$Disketo_Instructions::M_DIR_SUBTREE_SIZE],
+		"Total size of subtree of each directory.");
+	
+	my $directories_subtree_counts = sop0("directories-subtree-counts", "directories-subtree-counts",
+		\&Disketo_Instructions::directory_subtree_count, [$M_RESOURCES], [$Disketo_Instructions::M_DIR_SUBTREE_COUNT],
+		"Total count of resources in the directory subtree.");
+		
 			
 	my $to_each_file = sop0("to-each-file", "to-each-file", \&Disketo_Instructions::nope, [$M_RESOURCES], [],
 		"Computes the new meta for each file.");
@@ -213,55 +219,64 @@ sub commands() {
 
 	# -- compute composite operations ---------------------------------
 	
-	my $compute_custom_meta = sop2("compute-custom-meta", "custom-meta", \&Disketo_Instructions::compute_custom_meta, [], [], 
+	my $compute_custom_meta = sop3("compute-custom-meta", "custom-meta", \&Disketo_Instructions::compute_custom_meta, [], [], 
 		"Computes the custom meta field.",
 		"how?", [$applying_function],
-			"for-each?", [$to_each_file, $to_each_dir]);
-	
-	my $compute = sop2("compute", "compute", \&Disketo_Instructions::compute, [], [], 
-		"Computes a meta field.",
-		"what?", [$directories_sizes, $compute_custom_meta],
+		"for-each?", [$to_each_file, $to_each_dir],
 		"as-what-meta?", [$compute_as_meta]);
+	
+	my $compute = sop1("compute", "compute", \&Disketo_Instructions::compute, [], [], 
+		"Computes a meta field.",
+		"what?", [$directories_subtree_sizes, $directories_subtree_counts, $compute_custom_meta]);
 
 # ---------------------------------------------------------------
 # -- group primitive operations ---------------------------------
 
 
-	my $group_by_name = sop0("group-by-name", "by-name", 
-		\&Disketo_Instructions::group_by_name, [], [$Disketo_Instructions::M_WITH_SAME_NAME], 
-		"Groups the resources by their name.");
+	my $group_files_by_name = sop0("group-files-by-name", "by-name", 
+		\&Disketo_Instructions::group_files_by_name, [], [$Disketo_Instructions::M_FILES_WITH_SAME_NAME], 
+		"Groups the files by their names.");
+	
+	my $group_files_by_name_and_size = sop0("group-files-by-name-and-size", "by-name-and-size", 
+		\&Disketo_Instructions::group_files_by_name_and_size, [$Disketo_Instructions::M_FILE_STATS], [$Disketo_Instructions::M_FILES_WITH_SAME_NAME_AND_SIZE], 
+		"Groups the files by their name and size.");
+
+	
+	my $group_dirs_by_name = sop0("group-dirs-by-name", "by-name", 
+		\&Disketo_Instructions::group_dirs_by_name, [], [$Disketo_Instructions::M_DIRS_WITH_SAME_NAME], 
+		"Groups the dirs by their name.");
 			
-	my $group_by_name_and_size = sop0("group-by-name-and-size", "by-name-and-size", 
-		\&Disketo_Instructions::group_by_name_and_size, [$Disketo_Instructions::M_FILE_STATS], [$Disketo_Instructions::M_WITH_SAME_NAME_AND_SIZE], 
-		"Groups the resources by their name and size.");
+	my $group_dirs_by_name_and_subtree_size = sop0("group-dirs-by-name-and-subtree-size", "by-name-and-subtree-size",
+		\&Disketo_Instructions::group_dirs_by_name_and_subtree_size, [$Disketo_Instructions::M_DIR_SUBTREE_SIZE], [$Disketo_Instructions::M_DIRS_WITH_SAME_NAME_AND_SUBTREE_SIZE], 
+		"Groups the directories by their name and the total size of ancesting resources.");
 	
-	my $group_by_name_and_children_count = sop0("group-by-name-and-children-count", "by-name-and-children-count", 
-		\&Disketo_Instructions::group_by_name_and_children_count, [$Disketo_Instructions::M_WITH_SAME_NAME_AND_CHILDREN_COUNT], [], 
-		"Groups the directoctories by their name and number of children.");
-	
-	my $group_by_name_and_children_size = sop0("group-by-name-and-children-size", "by-name-and-children-size",
-		\&Disketo_Instructions::group_by_name_and_children_size, [$Disketo_Instructions::M_DIRS_SIZES], [$Disketo_Instructions::TODO], 
-		"Groups the directoctories by their name and the size.");
-	
-	my $group_by_custom = sop1("group-by-custom", "by-custom", \&Disketo_Instructions::group_by_custom, [], [], 
-		"Groups the resources by the specified groupper function.",
-		"by-what-groupper?", "(the groupper function)");
-		
+	my $group_dirs_by_name_and_subtree_count = sop0("group-dirs-by-name-and-subtree-count", "by-name-and-subtree-count",
+		\&Disketo_Instructions::group_dirs_by_name_and_subtree_count, [], [$Disketo_Instructions::M_DIRS_WITH_SAME_NAME_AND_SUBTREE_COUNT], 
+		"Groups the directories by their name and the total number of ancesting resources.");
+
+	my $group_dirs_by_name_and_children_count = sop0("group-dirs-by-name-and-children-count", "by-name-and-children-count",
+		\&Disketo_Instructions::group_dirs_by_name_and_children_count, [], [$Disketo_Instructions::M_DIRS_WITH_SAME_NAME_AND_CHILDREN_COUNT], 
+		"Groups the directories by their name and the number of child resources.");
+
 	my $group_as_meta = sop1("group-as-meta", "as-meta", \&Disketo_Instructions::pass_value, [], [$M_USER_DEF], 
-		"Computes it as a group with specified name.",
+		"Groups it as a group with specified name.",
 		"what-meta?", $GROUP_META_NAME_VALNAME_PROD);
 
+	my $group_by_custom = sop2("group-by-custom", "by-custom-groupper", \&Disketo_Instructions::group_by_custom, [], [], 
+		"Groups the resources by the specified groupper function.",
+		"what-function?", "(the groupper function)",
+		"as-meta?", [ $group_as_meta ]);
+		
 # -- group composite operations ---------------------------------
 
-	my $group_files = sop2("group-files", "files", \&Disketo_Instructions::group_files, [$M_RESOURCES], [], 
+	my $group_files = sop1("group-files", "files", \&Disketo_Instructions::group_files, [$M_RESOURCES], [], 
 		"Groups the files by the given groupper.",
-		"by-what?", [ $group_by_name, $group_by_name_and_size, $group_by_custom ],
-			"as-what-meta?", [ $group_as_meta ]);
+		"by-what?", [ $group_by_custom, $group_files_by_name, $group_files_by_name_and_size ]);
 
-	my $group_dirs = sop2("group-dirs", "dirs", \&Disketo_Instructions::group_dirs, [$M_RESOURCES], [], 
+	my $group_dirs = sop1("group-dirs", "dirs", \&Disketo_Instructions::group_dirs, [$M_RESOURCES], [], 
 		"Groups the dirs by the given groupper.",
-		"by-what?", [ $group_by_name, $group_by_name_and_children_count, $group_by_name_and_children_size, $group_by_custom ],
-		"as-what-meta?", [ $group_as_meta ]);
+		"by-what?", [ $group_by_custom, $group_dirs_by_name, 
+					$group_dirs_by_name_and_subtree_size, $group_dirs_by_name_and_subtree_count, $group_dirs_by_name_and_children_count ]);
 
 	my $group = sop1("group", "group", \&Disketo_Instructions::pass, [], [], 
 		"Computes a group with the resources groupped by some groupper",
@@ -313,13 +328,29 @@ sub commands() {
 	my $case_insensitive = sop0("case-insensitive", "case-insensitive", \&Disketo_Instructions::nope, [], [], 
 		"Matches the pattern ignoring the case");
 
-	my $with_same_name = sop0("with-the-same-name", "name",
-		\&Disketo_Instructions::with_same_name, [$Disketo_Instructions::M_WITH_SAME_NAME], [],  
-		"Matches the resources which have the same name.");
+	my $files_with_same_name = sop0("files-with-the-same-name", "name",
+		\&Disketo_Instructions::files_with_same_name, [$Disketo_Instructions::M_FILES_WITH_SAME_NAME], [],  
+		"Matches the files which have the same name.");
+
+	my $dirs_with_same_name = sop0("dirs-with-the-same-name", "name",
+		\&Disketo_Instructions::dirs_with_same_name, [$Disketo_Instructions::M_DIRS_WITH_SAME_NAME], [],  
+		"Matches the dirs which have the same name.");
 			
-	my $with_same_name_and_size = sop0("with-the-same-name-and-size", "name-and-size",
-		\&Disketo_Instructions::with_same_name_and_size, [$Disketo_Instructions::M_WITH_SAME_NAME_AND_SIZE], [],
-		"Matches the resources which have the same name and size.");
+	my $files_with_same_name_and_size = sop0("files-with-the-same-name-and-size", "name-and-size",
+		\&Disketo_Instructions::files_with_same_name_and_size, [$Disketo_Instructions::M_FILES_WITH_SAME_NAME_AND_SIZE], [],
+		"Matches the dirs which have the same name and size.");
+	
+	my $dirs_with_same_name_and_subtree_count = sop0("dirs-with-the-same-name-and-subtree-count", "name-and-subtree-count",
+		\&Disketo_Instructions::dirs_with_same_name_and_subtree_count, [$Disketo_Instructions::M_DIRS_WITH_SAME_NAME_AND_SUBTREE_COUNT], [],
+		"Matches the dirs which have the same name and subtree resources count.");
+	
+	my $dirs_with_same_name_and_subtree_size = sop0("dirs-with-the-same-name-and-subtree-size", "name-and-subtree-size",
+		\&Disketo_Instructions::dirs_with_same_name_and_subtree_size, [$Disketo_Instructions::M_DIRS_WITH_SAME_NAME_AND_SUBTREE_SIZE], [],
+		"Matches the dirs which have the same name and total subtree resources size.");
+		
+	my $dirs_with_same_name_and_children_count = sop0("dirs-with-the-same-name-and-children-count", "name-and-children-count",
+		\&Disketo_Instructions::dirs_with_same_name_and_children_count, [$Disketo_Instructions::M_DIRS_WITH_SAME_NAME_AND_CHILDREN_COUNT], [],
+		"Matches the dirs which have the same name and children resources count.");		
 			
 	my $with_same_of_custom_group = sop1("with-the-same-of-custom", "custom-group",
 		\&Disketo_Instructions::with_same_of_custom_group, [$M_USER_DEF], [], 
@@ -339,7 +370,7 @@ sub commands() {
 	
 	my $dir_of_the_same = sop1("dirs-of-the-same", "of-the-same", \&Disketo_Instructions::of_the_same, [], [], 
 		"Filters resources based on the group of the same resources.",
-		"which-group?", [ $with_same_name, $with_same_name_and_size, $with_same_of_custom_group ]);
+		"which-group?", [ $dirs_with_same_name, $dirs_with_same_name_and_subtree_count, $dirs_with_same_name_and_subtree_size, $with_same_of_custom_group ]);
 	
 	my $dirs_having = sop2("dirs-having", "having", \&Disketo_Instructions::having, [], [], 
 		"Filters dirs having the specified amount of element in the given group.",
@@ -348,7 +379,7 @@ sub commands() {
 			
 	my $files_of_the_same = sop1("files-of-the-same", "of-the-same", \&Disketo_Instructions::of_the_same, [], [], 
 		"Filters files having given group.",
-		"which-group?", [ $with_same_name, $with_same_name_and_size, $with_same_of_custom_group ]);
+		"which-group?", [ $files_with_same_name, $files_with_same_name_and_size, $with_same_of_custom_group ]);
 	
 	my $files_having = sop2("files-having", "having", \&Disketo_Instructions::having, [], [], 
 		"Filters files having the specified amount of element in the given group.",
@@ -372,7 +403,7 @@ sub commands() {
 		"what?", [ $filter_files, $filter_dirs ]);
 
 # ---------------------------------------------------------------
-# -- print primitive operations ----------------------------------
+# -- print common and shared operations --------------------------------
 	
 	my $print_stats = sop0("print-stats", "stats", \&Disketo_Instructions::print_stats, [], [], 
 		"Prints the current context stats.");
@@ -389,17 +420,6 @@ sub commands() {
 	my $print_custom = sop1("print-custom", "custom", \&Disketo_Instructions::print_custom, [], [], 
 		"Prints each resource by the given function.",
 		"how?", "(printer function)");
-	
-	my $print_with_children_count = sop0("print-with-children-count", "children-count", 
-		\&Disketo_Instructions::print_with_counts, [], [], 
-		"Prints each resource and number of its children.");
-	
-	my $print_size_in_bytes = sop0("print-size-in-bytes", "in-bytes", \&Disketo_Instructions::print_size_in_bytes, [], [], 
-		"Prints the file size in Bytes.");
-	
-	my $print_size_human_readable = sop0("print-size-human-readable", "human-readable", 
-		\&Disketo_Instructions::print_size_human_readable, [], [], 
-		"Prints the file size automatically in the B, kB, MB or GB based on its actual value.");
 
 	my $print_with_meta = sop1("print-with-meta", "meta", \&Disketo_Instructions::print_with_meta, [$M_USER_DEF], [], 
 		"Prints the resource and its corresponding meta field value.",
@@ -409,68 +429,118 @@ sub commands() {
 		\&Disketo_Instructions::print_custom_group, [$M_USER_DEF], [], 
 		"Prints the resources with resources in the same group specified by the given groupper function.",
 		"what-group?", $GROUP_META_NAME_VALNAME_REQ);
-	
-	my $print_with_same_name = sop0("print-with-same-name", "of-the-same-name",
-		\&Disketo_Instructions::print_of_the_same_name, [$Disketo_Instructions::M_WITH_SAME_NAME], [], 
-		"Prints the resources with the same name as the current resource.");
-	
-	my $print_with_same_name_and_size = sop0("print-with-same-name-and-size", "of-the-same-name-and-size",
-		\&Disketo_Instructions::print_of_the_same_name_and_size, [$Disketo_Instructions::M_WITH_SAME_NAME_AND_SIZE], [], 
-		"Prints the resources with the same name and size as the current resource.");
-			
-	my $print_with_same_name_and_children_size = sop0("print-with-same-name-and-children-size", "of-the-same-name-and-children-size",
-		\&Disketo_Instructions::print_of_the_same_name_and_children_size, [], [], 
-		"Prints the dirs with the same name and children size as the current dir.");
-	
-	my $print_with_same_name_and_children_count = sop0("print-with-same-name-and-children-count", "of-the-same-name-and-children-count",
-		\&Disketo_Instructions::print_of_the_same_name_and_children_count, [$Disketo_Instructions::TODO], [], 
-		"Prints the dirs with the same name and children count as the current dir.");
 
-	my $print_with_children_names = sop0("print-with-children-names", "children-names",
-		\&Disketo_Instructions::print_with_children_names, [], [], 
-		"Prints each dir and its children names.");
+	my $print_size_in_bytes = sop0("print-size-in-bytes", "in-bytes", \&Disketo_Instructions::print_size_in_bytes, [], [], 
+		"Prints the file size in Bytes.");
 	
-# -- print composite operations ---------------------------------
-	# TODO make the "print dir which children X" separated
+	my $print_size_human_readable = sop0("print-size-human-readable", "human-readable", 
+		\&Disketo_Instructions::print_size_human_readable, [], [], 
+		"Prints the file size automatically in the B, kB, MB or GB based on its actual value.");
+
+# -- print files specific operations --------------------------------
 	
-	my $print_files_with_its_group = sop1("print-files-with-its-group", "its-group", \&Disketo_Instructions::pass, [], [], 
-		"Prints the files with all the resources it same group.",
-		"what-groupper?", [$print_with_same_name, $print_with_custom_group, 
-							$print_with_same_name_and_size]);
+	my $print_files_with_size = sop1("print-files-with-size", "size", 
+		\&Disketo_Instructions::print_files_with_size, [$Disketo_Instructions::M_FILE_STATS], [],
+		"Prints the files and their size.",
+		"how?", [ $print_size_in_bytes, $print_size_human_readable ]);
+	
+	my $print_files_with_same_name = sop0("print-files-with-same-name", "name",
+		\&Disketo_Instructions::print_files_of_the_same_name, [$Disketo_Instructions::M_FILES_WITH_SAME_NAME], [], 
+		"Prints the files with the same name as the current file.");
+		
+	my $print_files_with_same_name_and_size = sop0("print-files-with-same-name-and-size", "name-and-size",
+		\&Disketo_Instructions::print_files_of_the_same_name_and_size, [$Disketo_Instructions::M_FILES_WITH_SAME_NAME_AND_SIZE], [], 
+		"Prints the resources with the same name and size as the current resource.");
+
+	my $print_files_with_its_group = sop1("print-files-with-its-group", "files-of-the-same", \&Disketo_Instructions::pass, [], [], 
+		"Prints the files with all the files of the specified same property.",
+		"what-groupper?", [$print_files_with_same_name, $print_with_custom_group, 
+							$print_files_with_same_name_and_size]);
+	
+	my $print_files_with = sop1("print-files-with", "with", \&Disketo_Instructions::print_with, [], [],
+		"Prints for each file its path and specified extra information.",
+		"with-what?", [ $print_files_with_its_group, $print_with_meta,
+						$print_files_with_size ]);
+	
+	my $print_files = sop1("print-files", "files", \&Disketo_Instructions::print_files, [$M_RESOURCES], [],
+		"Prints files.",
+		"how?", [ $print_simply, $print_only_name, $print_custom, $print_files_with ]);
 			
-	my $print_dirs_with_its_group = sop1("print-dirs-with-its-group", "its-group", \&Disketo_Instructions::pass, [], [], 
-		"Prints the dirs with all the resources it same group.",
-		"what-groupper?", [$print_with_same_name, $print_with_custom_group, 
-							$print_with_same_name_and_children_size, $print_with_same_name_and_children_count]);
+# -- print dirs operations --------------------------------
+
+	my $print_dir_with_children_count = sop0("print-dir-with-children-count", "count", 
+		\&Disketo_Instructions::print_dirs_with_children_count, [], [], 
+		"Prints each directory and number of its children.");
 	
+	my $print_dir_with_subtree_count = sop0("print-dir-with-subtree-count", "resources-count", 
+		\&Disketo_Instructions::print_dirs_with_subtree_count, [], [], 
+		"Prints each directory and number of resources in its subtree.");
+	
+	my $print_dir_with_children_paths = sop0("print-dir-with-children-paths", "paths", 
+		\&Disketo_Instructions::print_dirs_with_children_paths, [], [], 
+		"Prints each directory paths of its children resources.");
+	
+	my $print_dir_with_children_names = sop0("print-dir-with-children-names", "names", 
+		\&Disketo_Instructions::print_dirs_with_children_names, [], [], 
+		"Prints each directory and names of its children resources.");
+
+	my $print_dir_with_subtree_size = sop1("print-dir-with-subtree-size", "size", 
+		\&Disketo_Instructions::print_dirs_with_subtree_size, [], [], 
+		"Prints each directory and total size of resources in its subtree.",
+		"how?", [ $print_size_in_bytes, $print_size_human_readable ]);
+		
+	my $print_dirs_with_same_name = sop0("print-dirs-with-same-name", "name",
+		\&Disketo_Instructions::print_dirs_of_the_same_name, [$Disketo_Instructions::M_DIRS_WITH_SAME_NAME], [], 
+		"Prints the dirs with the same name as the current dir.");
+
+	my $print_dirs_with_same_name_and_children_count = sop0("print-with-same-name-and-children-count", "name-and-children-count",
+		\&Disketo_Instructions::print_of_the_same_name_and_children_count, [$Disketo_Instructions::M_DIRS_WITH_SAME_NAME_AND_CHILDREN_COUNT], [], 
+		"Prints the dirs with the same name and children count as the current dir.");
+		
+	my $print_dirs_with_same_name_and_subtree_size = sop0("print-with-same-name-and-subtree-size", "name-and-subtree-size",
+		\&Disketo_Instructions::print_of_the_same_name_and_subtree_size, [$Disketo_Instructions::M_DIRS_WITH_SAME_NAME_AND_SUBTREE_SIZE], [], 
+		"Prints the dirs with the same name and subtree size as the current dir.");
+	
+	my $print_dirs_with_same_name_and_subtree_count = sop0("print-with-same-name-and-subtree-resources-count", "name-and-subtree-resources-count",
+		\&Disketo_Instructions::print_of_the_same_name_and_subtree_size, [$Disketo_Instructions::M_DIRS_WITH_SAME_NAME_AND_SUBTREE_COUNT], [], 
+		"Prints the dirs with the same name and subtree resources count as the current dir.");
+	
+
 	my $print_with_children_size = sop1("print-with-children-size", "children-size", 
 		\&Disketo_Instructions::print_with_children_size, [$Disketo_Instructions::M_DIRS_SIZES], [], 
 		"Prints each directory and size of its children.",
 		"how?", [ $print_size_in_bytes, $print_size_human_readable ]);
 	
-	my $print_with_size = sop1("print-with-size", "size", 
-		\&Disketo_Instructions::print_with_size, [$Disketo_Instructions::M_FILE_STATS], [],
-		"Prints the files and their size.",
-		"how?", [ $print_size_in_bytes, $print_size_human_readable ]);
+
+	my $print_dirs_with_its_group = sop1("print-dirs-with-its-group", "dirs-of-the-same", \&Disketo_Instructions::pass, [], [], 
+		"Prints the dirs with all the resources it same group.",
+		"what-groupper?", [$print_dirs_with_same_name, $print_with_custom_group, 
+							$print_dirs_with_same_name_and_subtree_count, $print_dirs_with_same_name_and_subtree_size, 
+							$print_dirs_with_same_name_and_children_count ]);
 	
-	my $print_files_with = sop1("print-files-with", "with", \&Disketo_Instructions::print_with, [], [],
-		"Prints for each file its path and specified extra information.",
-		"with-what?", [ $print_files_with_its_group, $print_with_meta,
-						$print_with_size ]);
+	my $print_dirs_with_subtree = sop1("print-dir-with-subtree", "subtree", 
+		\&Disketo_Instructions::pass, [], [],
+		"Prints the directory and something of its subtree",
+		"subtree-what?", [ $print_dir_with_subtree_count, $print_dir_with_subtree_size ]);
+	
+	my $print_dirs_with_children = sop1("print-with-children", "children", 
+		\&Disketo_Instructions::pass, [$M_RESOURCES], [], 
+		"Prints each directory and something of its children",
+		"children-what?", [ $print_dir_with_children_paths, $print_dir_with_children_names, $print_dir_with_children_count ]);
 	
 	my $print_dirs_with = sop1("print-dirs-with", "with", \&Disketo_Instructions::print_with, [], [],
 		"Prints for each dir its path and specified extra information.",
 		"with-what?", [ $print_dirs_with_its_group, $print_with_meta,
-						$print_with_children_names, $print_with_children_size, $print_with_children_count ]);
+						$print_dirs_with_children, $print_dirs_with_subtree ]);
 	
-	
-	my $print_files = sop1("print-files", "files", \&Disketo_Instructions::print_files, [$M_RESOURCES], [],
-		"Prints files.",
-		"how?", [ $print_simply, $print_only_name, $print_custom, $print_files_with ]);
 				
 	my $print_dirs = sop1("print-dirs", "dirs", \&Disketo_Instructions::print_dirs, [$M_RESOURCES], [],
 		"Prints dirs.",
 		"how?", [ $print_simply, $print_only_name, $print_custom, $print_dirs_with ]);
+
+	
+# -- print composite operations ---------------------------------
+	
 	
 	my $print = sop1("print", "print", \&Disketo_Instructions::pass, [], [], 
 		"Prints given.",

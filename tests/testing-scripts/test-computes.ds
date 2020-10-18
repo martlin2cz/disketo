@@ -1,5 +1,9 @@
+# prepare
+load files-stats
+
 # test compute predefined
-compute directories-sizes as-meta "directories_sizes"
+compute directories-subtree-sizes
+compute directories-subtree-counts
 
 # test compute custom
 compute custom-meta by-appling-function sub {

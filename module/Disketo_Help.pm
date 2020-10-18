@@ -18,6 +18,7 @@ use Set::Scalar;
 ########################################################################
 # INSTRUCTION TO LINE
 
+# Converts the given program (back) to the string in lines.
 sub program_to_linear_string($) {
 	my ($program) = @_;
 	
@@ -103,26 +104,22 @@ sub tree_subtree_usage($$) {
 			$params_spec .= " $param_value\n";
 		}
 	}
+	my $requires = $command->{"requires"};
+	my $produces = $command->{"produces"};
+	my $requires_spec = (scalar @$requires > 0 ? join(",", @$requires) : "none");
+	my $produces_spec = (scalar @$produces > 0 ? join(",", @$produces) : "none");
+	my $req_prod_spec = "requires: $requires_spec; produces: $produces_spec";
 	
 	if ($params_spec eq "") {
-		return "$padded$command_name  $params_list\n$padded  $doc\n";
+		return "$padded$command_name  $params_list\n$padded  $doc\n$padded  $req_prod_spec\n";
 	} else {
-		return "$padded$command_name  $params_list\n$padded  $doc\n$padded  WHERE:\n$params_spec";
+		return "$padded$command_name  $params_list\n$padded  $doc\n$padded  $req_prod_spec\n$padded  WHERE:\n$params_spec";
 	}
 }
 
 
 ########################################################################
-# LINEAR USAGE
-
-# Prints the "linear usage" (all the valid statements)
-sub XXX_print_linear_usage() {
-	my $commands = Disketo_Instruction_Set::commands();
-
-	my $usage = linear_usage($commands);
-	
-	print(join("\n", @$usage) . "\n");
-}
+# LINEAR USAGE (ALL VALID STATEMENTS)
 
 # Computes all the possible statements constructable.
 sub compute_all_statements() {
@@ -144,99 +141,64 @@ sub compute_all_statements_for($) {
 		for my $command (values %commands) {
 			# for each of the valid "child command"
 			# compute its possible arguments usage
-			my $sub_usage = 
-			#[ "<THE " . $command->{"ID"} . " GOES HERE>" ];
-				valid_statements_for_command($command);
-#print(Dumper($command->{"name"}, $sub_usage, \@result));
+			my $sub_usage = valid_statements_for_command($command);
 			push (@result, @$sub_usage);
 		} 
-#print(Dumper(join(",", keys %commands), scalar @result)); 
+
 		return \@result;
 	} else {
 		# else it's just an atomic value
-		my $value_name = $valid_arg_value;
-		my $value = $valid_arg_value;
-		my $node = Disketo_Analyser::create_value_node($value_name, $value);
-		return [ $node ];
-		#return [ "<THE " . $value . " GOES HERE>" ];
+		my $value_spec = $valid_arg_value;
+		return valid_statements_for_value($value_spec);
 	}
 }
 
-# Computes the linear usage for the given command node
+# Computes the linear usage (the valid instructions nodes) 
+# for the given value spec (i.e. "(the function)").
+# In fact returns just list with exactly one node.
+sub valid_statements_for_value($) {
+	my ($value_spec) = @_;
+	
+	my $value_name = $value_spec;
+	my $value = $value_spec;
+	my $node = Disketo_Analyser::create_value_node($value_name, $value);
+
+	return [ $node ];
+}
+
+# Computes the linear usage (the valid instructions nodes) 
+# for the given command node.
+# In fact returns just list of instructions nodes with all the possible
+# combinations of its params.
 sub valid_statements_for_command($) {
 	my ($command) = @_;
 	
 	my $command_name = $command->{"name"};
-	
 	my @params_names = @{ $command->{"params"} };
+
 	if (scalar (@params_names) == 0) {
 		# if has no params at all,
-		# the usage of that command is just its name
-		#return [ "<THE $command_name IS EMPTY>" ];
+		# the usage of that command is just the command with no children
 		my $op = Disketo_Analyser::create_operation_node($command, []);
 		return [ $op ];
-	}
-	
-	if (scalar (@params_names) == 1) {
-		# if has one param, return statements of that, simply!
-		my $param_name = @params_names[0];
-		my $possibles = possible_statements_of_command_param($command, $param_name);
-		my @cmbs = map { [ $_ ] } @$possibles;
-		my $ops = _combinations_to_operations($command, \@cmbs);
-#print(Dumper(scalar @$possibles, scalar @$ops));		
-		return $ops;
-	}
-	
-	# compute the usages of all its params and combine them each by each
-	my @params_usages = map { possible_statements_of_command_param($command, $_) } @params_names;
-	my $combinations = combine(\@params_usages);
-	#my @with_command_name = map { Disketo_Analyser::create_operation_node($command, [ $_ ] ) } @$combinations;
-	my $with_command_name =_combinations_to_operations($command, $combinations);
+				
+	} else {
+		# compute the usages of all its params and combine them each by each
+		my @params_usages = map { possible_statements_of_command_param($command, $_) } @params_names;
+		my $combinations = combine(\@params_usages);
+		my @with_command = map { Disketo_Analyser::create_operation_node($command, $_) } @$combinations;
 
-#print(Dumper("WITH $command_name", \@params_names, \@params_usages, $combinations, \@with_command_name));
-#if ($command_name eq "as-meta") {
-#	die("XXX debug");
-#}
-	return $with_command_name;
+		return \@with_command;
+	}
 }
 
-sub _combinations_to_operations($$) {
-	my ($command, $combinations) = @_;
-	
-	my @result = ();
-	for my $combination (@$combinations) {
-		#if (ref($combination) eq "ARRAY") {
-		#	$combination = ( $combination );
-		#}
-		#if (ref($combination) eq "HASH") {
-		#	$combination = [ $combination ];
-		#}
-
-#print("CCC " . Dumper($combination));
-
-#		if (scalar @$combination > 0) {
-#			my $combination = $combination->[0];
-#		}
-
-#print(Dumper($command->{"ID"}, $combination));
-		my $op = Disketo_Analyser::create_operation_node($command, $combination );
-		push @result, $op;
-	}
-	
-	return \@result;
-}
-
-# Computes the usages array for the given param of the given command
+# Computes the usages array for the given param of the given command.
 sub possible_statements_of_command_param($$) {
 	my ($command, $param_name) = @_;
 	
 	my $child = $command->{"valid-args"}->{$param_name};
 	my $child_usages = compute_all_statements_for($child);
 	
-#print(Dumper("The usages of ", $command->{"ID"}, 
-#				"param named:", $param_name, 
-#				"having possiblities:", $child,
-#				"gets: ", $child_usages));
 	return $child_usages;
 }
 
@@ -249,15 +211,21 @@ sub combine($) {
 	my @sets = @$sets;
 	my $first_set = shift @sets;
 	if ((scalar @sets) == 0) {
-		return $first_set;
+		# If we have nothing to combine with, 
+		# make one combination for each item and return
+		
+		my @wrapped = map { [$_] } @$first_set;
+		return \@wrapped;
 	}
 	
 	my @result = ();
 	for my $item (@$first_set) {
-
-		my $sub_result = combine(\@sets);
-		my @sub_result_with_item = map { [$item, $_] } @$sub_result;
+		# Otherwise iterate over each item
+		# and for each item compute its sub-combinations and
+		# join the item with the sub-combinations and collect
 		
+		my $sub_result = combine(\@sets);
+		my @sub_result_with_item = map { [ ($item, @$_) ] } @$sub_result;
 		push (@result, @sub_result_with_item);
 	}
 	return \@result;

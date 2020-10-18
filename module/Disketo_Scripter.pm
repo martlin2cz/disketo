@@ -26,7 +26,6 @@ sub run_script($$) {
 	
 	my $script = Disketo_Parser::parse($script_file);
 	my $program = Disketo_Analyser::analyse($script);
-	
 	Disketo_Preparer::prepare_to_execute($program, $program_arguments);
 	Disketo_Interpreter::run_program($program);
 	
@@ -92,10 +91,7 @@ sub print_commands_tree() {
 
 # Prints the list of all the valid statements
 sub print_all_statements() {
-	#Disketo_Help::print_linear_usage();
 	my $statements = Disketo_Help::compute_all_statements();
-	#print(Dumper($statements));
-	#Disketo_Interpreter::print_program($statements);
 	my $str = Disketo_Help::program_to_linear_string($statements);
 	print($str);
 }

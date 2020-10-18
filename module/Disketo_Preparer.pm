@@ -282,12 +282,14 @@ sub verify_dependencies($) {
 		for my $required (@$requireds) {
 			my $is = is_produced_by($program, $required, $index);
 			if (not $is) {
+				print(Dumper($instruction));
 				my $producing_statements = compute_producing_str($required);
-				die("The meta " 
-				. "'" . $required . "' is required "
-				. "by the statement " . ($index + 1) . ", "
-				. "but none of its foregoing statements produces it. "
-				. "There are following statements, which should:\n$producing_statements\nTry to use one of them.");
+				die("The statement " . ($index + 1) . ", " 
+				. "requires metas '" . (join(", ", @$requireds)) . "', "
+				. "but '" . $required . "' is not produced "
+				. "by any of its foregoing statements. "
+				. "There are following statements, which should:\n$producing_statements\n"
+				. "Try to use one of them.");
 			}
 		}
 	}

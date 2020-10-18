@@ -238,6 +238,7 @@ sub walk_tree_node($$$$) {
 	my ($node, $stack, $param_name, $operation_node_fn, $value_node_fn) = @_;
 
 #print(Dumper($node));
+#print((" " x (scalar @$stack)) . " " . ref($node) . ", " . ((ref($node) eq "HASH") ? $node->{"name"} : "XXX") . "\n");
 
 	my $name = $node->{"name"};
 	if (exists($node->{"operation"})) {
