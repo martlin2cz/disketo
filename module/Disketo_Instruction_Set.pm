@@ -251,7 +251,7 @@ sub commands() {
 		"Groups the directories by their name and the total size of ancesting resources.");
 	
 	my $group_dirs_by_name_and_subtree_count = sop0("group-dirs-by-name-and-subtree-count", "by-name-and-subtree-count",
-		\&Disketo_Instructions::group_dirs_by_name_and_subtree_count, [], [$Disketo_Instructions::M_DIRS_WITH_SAME_NAME_AND_SUBTREE_COUNT], 
+		\&Disketo_Instructions::group_dirs_by_name_and_subtree_count, [$Disketo_Instructions::M_DIR_SUBTREE_COUNT], [$Disketo_Instructions::M_DIRS_WITH_SAME_NAME_AND_SUBTREE_COUNT], 
 		"Groups the directories by their name and the total number of ancesting resources.");
 
 	my $group_dirs_by_name_and_children_count = sop0("group-dirs-by-name-and-children-count", "by-name-and-children-count",

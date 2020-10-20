@@ -150,8 +150,13 @@ sub filter_files($$) {
 	Disketo_Utils::iterate_files($context, $Disketo_Utils::UNORDERED, sub($$$$) {
 		my ($dir, $i, $file, $j) = @_;
 		my $matches = $predicate->($file, $context);
+
 		if ($matches) {
 			push @{ $new_resources{$dir} }, $file;
+		} else {
+			if (not defined $new_resources{$dir}) {
+				$new_resources{$dir} = [];
+			}
 		}
 	});
 	
