@@ -1,0 +1,3 @@
+# Just prints all the dirs and its children resources names
+
+print dirs with children names

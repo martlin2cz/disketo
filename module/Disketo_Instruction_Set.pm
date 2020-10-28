@@ -296,7 +296,8 @@ sub commands() {
 		\&Disketo_Instructions::matching_custom_matcher, [], [], 
 		"Filters by specified matcher function",
 		"by-what?", "(matcher function)");
-	
+		
+	#TODO dir-subtree of named vs. all dirs named
 	my $named = sop1("named", "named", \&Disketo_Instructions::named, [], [], 
 		"Resources having the specified name.",
 		"what-name?", "(the resource name)");
@@ -304,6 +305,10 @@ sub commands() {
 	my $having_extension = sop1("having-extension", "having-extension", \&Disketo_Instructions::having_extension, [], [], 
 		"Files having the specified extension.",
 		"which-extension?", "(extension)");
+		
+	#TODO file bigger/smaller than
+	#TODO dir subtree bigger/smaller than
+	#TODO files older/younger than
 		
 	my $more_than = sop1("more-than", "more-than", \&Disketo_Instructions::more_than, [], [], 
 		"Having more than specified number of resources matching the condition.",
@@ -364,9 +369,20 @@ sub commands() {
 		"pattern?", "(the pattern)",
 		"how?", [ $case_sensitive, $case_insensitive ]);
 		
+	my $files_of_the_same = sop1("files-of-the-same", "of-the-same", \&Disketo_Instructions::of_the_same, [], [], 
+		"Filters files having given group.",
+		"which-group?", [ $files_with_same_name, $files_with_same_name_and_size, $with_same_of_custom_group ]);
+	
+	my $files_having = sop2("files-having", "having", \&Disketo_Instructions::having, [], [], 
+		"Filters files having the specified amount of element in the given group.",
+		"how-much?", [ $less_than, $more_than, $none, $at_least_one, $at_least_one_more ],
+		"of-what?", [ $files_of_the_same ]);
+	
 	my $dirs_having_children = sop1("dirs-having-children", "children", \&Disketo_Instructions::dirs_having_children, [], [], 
 		"Filters dirs matching specified condition of its children.",
-		"matching-what?", [ $matching_custom_matcher, $having_extension, $matching_pattern ]);
+		"matching-what?", [ $matching_custom_matcher, $named, $matching_pattern, 
+							$files_having, 
+							$having_extension ]);
 	
 	my $dir_of_the_same = sop1("dirs-of-the-same", "of-the-same", \&Disketo_Instructions::of_the_same, [], [], 
 		"Filters resources based on the group of the same resources.",
@@ -377,15 +393,6 @@ sub commands() {
 		"how-much?", [ $less_than, $more_than, $none, $at_least_one_more ],
 		"of-what?", [ $dir_of_the_same, $dirs_having_children ]);
 			
-	my $files_of_the_same = sop1("files-of-the-same", "of-the-same", \&Disketo_Instructions::of_the_same, [], [], 
-		"Filters files having given group.",
-		"which-group?", [ $files_with_same_name, $files_with_same_name_and_size, $with_same_of_custom_group ]);
-	
-	my $files_having = sop2("files-having", "having", \&Disketo_Instructions::having, [], [], 
-		"Filters files having the specified amount of element in the given group.",
-		"how-much?", [ $less_than, $more_than, $none, $at_least_one, $at_least_one_more ],
-		"of-what?", [ $files_of_the_same ]);
-	
 	my $filter_files = sop1("filter-files", "files", \&Disketo_Instructions::filter_files, [$M_RESOURCES], [], 
 		"Filters files by given criteria",
 		"matching-what?", [ $matching_custom_matcher, $named, $matching_pattern, 
@@ -476,14 +483,23 @@ sub commands() {
 		\&Disketo_Instructions::print_dirs_with_subtree_count, [], [], 
 		"Prints each directory and number of resources in its subtree.");
 	
+	my $print_dir_with_children_custom = sop1("print-dir-with-children-custom", "custom", 
+		\&Disketo_Instructions::print_dir_child_custom, [], [], 
+		"Prints each directory and by custom printer also its children resources.",
+		"how?", "(the children files printer function)");
+	
 	my $print_dir_with_children_paths = sop0("print-dir-with-children-paths", "paths", 
-		\&Disketo_Instructions::print_dirs_with_children_paths, [], [], 
-		"Prints each directory paths of its children resources.");
+		\&Disketo_Instructions::print_dir_child_path, [], [], 
+		"Prints each directory and paths of its children resources.");
 	
 	my $print_dir_with_children_names = sop0("print-dir-with-children-names", "names", 
-		\&Disketo_Instructions::print_dirs_with_children_names, [], [], 
+		\&Disketo_Instructions::print_dir_child_name, [], [], 
 		"Prints each directory and names of its children resources.");
 
+	my $print_with_children_count = sop0("print-with-children-count", "count", 
+		\&Disketo_Instructions::print_dirs_with_children_count, [], [], 
+		"Prints each directory and number of its children.");
+	
 	my $print_dir_with_subtree_size = sop1("print-dir-with-subtree-size", "size", 
 		\&Disketo_Instructions::print_dirs_with_subtree_size, [], [], 
 		"Prints each directory and total size of resources in its subtree.",
@@ -504,13 +520,7 @@ sub commands() {
 	my $print_dirs_with_same_name_and_subtree_count = sop0("print-with-same-name-and-subtree-resources-count", "name-and-subtree-resources-count",
 		\&Disketo_Instructions::print_of_the_same_name_and_subtree_size, [$Disketo_Instructions::M_DIRS_WITH_SAME_NAME_AND_SUBTREE_COUNT], [], 
 		"Prints the dirs with the same name and subtree resources count as the current dir.");
-	
 
-	my $print_with_children_size = sop1("print-with-children-size", "children-size", 
-		\&Disketo_Instructions::print_with_children_size, [$Disketo_Instructions::M_DIRS_SIZES], [], 
-		"Prints each directory and size of its children.",
-		"how?", [ $print_size_in_bytes, $print_size_human_readable ]);
-	
 
 	my $print_dirs_with_its_group = sop1("print-dirs-with-its-group", "dirs-of-the-same", \&Disketo_Instructions::pass, [], [], 
 		"Prints the dirs with all the resources it same group.",
@@ -524,9 +534,10 @@ sub commands() {
 		"subtree-what?", [ $print_dir_with_subtree_count, $print_dir_with_subtree_size ]);
 	
 	my $print_dirs_with_children = sop1("print-with-children", "children", 
-		\&Disketo_Instructions::pass, [$M_RESOURCES], [], 
+		\&Disketo_Instructions::print_dir_with_children, [$M_RESOURCES], [], 
 		"Prints each directory and something of its children",
-		"children-what?", [ $print_dir_with_children_paths, $print_dir_with_children_names, $print_dir_with_children_count ]);
+		"children-what?", [ $print_dir_with_children_paths, $print_dir_with_children_names, $print_dir_with_children_custom,
+							$print_dir_with_children_count ]);
 	
 	my $print_dirs_with = sop1("print-dirs-with", "with", \&Disketo_Instructions::print_with, [], [],
 		"Prints for each dir its path and specified extra information.",

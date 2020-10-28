@@ -1,0 +1,8 @@
+# Just simply prints all the files having specified name
+# Usage [FILE NAME] [WHERE...]
+
+# just simply filter them
+filter files named $$
+
+# and print
+print files simply

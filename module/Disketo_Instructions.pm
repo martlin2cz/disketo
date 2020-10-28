@@ -446,7 +446,7 @@ sub files_with_same_name($) {
 
 sub files_with_same_name_and_size($) {
 	my ($node) = @_;
-	return $M_FILES_WITH_SAME_NAME;
+	return $M_FILES_WITH_SAME_NAME_AND_SIZE;
 }
 
 sub with_same_of_custom_group($) {
@@ -494,7 +494,7 @@ sub dirs_having_children($) {
 sub of_the_same($) {
 	my ($node) = @_;
 
-	my $group_name = delegate($node, 0);	
+	my $group_name = delegate($node, 0);		
 	return create_resource_to_meta_fn($group_name);
 }
 
@@ -568,12 +568,6 @@ sub print_custom($) {
 
 	my $printer = value($node, 0);
 	return $printer;
-}
-
-sub print_with_counts($) {
-	my ($node) = @_;
-
-	return \&dir_to_name_and_children_count;
 }
 
 sub print_size_in_bytes($) {
@@ -652,6 +646,7 @@ sub print_dirs_with_children_count($) {
 	return \&dir_to_children_count;
 }
 
+
 sub print_dirs_with_subtree_count($) {
 	my ($node) = @_;
 	return create_resource_to_meta_fn($M_DIR_SUBTREE_COUNT);
@@ -671,14 +666,40 @@ sub print_files_with_size($) {
 	return create_file_to_size_fn($size_printer);
 }
 
-sub print_dirs_with_children_names($) {
+sub print_dir_child_custom($) {
 	my ($node) = @_;
-	return \&dir_to_children_names;
+	
+	my $printer = value($node, 0);
+	
+	return $printer;
 }
 
-sub print_dirs_with_children_paths($) {
+sub print_dir_child_name($) {
 	my ($node) = @_;
-	return \&dir_to_children_paths;
+	return \&resource_to_name;
+}
+
+sub print_dir_child_path($) {
+	my ($node) = @_;
+	return \&resource_to_resource;
+}
+
+sub print_dir_with_children($) {
+	my ($node) = @_;
+
+	if (is($node, 0, "count")) {
+		return delegate($node, 0);
+	}
+	
+	my $what_printer = delegate($node, 0);
+	
+	return sub ($$) {
+		my ($dir, $context) = @_;
+		
+		my $children = $context->{$M_RESOURCES}->{$dir};
+		my @mapped = map { $what_printer->($_) } @$children;
+		return join($SEPARATOR, @mapped);
+	};
 }
 
 sub print_with($) {

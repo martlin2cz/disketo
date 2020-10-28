@@ -1,0 +1,7 @@
+# Prints dirs containing some files, which are duplicate
+# Reduced based on the extension
+# Usages [EXTENSION] [MIN_COUNT_OF_DUPLICATE_FILES] [ROOTS]
+
+filter files having-extension $$
+filter dirs having more-than $$ children having at-least-one-more of-the-same name
+print dirs with children count

@@ -52,7 +52,7 @@ sub print_program($$) {
 	
 	my $script = Disketo_Parser::parse($script_file);
 	my $program = Disketo_Analyser::analyse($script);
-print(Dumper($program));
+#print(Dumper($program));
 
 	if ((scalar @$program_arguments) == 0) {
 		Disketo_Preparer::prepare_to_print($program);

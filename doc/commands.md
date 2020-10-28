@@ -5,7 +5,7 @@
  Each statement has to start with any of this commands:
 
 
-[execute](#execute) [filter](#filter) [print](#print) [compute](#compute) [group](#group) [load](#load)
+[compute](#compute) [print](#print) [load](#load) [execute](#execute) [filter](#filter) [group](#group)
 
  After that, continue with its declared parameter's values or (sub)commands.
 
@@ -73,7 +73,7 @@ Computes a meta field.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what? |  [directories-subtree-sizes](#directories-subtree-sizes)  [directories-subtree-counts](#directories-subtree-counts)  [custom-meta](#compute-custom-meta)  |
+| what? |  [custom-meta](#compute-custom-meta)  [directories-subtree-counts](#directories-subtree-counts)  [directories-subtree-sizes](#directories-subtree-sizes)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -159,8 +159,8 @@ Filters dirs having the specified amount of element in the given group.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| how-much? |  [none](#none)  [at-least-one-more](#at-least-one-more)  [less-than](#less-than)  [more-than](#more-than)  |
-| of-what? |  [children](#dirs-having-children)  [of-the-same](#dirs-of-the-same)  |
+| how-much? |  [at-least-one-more](#at-least-one-more)  [none](#none)  [more-than](#more-than)  [less-than](#less-than)  |
+| of-what? |  [of-the-same](#dirs-of-the-same)  [children](#dirs-having-children)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -174,7 +174,7 @@ Filters dirs matching specified condition of its children.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| matching-what? |  [matching-custom-matcher](#matching-custom-matcher)  [having-extension](#having-extension)  [matching-pattern](#matching-pattern)  |
+| matching-what? |  [having-extension](#having-extension)  [named](#named)  [matching-custom-matcher](#matching-custom-matcher)  [matching-pattern](#matching-pattern)  [having](#files-having)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -188,7 +188,7 @@ Filters resources based on the group of the same resources.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| which-group? |  [custom-group](#with-the-same-of-custom)  [name-and-size](#with-the-same-name-and-size)  [name](#dirs-with-the-same-name)  |
+| which-group? |  [name-and-subtree-size](#dirs-with-the-same-name-and-subtree-size)  [name](#dirs-with-the-same-name)  [custom-group](#with-the-same-of-custom)  [name-and-subtree-count](#dirs-with-the-same-name-and-subtree-count)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -205,6 +205,34 @@ Matches the dirs which have the same name.
 | _no params_ | _no_value(s)_ |
 
 **Requires:** dirs-with-same-name 
+**Produces:** _nothing_ 
+
+
+# dirs-with-the-same-name-and-subtree-count
+**Usage:** `name-and-subtree-count `
+
+Matches the dirs which have the same name and subtree resources count.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** dirs-with-same-name-and-subtree-count 
+**Produces:** _nothing_ 
+
+
+# dirs-with-the-same-name-and-subtree-size
+**Usage:** `name-and-subtree-size `
+
+Matches the dirs which have the same name and total subtree resources size.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** dirs-with-same-name-and-subtree-size 
 **Produces:** _nothing_ 
 
 
@@ -230,7 +258,7 @@ Filters files having the specified amount of element in the given group.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| how-much? |  [at-least-one](#at-least-one)  [at-least-one-more](#at-least-one-more)  [none](#none)  [less-than](#less-than)  [more-than](#more-than)  |
+| how-much? |  [less-than](#less-than)  [none](#none)  [at-least-one-more](#at-least-one-more)  [at-least-one](#at-least-one)  [more-than](#more-than)  |
 | of-what? |  [of-the-same](#files-of-the-same)  |
 
 **Requires:** _nothing_ 
@@ -245,7 +273,7 @@ Filters files having given group.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| which-group? |  [custom-group](#with-the-same-of-custom)  [name-and-size](#with-the-same-name-and-size)  [name](#files-with-the-same-name)  |
+| which-group? |  [name-and-size](#files-with-the-same-name-and-size)  [custom-group](#with-the-same-of-custom)  [name](#files-with-the-same-name)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -279,6 +307,20 @@ Matches the files which have the same name.
 **Produces:** _nothing_ 
 
 
+# files-with-the-same-name-and-size
+**Usage:** `name-and-size `
+
+Matches the dirs which have the same name and size.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** files-with-same-name-and-size 
+**Produces:** _nothing_ 
+
+
 # filter
 **Usage:** `filter what?`
 
@@ -287,7 +329,7 @@ Filters the resources by given criteria.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what? |  [dirs](#filter-dirs)  [files](#filter-files)  |
+| what? |  [files](#filter-files)  [dirs](#filter-dirs)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -301,7 +343,7 @@ Filters dirs by given criteria.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| matching-what? |  [having](#dirs-having)  [named](#named)  [matching-pattern](#matching-pattern)  [matching-custom-matcher](#matching-custom-matcher)  |
+| matching-what? |  [matching-custom-matcher](#matching-custom-matcher)  [named](#named)  [matching-pattern](#matching-pattern)  [having](#dirs-having)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
@@ -315,7 +357,7 @@ Filters files by given criteria
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| matching-what? |  [matching-custom-matcher](#matching-custom-matcher)  [having-extension](#having-extension)  [matching-pattern](#matching-pattern)  [named](#named)  [having](#files-having)  |
+| matching-what? |  [matching-pattern](#matching-pattern)  [having](#files-having)  [having-extension](#having-extension)  [matching-custom-matcher](#matching-custom-matcher)  [named](#named)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
@@ -329,7 +371,7 @@ Computes a group with the resources groupped by some groupper
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what? |  [files](#group-files)  [dirs](#group-dirs)  |
+| what? |  [dirs](#group-dirs)  [files](#group-files)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -338,7 +380,7 @@ Computes a group with the resources groupped by some groupper
 # group-as-meta
 **Usage:** `as-meta what-meta?`
 
-Computes it as a group with specified name.
+Groups it as a group with specified name.
 
 
 | Parameter | Possible value(s) |
@@ -350,23 +392,38 @@ Computes it as a group with specified name.
 
 
 # group-by-custom
-**Usage:** `by-custom by-what-groupper?`
+**Usage:** `by-custom-groupper what-function? as-meta?`
 
 Groups the resources by the specified groupper function.
 
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| by-what-groupper? | (the groupper function) |
+| what-function? | (the groupper function) |
+| as-meta? |  [as-meta](#group-as-meta)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
 
 
-# group-by-name
+# group-dirs
+**Usage:** `dirs by-what?`
+
+Groups the dirs by the given groupper.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| by-what? |  [by-name-and-subtree-count](#group-dirs-by-name-and-subtree-count)  [by-name](#group-dirs-by-name)  [by-name-and-children-count](#group-dirs-by-name-and-children-count)  [by-custom-groupper](#group-by-custom)  [by-name-and-subtree-size](#group-dirs-by-name-and-subtree-size)  |
+
+**Requires:** resources 
+**Produces:** _nothing_ 
+
+
+# group-dirs-by-name
 **Usage:** `by-name `
 
-Groups the resources by their name.
+Groups the dirs by their name.
 
 
 | Parameter | Possible value(s) |
@@ -374,10 +431,10 @@ Groups the resources by their name.
 | _no params_ | _no_value(s)_ |
 
 **Requires:** _nothing_ 
-**Produces:**  
+**Produces:** dirs-with-same-name 
 
 
-# group-by-name-and-children-count
+# group-dirs-by-name-and-children-count
 **Usage:** `by-name-and-children-count `
 
 Groups the directories by their name and the number of child resources.
@@ -391,7 +448,63 @@ Groups the directories by their name and the number of child resources.
 **Produces:** dirs-with-same-name-and-children-count 
 
 
-# group-by-name-and-size
+# group-dirs-by-name-and-subtree-count
+**Usage:** `by-name-and-subtree-count `
+
+Groups the directories by their name and the total number of ancesting resources.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** dir-subtrees-count 
+**Produces:** dirs-with-same-name-and-subtree-count 
+
+
+# group-dirs-by-name-and-subtree-size
+**Usage:** `by-name-and-subtree-size `
+
+Groups the directories by their name and the total size of ancesting resources.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** dir-subtrees-size 
+**Produces:** dirs-with-same-name-and-subtree-size 
+
+
+# group-files
+**Usage:** `files by-what?`
+
+Groups the files by the given groupper.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| by-what? |  [by-custom-groupper](#group-by-custom)  [by-name-and-size](#group-files-by-name-and-size)  [by-name](#group-files-by-name)  |
+
+**Requires:** resources 
+**Produces:** _nothing_ 
+
+
+# group-files-by-name
+**Usage:** `by-name `
+
+Groups the files by their names.
+
+
+| Parameter | Possible value(s) |
+| --------- | ----------------- |
+| _no params_ | _no_value(s)_ |
+
+**Requires:** _nothing_ 
+**Produces:** files-with-same-name 
+
+
+# group-files-by-name-and-size
 **Usage:** `by-name-and-size `
 
 Groups the files by their name and size.
@@ -402,65 +515,7 @@ Groups the files by their name and size.
 | _no params_ | _no_value(s)_ |
 
 **Requires:** file-stats 
-**Produces:**  
-
-
-# group-by-name-and-subtree-count
-**Usage:** `by-name-and-subtree-count `
-
-Groups the directories by their name and the total number of ancesting resources.
-
-
-| Parameter | Possible value(s) |
-| --------- | ----------------- |
-| _no params_ | _no_value(s)_ |
-
-**Requires:** _nothing_ 
-**Produces:** dirs-with-same-name-and-subtree-count 
-
-
-# group-by-name-and-subtree-size
-**Usage:** `by-name-and-subtree-size `
-
-Groups the directories by their name and the total size of ancesting resources.
-
-
-| Parameter | Possible value(s) |
-| --------- | ----------------- |
-| _no params_ | _no_value(s)_ |
-
-**Requires:**  
-**Produces:** dirs-with-same-name-and-subtree-size 
-
-
-# group-dirs
-**Usage:** `dirs by-what? as-what-meta?`
-
-Groups the dirs by the given groupper.
-
-
-| Parameter | Possible value(s) |
-| --------- | ----------------- |
-| by-what? |  [by-name-and-children-count](#group-by-name-and-children-count)  [by-name](#group-by-name)  [by-name-and-subtree-size](#group-by-name-and-subtree-size)  [by-name-and-subtree-count](#group-by-name-and-subtree-count)  [by-custom](#group-by-custom)  |
-| as-what-meta? |  [as-meta](#group-as-meta)  |
-
-**Requires:** resources 
-**Produces:** _nothing_ 
-
-
-# group-files
-**Usage:** `files by-what? as-what-meta?`
-
-Groups the files by the given groupper.
-
-
-| Parameter | Possible value(s) |
-| --------- | ----------------- |
-| by-what? |  [by-name-and-size](#group-by-name-and-size)  [by-name](#group-by-name)  [by-custom](#group-by-custom)  |
-| as-what-meta? |  [as-meta](#group-as-meta)  |
-
-**Requires:** resources 
-**Produces:** _nothing_ 
+**Produces:** files-with-same-name-and-size 
 
 
 # having-extension
@@ -499,7 +554,7 @@ Loads specified data from the disk.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what? |  [resources](#load-resources)  [files-stats](#files-stats)  |
+| what? |  [files-stats](#files-stats)  [resources](#load-resources)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -542,7 +597,7 @@ Matches the given pattern specified way.
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
 | pattern? | (the pattern) |
-| how? |  [case-insensitive](#case-insensitive)  [case-sensitive](#case-sensitive)  |
+| how? |  [case-sensitive](#case-sensitive)  [case-insensitive](#case-insensitive)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -598,7 +653,7 @@ Prints given.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what? |  [dirs](#print-dirs)  [files](#print-files)  [debug-stats](#print-debug-stats)  [stats](#print-stats)  |
+| what? |  [dirs](#print-dirs)  [debug-stats](#print-debug-stats)  [files](#print-files)  [stats](#print-stats)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -724,7 +779,7 @@ Prints each directory and total size of resources in its subtree.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| how? |  [in-bytes](#print-size-in-bytes)  [human-readable](#print-size-human-readable)  |
+| how? |  [human-readable](#print-size-human-readable)  [in-bytes](#print-size-in-bytes)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -738,7 +793,7 @@ Prints dirs.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| how? |  [with](#print-dirs-with)  [only-name](#print-only-name)  [custom](#print-custom)  [simply](#print-simply)  |
+| how? |  [with](#print-dirs-with)  [simply](#print-simply)  [only-name](#print-only-name)  [custom](#print-custom)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
@@ -752,7 +807,7 @@ Prints for each dir its path and specified extra information.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| with-what? |  [meta](#print-with-meta)  [subtree](#print-dir-with-subtree)  [dirs-of-the-same](#print-dirs-with-its-group)  [children](#print-with-children)  |
+| with-what? |  [meta](#print-with-meta)  [dirs-of-the-same](#print-dirs-with-its-group)  [subtree](#print-dir-with-subtree)  [children](#print-with-children)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -766,7 +821,7 @@ Prints the dirs with all the resources it same group.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what-groupper? |  [name-and-children-count](#print-with-same-name-and-children-count)  [name-and-subtree-size](#print-with-same-name-and-subtree-size)  [name-and-subtree-resources-count](#print-with-same-name-and-subtree-resources-count)  [custom-group](#print-custom-group)  [name](#print-dirs-with-same-name)  |
+| what-groupper? |  [name-and-children-count](#print-with-same-name-and-children-count)  [custom-group](#print-custom-group)  [name](#print-dirs-with-same-name)  [name-and-subtree-size](#print-with-same-name-and-subtree-size)  [name-and-subtree-resources-count](#print-with-same-name-and-subtree-resources-count)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -794,7 +849,7 @@ Prints files.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| how? |  [with](#print-files-with)  [only-name](#print-only-name)  [custom](#print-custom)  [simply](#print-simply)  |
+| how? |  [only-name](#print-only-name)  [with](#print-files-with)  [simply](#print-simply)  [custom](#print-custom)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
@@ -808,7 +863,7 @@ Prints for each file its path and specified extra information.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| with-what? |  [size](#print-files-with-size)  [meta](#print-with-meta)  [files-of-the-same](#print-files-with-its-group)  |
+| with-what? |  [size](#print-files-with-size)  [files-of-the-same](#print-files-with-its-group)  [meta](#print-with-meta)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -822,7 +877,7 @@ Prints the files with all the files of the specified same property.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| what-groupper? |  [name-and-size](#print-files-with-same-name-and-size)  [custom-group](#print-custom-group)  [name](#print-files-with-same-name)  |
+| what-groupper? |  [custom-group](#print-custom-group)  [name](#print-files-with-same-name)  [name-and-size](#print-files-with-same-name-and-size)  |
 
 **Requires:** _nothing_ 
 **Produces:** _nothing_ 
@@ -852,7 +907,7 @@ Prints the resources with the same name and size as the current resource.
 | --------- | ----------------- |
 | _no params_ | _no_value(s)_ |
 
-**Requires:**  
+**Requires:** files-with-same-name-and-size 
 **Produces:** _nothing_ 
 
 
@@ -864,7 +919,7 @@ Prints the files and their size.
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| how? |  [in-bytes](#print-size-in-bytes)  [human-readable](#print-size-human-readable)  |
+| how? |  [human-readable](#print-size-human-readable)  [in-bytes](#print-size-in-bytes)  |
 
 **Requires:** file-stats 
 **Produces:** _nothing_ 
@@ -948,7 +1003,7 @@ Prints each directory and something of its children
 
 | Parameter | Possible value(s) |
 | --------- | ----------------- |
-| children-what? |  [count](#print-dir-with-children-count)  [paths](#print-dir-with-children-paths)  [names](#print-dir-with-children-names)  |
+| children-what? |  [names](#print-dir-with-children-names)  [count](#print-dir-with-children-count)  [paths](#print-dir-with-children-paths)  |
 
 **Requires:** resources 
 **Produces:** _nothing_ 
@@ -1035,20 +1090,6 @@ Computes the new meta for each file.
 | _no params_ | _no_value(s)_ |
 
 **Requires:** resources 
-**Produces:** _nothing_ 
-
-
-# with-the-same-name-and-size
-**Usage:** `name-and-size `
-
-Matches the dirs which have the same name and size.
-
-
-| Parameter | Possible value(s) |
-| --------- | ----------------- |
-| _no params_ | _no_value(s)_ |
-
-**Requires:**  
 **Produces:** _nothing_ 
 
 
