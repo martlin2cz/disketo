@@ -305,7 +305,7 @@ sub commands() {
 	my $having_extension = sop1("having-extension", "having-extension", \&Disketo_Instructions::having_extension, [], [], 
 		"Files having the specified extension.",
 		"which-extension?", "(extension)");
-		
+	
 	#TODO file bigger/smaller than
 	#TODO dir subtree bigger/smaller than
 	#TODO files older/younger than
@@ -324,9 +324,6 @@ sub commands() {
 	my $at_least_one = sop0("at-least-one", "at-least-one", \&Disketo_Instructions::at_least_one, [], [], 
 		"Having at least one resource matching the condition.");
 
-	my $at_least_one_more = sop0("at-least-one-more", "at-least-one-more", \&Disketo_Instructions::at_least_one_more, [], [], 
-		"Having at least one and one more extra (2 in total) resource matching the condition.");
-		
 	my $case_sensitive = sop0("case-sensitive", "case-sensitive", \&Disketo_Instructions::nope, [], [], 
 		"Matches the pattern respecing the case");
 
@@ -361,8 +358,37 @@ sub commands() {
 		\&Disketo_Instructions::with_same_of_custom_group, [$M_USER_DEF], [], 
 		"Matches the resources which have the specified amount of the resources with the specified custom groupper.",
 		"what-group?", $GROUP_META_NAME_VALNAME_REQ);
+	
+	my $bytes = sop0("bytes", "bytes", \&Disketo_Instructions::nope, [], [], 
+		"The size in the Bytes.");
+	my $kilobytes = sop0("kilo-bytes", "kilobytes", \&Disketo_Instructions::nope, [], [], 
+		"The size in the kiloBytes.");
+	my $megabytes = sop0("mega-bytes", "megabytes", \&Disketo_Instructions::nope, [], [], 
+		"The size in the megaBytes.");
+	
+	my $smaller_than = sop2("smaller-than", "smaller-than", 
+		\&Disketo_Instructions::smaller_than, [], [], 
+		"Filters the resources with size smaller than specified size.",
+		"what-size?", "(the size in the specified unit)",
+		"what-unit?", [ $bytes, $kilobytes, $megabytes ]);
+
+	my $bigger_than = sop2("bigger-than", "bigger-than", 
+		\&Disketo_Instructions::bigger_than, [], [], 
+		"Filters the resources with size bigger than specified size.",
+		"what-size?", "(the size in the specified unit)",
+		"what-unit?", [ $bytes, $kilobytes, $megabytes ]);
 		
 # -- filter composite operations ---------------------------------
+
+	my $files_sized = sop1("files-sized", "with-size", 
+		\&Disketo_Instructions::filter_files_with_size, [$Disketo_Instructions::M_FILE_STATS], [], 
+		"Filters files with size matching specified condition.",
+		"what-size?", [ $smaller_than, $bigger_than ]);
+
+	my $dirs_subtree_sized = sop1("dirs-subtree-sized", "with-subtree-size", 
+		\&Disketo_Instructions::filter_dirs_with_subtree_size, [$Disketo_Instructions::M_DIR_SUBTREE_SIZE], [], 
+		"Filters dirs with subtree size matching specified condition.",
+		"what-size?", [ $smaller_than, $bigger_than ]);
 
 	my $matching_pattern = sop2("matching-pattern", "matching-pattern", \&Disketo_Instructions::matching_pattern, [], [], 
 		"Matches the given pattern specified way.",
@@ -375,14 +401,18 @@ sub commands() {
 	
 	my $files_having = sop2("files-having", "having", \&Disketo_Instructions::having, [], [], 
 		"Filters files having the specified amount of element in the given group.",
-		"how-much?", [ $less_than, $more_than, $none, $at_least_one, $at_least_one_more ],
+		"how-much?", [ $less_than, $more_than, $none, $at_least_one ],
 		"of-what?", [ $files_of_the_same ]);
-	
+
+
+	my $all_files = sop0("dirs-having-children-files", "files", \&Disketo_Instructions::dirs_having_children_files, [], [], 
+		"Filters just on the children files as they are.");
+			
 	my $dirs_having_children = sop1("dirs-having-children", "children", \&Disketo_Instructions::dirs_having_children, [], [], 
 		"Filters dirs matching specified condition of its children.",
-		"matching-what?", [ $matching_custom_matcher, $named, $matching_pattern, 
-							$files_having, 
-							$having_extension ]);
+		"matching-what?", [ $all_files,
+							$files_having, $matching_custom_matcher, 
+							$named, $matching_pattern, $having_extension ]);
 	
 	my $dir_of_the_same = sop1("dirs-of-the-same", "of-the-same", \&Disketo_Instructions::of_the_same, [], [], 
 		"Filters resources based on the group of the same resources.",
@@ -390,19 +420,19 @@ sub commands() {
 	
 	my $dirs_having = sop2("dirs-having", "having", \&Disketo_Instructions::having, [], [], 
 		"Filters dirs having the specified amount of element in the given group.",
-		"how-much?", [ $less_than, $more_than, $none, $at_least_one_more ],
+		"how-much?", [ $less_than, $more_than, $none, $at_least_one ],
 		"of-what?", [ $dir_of_the_same, $dirs_having_children ]);
 			
 	my $filter_files = sop1("filter-files", "files", \&Disketo_Instructions::filter_files, [$M_RESOURCES], [], 
 		"Filters files by given criteria",
 		"matching-what?", [ $matching_custom_matcher, $named, $matching_pattern, 
-							$files_having, 
+							$files_having, $files_sized,
 							$having_extension ]);
 
 	my $filter_dirs = sop1("filter-dirs", "dirs", \&Disketo_Instructions::filter_dirs, [$M_RESOURCES], [], 
 		"Filters dirs by given criteria.",
 		"matching-what?", [ $matching_custom_matcher, $named, $matching_pattern, 
-							$dirs_having
+							$dirs_having, $dirs_subtree_sized
 							]);
 							
 	my $filter = sop1("filter", "filter", \&Disketo_Instructions::pass, [], [], 

@@ -1,0 +1,9 @@
+# Prints all dirs having more than specified number of children (not subtree, just children)
+
+# just filter them
+filter dirs having more-than $$ children files
+
+
+# and then simply print
+print dirs with children count
+#print dirs with children names

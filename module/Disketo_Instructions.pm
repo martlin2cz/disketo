@@ -410,14 +410,6 @@ sub at_least_one($) {
 	};
 }
 
-sub at_least_one_more($) {
-	my ($node) = @_;
-	
-	return sub($$) {
-		my ($resources, $context) = @_;
-		return (scalar @$resources) > 2;
-	};
-}
 
 sub dirs_with_same_name($) {
 	my ($node) = @_;
@@ -456,8 +448,78 @@ sub with_same_of_custom_group($) {
 	return $meta_name;
 }
 
+sub dirs_having_children_files($) {
+	my ($node) = @_;
+	
+	return \&resource_to_true;
+}
+
+sub bigger_than($) {
+	my ($node) = @_;
+	
+	my $bigger_than_size = _obtain_condition_size($node);
+	return sub($) {
+		my ($size) = @_;
+		return $size > $bigger_than_size;
+	};
+}
+
+sub smaller_than($) {
+	my ($node) = @_;
+	
+	my $smaller_than_size = _obtain_condition_size($node);
+	return sub($) {
+		my ($size) = @_;
+		return $size < $smaller_than_size;
+	};
+}
+
+
+sub _obtain_condition_size($) {
+	my ($node) = @_;
+	
+	my $size = value($node, 0);
+	if (is($node, 1, "bytes")) {
+		$size *= 1;
+	}
+	if (is($node, 1, "kilobytes")) {
+		$size *= 1024;
+	}
+	if (is($node, 1, "megabytes")) {
+		$size *= 1024 * 1024;
+	}
+	
+	return $size;
+}
+
+
 ########################################################################
 # FILTERS composite
+
+
+sub filter_files_with_size($) {
+	my ($node) = @_;
+
+	my $size_condition = delegate($node, 0);
+	
+	return sub($$) {
+		my ($file, $context) = @_;
+		my $size = $context->{$M_FILE_STATS}->{$file}->{"size"};
+		return $size_condition->($size);
+	}	
+}
+
+sub filter_dirs_with_subtree_size($) {
+	my ($node) = @_;
+
+	my $size_condition = delegate($node, 0);
+	
+	return sub($$) {
+		my ($dir, $context) = @_;
+		my $size = $context->{$M_DIR_SUBTREE_SIZE}->{$dir};
+		return $size_condition->($size);
+	}	
+}
 
 sub matching_pattern($) {
 	my ($node) = @_;
@@ -481,6 +543,7 @@ sub matching_pattern($) {
 	die("Unsupported.");
 }
 
+
 sub dirs_having_children($) {
 	my ($node) = @_;
 
@@ -495,7 +558,7 @@ sub of_the_same($) {
 	my ($node) = @_;
 
 	my $group_name = delegate($node, 0);		
-	return create_resource_to_meta_fn($group_name);
+	return create_resource_to_group_meta_fn($group_name);
 }
 
 sub having($) {
@@ -592,43 +655,43 @@ sub print_custom_group($) {
 	my ($node) = @_;
  
 	my $group_meta_name = value($node, 0);
-	return create_resource_to_meta_fn($group_meta_name);
+	return create_resource_to_group_meta_fn($group_meta_name);
 }
 
 
 sub print_files_of_the_same_name($) {
 	my ($node) = @_;
-	return create_resource_to_meta_fn($M_FILES_WITH_SAME_NAME);
+	return create_resource_to_group_meta_fn($M_FILES_WITH_SAME_NAME);
 }
 
 sub print_files_of_the_same_name_and_size($) {
 	my ($node) = @_;
-	return create_resource_to_meta_fn($M_FILES_WITH_SAME_NAME_AND_SIZE);
+	return create_resource_to_group_meta_fn($M_FILES_WITH_SAME_NAME_AND_SIZE);
 }
 
 sub print_dirs_of_the_same_name($) {
 	my ($node) = @_;
-	return create_resource_to_meta_fn($M_DIRS_WITH_SAME_NAME);
+	return create_resource_to_group_meta_fn($M_DIRS_WITH_SAME_NAME);
 }
 
 sub print_of_the_same_name_and_size($) {
 	my ($node) = @_;
-	return create_resource_to_meta_fn($M_FILES_WITH_SAME_NAME_AND_SIZE);
+	return create_resource_to_group_meta_fn($M_FILES_WITH_SAME_NAME_AND_SIZE);
 }
 
 sub print_of_the_same_name_and_subtree_size($) {
 	my ($node) = @_;
-	return create_resource_to_meta_fn($M_DIRS_WITH_SAME_NAME_AND_SUBTREE_SIZE);
+	return create_resource_to_group_meta_fn($M_DIRS_WITH_SAME_NAME_AND_SUBTREE_SIZE);
 }
 
 sub print_of_the_same_name_and_subtree_count($) {
 	my ($node) = @_;
-	return create_resource_to_meta_fn($M_DIRS_WITH_SAME_NAME_AND_SUBTREE_COUNT);
+	return create_resource_to_group_meta_fn($M_DIRS_WITH_SAME_NAME_AND_SUBTREE_COUNT);
 }
 
 sub print_of_the_same_name_and_children_count($) {
 	my ($node) = @_;
-	return create_resource_to_meta_fn($M_DIRS_WITH_SAME_NAME_AND_CHILDREN_COUNT);
+	return create_resource_to_group_meta_fn($M_DIRS_WITH_SAME_NAME_AND_CHILDREN_COUNT);
 }
 
 ########################################################################
@@ -759,11 +822,22 @@ sub create_resource_to_meta_fn($) {
 	
 	return sub($$) {
 		my ($resource, $context) = @_;
-###print(Dumper("----------------------", $resource, $meta_name, $context->{$meta_name}, $context->{$meta_name}->{$resource}));
 
 		return $context->{$meta_name}->{$resource};
 	};
 }
+
+sub create_resource_to_group_meta_fn($) {
+	my ($group_meta_name) = @_;
+	
+	return sub($$) {
+		my ($resource, $context) = @_;
+		my $group = $context->{$group_meta_name}->{$resource};
+		my $without = remove_from_group($resource, $group);
+		return $without;
+	};
+}
+
 
 sub create_dir_to_subtree_size_fn($) {
 	my ($size_printer) = @_;
@@ -799,6 +873,11 @@ sub resource_to_name($$) {
 	my ($resource, $context) = @_;
 	my $name = basename($resource);
 	return $name;
+}
+
+sub resource_to_true($$) {
+	my ($resource, $context) = @_;
+	return 1;
 }
 
 sub file_to_name_and_size_simply($$) {
@@ -924,6 +1003,14 @@ sub files_of_dir_matching($$$) {
 	my $children = $context->{$M_RESOURCES}->{$dir};
 	my @matching = grep { $condition->($_, $context) } @$children;
 	return \@matching;
+}
+
+# Creates copy of the given group NOT HAVING the given resource.
+sub remove_from_group($$) {
+	my ($resource, $group) = @_;
+	my @group = @$group;
+	my @without = grep { not($_ eq $resource) } @group;
+	return \@without;
 }
 
 ########################################################################

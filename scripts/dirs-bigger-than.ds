@@ -1,0 +1,8 @@
+# Prints the dirs bigger than specified size in megabytes
+# (having subtree size bigger than)
+
+# Filter them
+filter dirs with-subtree-size bigger-than $$ megabytes
+
+# and print
+print dirs with subtree size human-readable
