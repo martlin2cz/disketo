@@ -317,6 +317,27 @@ sub execute_commands() {
 	return $execute;
 }
 
+sub reduce_commands() {
+	# ---------------------------------------------------------------
+	# -- reduce commands --------------------------------------------
+	
+	my $reduce_to_dirs_only = sop0("reduce-files-to-dirs-only", "to-dirs-only", \&Disketo_Instructions::reduce_to_dirs_only, [], [], 
+		"Reduces the files to contain only the actual dirs.");
+	
+	my $reduce_to_files_only = sop0("reduce-files-to-files-only", "to-files-only", \&Disketo_Instructions::reduce_to_files_only, [], [], 
+		"Reduces the files to contain only the actual files.");
+	
+	my $reduce_files = sop1("reduce-files", "files", \&Disketo_Instructions::reduce_files, [$M_RESOURCES], [], 
+		"Reduces the files.",
+		"to?", [$reduce_to_dirs_only, $reduce_to_files_only]);
+		
+	my $reduce = sop1("reduce", "reduce", \&Disketo_Instructions::pass, [], [], 
+		"Reduces the specified resources to specified subset of them.",
+		"what?", [$reduce_files]);
+
+	return $reduce;
+}
+
 sub filter_commands() {
 	# ---------------------------------------------------------------
 	# -- filter BY PATTERN operations ---------------------------------
@@ -494,10 +515,11 @@ sub print_commands() {
 	# ---------------------------------------------------------------
 	# -- print HOW? operations --------------------------------
 	
-	my $print_simply = sop0("print-simply", "simply", \&Disketo_Instructions::print_simply, [], [], 
-		"Prints each resource by its complete path.");
+	my $print_simply = sop0("print-simply", "simply", \&Disketo_Instructions::print_path, [], [], 
+		"Prints just the path of each resource (an alias for the print-path).");
 	
-	#TODO 'print paths', 'print simply' mark as alias to that
+	my $print_path = sop0("print-path", "path", \&Disketo_Instructions::print_path, [], [], 
+		"Prints complete path of each resource.");	
 		
 	my $print_only_name = sop0("print-only-name", "only-name", \&Disketo_Instructions::print_only_name, [], [], 
 		"Prints only the name of the resource.");
@@ -620,7 +642,7 @@ sub print_commands() {
 	
 	my $print_files = sop1("print-files", "files", \&Disketo_Instructions::print_files, [$M_RESOURCES], [],
 		"Prints files.",
-		"how?", [ $print_simply, $print_only_name, $print_custom, $print_files_with ]);
+		"how?", [ $print_simply, $print_path, $print_only_name, $print_custom, $print_files_with ]);
 	
 	my $print_dirs_with = sop1("print-dirs-with", "with", \&Disketo_Instructions::print_with, [], [],
 		"Prints for each dir its path and specified extra information.",
@@ -629,7 +651,7 @@ sub print_commands() {
 				
 	my $print_dirs = sop1("print-dirs", "dirs", \&Disketo_Instructions::print_dirs, [$M_RESOURCES], [],
 		"Prints dirs.",
-		"how?", [ $print_simply, $print_only_name, $print_custom, $print_dirs_with ]);
+		"how?", [ $print_simply, $print_path, $print_only_name, $print_custom, $print_dirs_with ]);
 	
 	my $print = sop1("print", "print", \&Disketo_Instructions::pass, [], [], 
 		"Prints given.",
@@ -648,6 +670,7 @@ sub commands() {
 		"compute" => compute_commands(),
 		"group" => group_commands(),
 		"execute" => execute_commands(),
+		"reduce" => reduce_commands(),
 		#TODO reduce files to files-only/dirs-only
 		#TODO exclude hidden files/folders/resources
 		"filter" => filter_commands(),

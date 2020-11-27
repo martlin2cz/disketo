@@ -354,6 +354,43 @@ sub execute($) {
 ########################################################################
 ########################################################################
 ########################################################################
+# REDUCE
+
+sub reduce_to_dirs_only($) {
+	my ($node) = @_;
+	
+	return sub($$) {
+		my ($file, $context) = @_;
+		my $is_dir = (exists $context->{$M_RESOURCES}->{$file});
+		return $is_dir;
+	};
+}
+
+sub reduce_to_files_only($) {
+	my ($node) = @_;
+	
+	return sub($$) {
+		my ($file, $context) = @_;
+		my $is_dir = (exists $context->{$M_RESOURCES}->{$file});
+		return not $is_dir;
+	};
+}
+
+sub reduce_files($) {
+	my ($node) = @_;
+	
+	my $matching = delegate($node, 0);
+	return sub($$) {
+		my ($context) = @_;
+		
+		Disketo_Engine::filter_files($matching, $context);
+	}
+	
+}
+
+########################################################################
+########################################################################
+########################################################################
 # FILTERS BY PATTERN
 
 sub matching_pattern($) {
@@ -495,7 +532,7 @@ sub at_least_one($) {
 	
 	return sub($$) {
 		my ($resources, $context) = @_;
-		return (scalar @$resources) > 1;
+		return (scalar @$resources) >= 1;
 	};
 }
 
@@ -650,7 +687,7 @@ sub print_debug_stats($) {
 ########################################################################
 # PRINTS HOW
 
-sub print_simply($) {
+sub print_path($) {
 	my ($node) = @_;
 	return \&resource_to_resource;
 }

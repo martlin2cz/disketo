@@ -1,0 +1,14 @@
+# tests the reduce commands
+
+# reduce to files only
+load resources $$$
+reduce files to-files-only
+print files simply
+
+# reduce to dirs only
+load resources $$$
+reduce files to-dirs-only
+print files simply
+print dirs simply
+
+
