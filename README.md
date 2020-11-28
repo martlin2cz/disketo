@@ -145,10 +145,10 @@ Prints the list of all the supported commands, theirs valid arguments and values
 Prints all the valid combinations of all the supported commands. Usefull for the sample usages of particular command(s).
 
 And also:
-# utils/scriptman.pl
+## utils/scriptman.pl
 Prints the doc/man of the disketo script (comments the script starts with).
 
-# utils/print-matching.pl
+## utils/print-matching.pl
 An utility to execute filter&print directly from command line, without need to create disketo script as a file. For instance:
 ```
 utils/print-matching.sh 'files' 'having-extension "txt"' 'test/testing-resources/'
