@@ -1,19 +1,23 @@
-# tests compute for-each-file ...
-compute for-each-file files-stats 
-compute for-each-file custom "file path length" sub {
+# prepare
+load files-stats
+
+# test compute predefined
+compute directories-subtree-sizes
+compute directories-subtree-counts
+
+# test compute custom
+compute custom-meta by-appling-function sub {
 	my ($file, $context) = @_;
 	return length($file); 
-}
+} to-each-file as-meta "files metas"
 
-# test compute for-each-dir ...
-compute for-each-dir count-files
-compute for-each-dir custom "dir path length" sub {
+compute custom-meta by-appling-function sub {
 	my ($dir, $context) = @_;
 	return length($dir);
-}
+} to-each-dir as-meta "dirs metas"
 
 # print it
-print stats
+print debug-stats
 
 
  

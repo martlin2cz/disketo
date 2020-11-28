@@ -1,17 +1,68 @@
-# test the print files ...
-print files simply
-print files only-name
+# prepare to print files
+
+load files-stats
+compute directories-subtree-sizes
+
+group files by-name 
+group files by-name-and-size
+group dirs by-name
+group dirs by-name-and-children-count
+group dirs by-name-and-subtree-size 
+group dirs by-name-and-subtree-count
+
+compute custom-meta by-appling-function sub {
+	my ($file, $context) = @_;
+	return length($file);
+} to-each-file as-meta "files lengths"
+compute custom-meta by-appling-function sub {
+	my ($dir, $context) = @_;
+	return length($dir);
+} to-each-dir as-meta "dirs lengths"
+group files by-custom-groupper sub {
+	my ($file, $context) = @_;
+	return length($file);
+} as-meta "files groupped by length"
+group dirs by-custom-groupper sub {
+	my ($dir, $context) = @_;
+	return length($dir);
+} as-meta "dirs groupped by length"
+
+
+# Print files
+print files simply 
+print files only-name 
+print files with files-of-the-same name-and-size 
+print files with files-of-the-same name 
+print files with files-of-the-same custom-group "files groupped by length"
+print files with meta "files lengths"
+print files with size human-readable 
+print files with size in-bytes 
 print files custom sub {
 	my ($file, $context) = @_;
-	return "F: $file $context";
-}
+	return "F: $file";
+}  
 
-# test the print dirs ...
-print dirs simply
-print dirs only-name
-compute for-each-dir count-files
-print dirs with-counts
+# Print dirs
+print dirs with dirs-of-the-same name-and-children-count 
+print dirs with dirs-of-the-same name-and-subtree-size 
+print dirs with dirs-of-the-same name 
+print dirs with dirs-of-the-same custom-group "dirs groupped by length"
+print dirs with dirs-of-the-same name-and-subtree-resources-count 
+print dirs with subtree resources-count 
+print dirs with subtree size in-bytes 
+print dirs with subtree size human-readable 
+print dirs with meta "dirs lengths"
+print dirs with children paths 
+print dirs with children names 
+print dirs with children count 
 print dirs custom sub {
-	my ($dirs, $context) = @_;
-	return "D: $dirs $context";
+	my ($dir, $context) = @_;
+	return "D: $dir";
 }
+print dirs simply 
+print dirs only-name
+print stats
+print debug-stats 
+
+
+

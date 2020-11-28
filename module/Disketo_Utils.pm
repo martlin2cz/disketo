@@ -2,13 +2,13 @@
 use strict;
 
 package Disketo_Utils; 
-my $VERSION=3.00.0;
+my $VERSION=3.1.0;
 
 # The version to be printed by --version.
-use constant VERSION => "3.00.0";
+use constant VERSION => "3.1.0";
 
 # How offten (in seconds) tu print the current orogress?
-use constant PROGRESS_PERIOD => 60;
+use constant PROGRESS_PERIOD => 10;
 
 use DateTime;
 use Data::Dumper;
@@ -112,21 +112,30 @@ sub logit($) {
 ########################################################################
 # PRINT PROGRESS
 
+# Walk ordered, directory first (preorder)
+our $ORDER_DIR_FIRST = "ORDER DIRECTORY FIRST";
+# Walk ordered, directory last (postorder)
+our $ORDER_DIR_LAST = "ORDER DIRECTORY LAST";
+# Walk unordered (in random, unspecified order)
+our $UNORDERED = "UNORDERED";
+
 # The last time progress have been printed
 my $last_printed_at = 0;
 my $loop_started_at = 0;
 
 # Iterates over the context's dirs, applying given function;
 # each PROGRESS_PERIOD seconds prints percentage of done.
-sub iterate_dirs($$) {
-	my ($context, $function_ref) = @_;
+sub iterate_dirs($$$) {
+	my ($context, $order, $function_ref) = @_;
+	
 	my @dirs = keys %{ $context->{"resources"} };
+	my $ordered = order_list(\@dirs, $order);
+	my $total = scalar @$ordered;
 
-	my $total = scalar @dirs;
 	start_progress($total);
 	
 	for (my $i = 0; $i < $total; $i++) {
-		my $dir = $dirs[$i];
+		my $dir = $ordered->[$i];
 
 		$function_ref->($dir, $i);
 		
@@ -136,26 +145,45 @@ sub iterate_dirs($$) {
 
 # Iterates over the context's files, applying given function;
 # each PROGRESS_PERIOD seconds prints percentage of done.
-sub iterate_files($$) {
-	my ($context, $function_ref) = @_;
+sub iterate_files($$$) {
+	my ($context, $order, $function_ref) = @_;
 	my %resources = %{ $context->{"resources"} };
 	my @dirs = keys %resources;
+	my $ordered_dirs = order_list(\@dirs, $order);
 	
-	my $total = scalar @dirs;
+	my $total = scalar @$ordered_dirs;
 	start_progress($total);
 	
 	for (my $i = 0; $i < $total; $i++) {
-		my $dir = $dirs[$i];
+		my $dir = $ordered_dirs->[$i];
+		
 		my @files = @{ %resources{$dir} };
-		my $files_count = scalar @files;
+		my $ordered_files = order_list(\@files, $order);
+		my $files_count = scalar @$ordered_files;
 		
 		for (my $j = 0; $j < $files_count; $j++) {
-			my $file = $files[$j];
+			my $file = $ordered_files->[$j];
 			$function_ref->($dir, $i, $file, $j);
 		}
 		
 		check_progress($i, $total);
 	}
+}
+
+# Orders the given resources by dir first or last or keeps it as it is.
+sub order_list($$) {
+	my ($resources, $order) = @_;
+	
+	if ($order eq $ORDER_DIR_FIRST) {
+		my @ordered = sort @$resources;
+		return \@ordered;
+	}
+	if ($order eq $ORDER_DIR_LAST) {
+		my @ordered = reverse sort @$resources;
+		return \@ordered;
+	}
+	
+	return $resources;
 }
 
 
@@ -196,8 +224,7 @@ sub print_progress($$) {
 			my $remaining_seconds = int(($now - $time_spent) * (100.0 - $percent) / $percent);
 			my $remaining_minutes = int($remaining_seconds / 60);
 			my $minutes = int($remaining_minutes % 60);
-			my $hours = int($remaining_minutes / 60);
-			printf (STDERR "\t%4.2g%%, remaining approx. %d hours and %d minutes \r", $percent, $hours, $minutes);
+			printf (STDERR "\t%4.2g%%, remaining approx. %d minutes \r", $percent, $minutes);
 		} else {
 			printf (STDERR "\t%4.2g%% \r", $percent);
 		}

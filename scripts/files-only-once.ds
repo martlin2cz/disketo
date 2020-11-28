@@ -1,0 +1,8 @@
+# Prints just the files which are present only once in the specified directory
+# meaning the files with the same name and size
+
+# Reduce to singleton files
+filter files having none of-the-same name-and-size
+
+# and print them
+print files simply

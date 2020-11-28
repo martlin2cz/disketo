@@ -1,0 +1,7 @@
+# Prints the files bigger than specified size in megabytes
+
+# Filter them
+filter files with-size bigger-than $$ megabytes
+
+# and print
+print files with size human-readable

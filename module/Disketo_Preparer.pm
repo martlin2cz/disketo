@@ -4,7 +4,7 @@ use strict;
 BEGIN { unshift @INC, "."; }
 
 package Disketo_Preparer;
-my $VERSION=3.0.0;
+my $VERSION=3.1.0;
 
 use Data::Dumper;
 use Disketo_Utils;
@@ -24,13 +24,11 @@ use Disketo_Analyser;
 sub prepare_to_execute($$) {
 	my ($program, $arguments) = @_;
 
-	insert_load($program); #FIXME use the fill_missing_dependencies for it
+	resolve_dependencies($program);
 	
 	prepare_values($program);
 
 	my $remaining_arguments = resolve_values($program, $arguments);
-
-	verify_dependencies($program); #TODO replace by fill_missing_dependencies
 	
 	return $remaining_arguments;
 }
@@ -39,11 +37,9 @@ sub prepare_to_execute($$) {
 sub prepare_to_print($) {
 	my ($program) = @_;
 
-	insert_load($program); #FIXME use the fill_missing_dependencies for it
+	resolve_dependencies($program);
 	
 	prepare_values($program);
-
-	verify_dependencies($program); #TODO replace by fill_missing_dependencies
 }
 
 ########################################################################
@@ -176,23 +172,7 @@ sub resolve_hypermarker_values($$) {
 
 
 ########################################################################
-# VERIFY MISSING METAS
-
-# Inserts the load instruction at the very beggining of the given program.
-# No f****s given about already existing load instruction at the 
-# beggining of the program, or its unnecessarity.
-sub insert_load($) {
-	my ($program) = @_;
-
-	my $commands = Disketo_Instruction_Set::commands();
-	my $operation = $commands->{"load"};
-	
-	my $value = Disketo_Analyser::create_value_node('$$$', "(the roots)");
-	my $children = [$value];
-	my $instruction = Disketo_Analyser::create_operation_node($operation, $children);
-	
-	unshift @$program, $instruction;
-}
+# RESOLVE DEPENDECIES
 
 # Computes the metas required by the given instruction.
 sub compute_requireds($) {
@@ -206,9 +186,16 @@ sub compute_requireds($) {
 			my $produces = $operation->{"requires"};
 			push @produceds, (@$produces);
 		},
-		sub {}
+		sub { 
+			my ($node, $stack, $param_name, $name, $value, $prepared_value) = @_;
+
+			if ($name eq $Disketo_Instruction_Set::META_NAME_VALNAME_REQ
+			 or $name eq $Disketo_Instruction_Set::GROUP_META_NAME_VALNAME_REQ) {
+				push @produceds, $prepared_value;
+			}
+		}
 	);
-	
+
 	return \@produceds;
 }
 
@@ -224,7 +211,14 @@ sub compute_produceds($) {
 			my $produces = $operation->{"produces"};
 			push @produceds, (@$produces);
 		},
-		sub {}
+		sub { 
+			my ($node, $stack, $param_name, $name, $value, $prepared_value) = @_;
+			
+			if ($name eq $Disketo_Instruction_Set::META_NAME_VALNAME_PROD
+			 or $name eq $Disketo_Instruction_Set::GROUP_META_NAME_VALNAME_PROD) {
+				push @produceds, $prepared_value;
+			}
+		}
 	);
 	
 	return \@produceds;
@@ -254,23 +248,117 @@ sub is_produced_by($$$) {
 	return 0;
 }
 
-# Verifies all the instructions gets its specified metas produced.
-sub verify_dependencies($) {
+# Resolves the dependeincies (fills the instructions producing the missing metas).
+sub resolve_dependencies($) {
 	my ($program) = @_;
 	
-	while (my ($index, $instruction) = each @$program) {
+	my $all_resolved;
+	
+	do {
+		$all_resolved = do_one_step_of_dependency_resolution($program);
+	} while (not $all_resolved);
+}
+
+# Once walks throught the program and checks whether has all its depencencies resolved.
+# If not, adds the instruction producing that missing meta and returns 0.
+# Otherwise (all dependencies resolved), return 1;
+sub do_one_step_of_dependency_resolution($) {
+	my ($program) = @_;
+
+	my @program = @$program;
+	while (my ($index, $instruction) = each @program) {
 		my $requireds = compute_requireds($instruction);
-		
-		for my $required (@$requireds) {
-			my $is = is_produced_by($program, $required, $index);
+
+		for my $required_meta (@$requireds) {
+			my $is = is_produced_by($program, $required_meta, $index);
 			if (not $is) {
-				die("The meta " 
-				. "'" . $required . "' is required "
-				. "by the statement " . ($index + 1) . ", "
-				. "but none of its foregoing statements produces it.");
+				resolve_dependency($program, $instruction, $index, $requireds, $required_meta);
+				return 0;
 			}
 		}
 	}
+	
+	return 1;
 }
+
+# Resolves the given depencency. Inserts instruction producing given meta
+# at given position. Fails if cannot resolve.
+sub resolve_dependency($$$$$) {
+	my ($program, $instruction, $index, $requireds, $required_meta) = @_;
+
+	my $producing = compute_producing($required_meta);
+	
+	if (scalar @$producing == 1) {
+		my $producing_instruction = $producing->[0];
+		check_instructions_args($producing_instruction);
+		splice @$program, $index, 0, $producing_instruction;
+		
+	} else {
+		my $message = "The statement " . ($index + 1) . ", " 
+				. "requires metas '" . (join(", ", @$requireds)) . "', "
+				. "but '" . $required_meta . "' is not produced "
+				. "by any of its foregoing statements.\n";
+				
+		if (scalar @$producing == 0) {
+			$message .= "Unfortunatelly, there is no particular statement producing it. "
+					. "Isn't the meta user specified?";
+		}
+		
+		if (scalar @$producing > 1) {
+			my $producing_str = join("\n", map { Disketo_Help::instruction_to_linear_string($_) } @$producing);
+			$message .= "Unfortunatelly, there are more than 1 avaiable resolutions. "
+					. "Plase specify the one you need manually. They are:\n$producing_str\n";
+		}
+		
+		die($message);
+	}
+}
+
+# Computes (all of them) instructions producing given meta.
+sub compute_producing($) {
+	my ($meta_name) = @_;
+	my $all_statements = Disketo_Help::compute_all_statements();
+				
+	my @result = ();			
+	for my $statement (@$all_statements) {
+		if (produces($statement, $meta_name)) {
+			push @result, $statement;
+		}
+	}
+	
+	return \@result;
+}
+
+# Checks the argument of the instruction. In fact, just sets the "$$$" value 
+# to the load resources instruction.
+sub check_instructions_args($) {
+	my ($instruction) = @_;
+	
+	if (is_instruction($instruction, "load", "load-resources")) {
+		my $values_node = $instruction->{"arguments"}->[0]->{"arguments"}->[0];
+		$values_node->{"value"} = '$$$';
+	}
+}
+
+# Checks whether the given instruction has its id and first child id.
+sub is_instruction($$$) {
+	my ($instruction, $expected_first_id, $expected_second_id) = @_;
+	
+	my $first_instruction = $instruction;
+	my $first_operation = $first_instruction->{"operation"};
+	my $first_id = $first_operation->{"ID"};
+	if (not $first_id eq $expected_first_id) {
+		return 0;
+	}
+	
+	my $second_instruction = $instruction->{"arguments"}->[0];
+	my $second_operation = $second_instruction->{"operation"};
+	my $second_id = $second_operation->{"ID"};
+	if (not $second_id eq $expected_second_id) {
+		return 0;
+	}
+	
+	return 1;
+	}
 
 ########################################################################

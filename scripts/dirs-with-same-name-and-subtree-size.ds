@@ -1,0 +1,9 @@
+# Prints the directories which has the same name and subtree size
+
+# First pick the directories containing such twins
+filter dirs having at-least-one of-the-same name-and-subtree-size
+
+filter dirs matching-pattern "[^0-9]$" case-sensitive
+
+# And then print them
+print dirs with dirs-of-the-same name-and-subtree-size

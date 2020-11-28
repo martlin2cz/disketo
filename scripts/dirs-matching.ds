@@ -1,0 +1,5 @@
+# Just prints dirs matching provided pattern
+
+filter dirs matching-pattern $$ case-insensitive
+
+print dirs simply

@@ -1,0 +1,95 @@
+# test filter files basic
+
+load resources $$$
+filter files named "foo.txt"
+print files simply
+
+load resources $$$
+filter files matching-pattern "foo" case-insensitive
+print files simply
+
+load  resources $$$
+filter files matching-pattern "foo" case-sensitive
+print files simply
+
+load  resources $$$
+filter files matching-custom-matcher sub {
+	my ($file, $context) = @_;
+	return (length($file) > 25);
+}
+print files simply
+
+load  resources $$$
+filter files having-extension "txt"
+print files simply
+
+
+# test filter files having X of-the-same Y 
+load resources $$$
+load files-stats
+group files by-name
+group files by-name-and-size
+group files by-custom-groupper sub {
+	my ($file, $context) = @_;
+	return length($file);
+} as-meta "with same length"
+print stats
+
+
+load  resources $$$
+filter files having none of-the-same name
+print files with files-of-the-same name
+
+load  resources $$$
+filter files having none of-the-same name-and-size
+print files with files-of-the-same name-and-size
+
+load  resources $$$
+filter files having none of-the-same custom-group "with same length"
+print files with files-of-the-same custom-group "with same length"
+
+load  resources $$$
+filter files having less-than 3 of-the-same name
+print files  with files-of-the-same name
+
+
+load  resources $$$
+filter files having less-than 3 of-the-same name-and-size
+print files  with files-of-the-same name-and-size
+
+
+load  resources $$$
+filter files having less-than 3 of-the-same custom-group "with same length"
+print files  with files-of-the-same custom-group "with same length"
+
+
+load  resources $$$
+filter files having more-than 2 of-the-same name
+print files  with files-of-the-same name
+
+
+load  resources $$$
+filter files having more-than 2 of-the-same name-and-size
+print files  with files-of-the-same name-and-size
+
+
+load  resources $$$
+filter files having more-than 2 of-the-same custom-group "with same length"
+print files  with files-of-the-same custom-group "with same length"
+
+
+load  resources $$$
+filter files having at-least-one-more of-the-same name
+print files  with files-of-the-same name
+
+
+load  resources $$$
+filter files having at-least-one-more of-the-same name-and-size
+print files  with files-of-the-same name-and-size
+
+
+load  resources $$$
+filter files having at-least-one-more of-the-same custom-group "with same length"
+print files  with files-of-the-same custom-group "with same length"
+
+

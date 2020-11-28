@@ -80,10 +80,11 @@ sub children_of($) {
 	my $dh;
 	unless (opendir($dh, $dir)) {
 		print STDERR "Can't open $dir: $!\n";
-		return @result;
+		return \@result;
 	}
 
 	while (my $child = readdir $dh) {
+			#if (($child eq ".") or ($child eq "..")) {
 			if (substr($child, 0, 1) eq ".") {
 				next;
 			}
@@ -168,6 +169,24 @@ sub load_stats_for_file($) {
 ########################################################################
 # FILE SIZE
 
+sub size_to_human_readable($) {
+	my ($size) = @_;
+
+	if ($size < 1024) {
+		return "$size B";
+	}
+	$size = $size / 1024;
+	if ($size < 1024) {
+		return "$size kB";
+	}
+	$size = $size / 1024;
+	if ($size < 1024) {
+		return "$size MB";
+	}
+	
+	$size = $size / 1024;
+	return "$size GB";
+}
 #TODO file size to human format
 
 ########################################################################

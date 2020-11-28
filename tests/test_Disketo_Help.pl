@@ -24,14 +24,14 @@ Disketo_Utils::logit("print_tree_usage");
 
 Disketo_Help::print_tree_usage();
 ########################################################################
-Disketo_Utils::logit("linear_usage");
+#Disketo_Utils::logit("linear_usage");
 
-print(Dumper(Disketo_Help::linear_usage($commands)));
+#print(Dumper(Disketo_Help::linear_usage($commands)));
 
 ########################################################################
-Disketo_Utils::logit("print_linear_usage");
+#Disketo_Utils::logit("print_linear_usage");
 
-Disketo_Help::print_linear_usage();
+#Disketo_Help::print_linear_usage();
 
 ########################################################################
 Disketo_Utils::logit("combine");
@@ -39,6 +39,12 @@ my $list_of_lists4a = [["foo", "bar", "baz"], [42, 99]];
 my $combinations4a = Disketo_Help::combine($list_of_lists4a);
 print(Dumper($list_of_lists4a, $combinations4a));
 
+my $list_of_lists4b = [["foo", "bar", "baz"], [42, 99], ["LOREM", "IPSUM"]];
+my $combinations4b = Disketo_Help::combine($list_of_lists4b);
+print(Dumper($list_of_lists4b, $combinations4b));
+
+
+die("FIXME");
 ########################################################################
 
 Disketo_Utils::logit("print_list_of_commands_in_markdown");

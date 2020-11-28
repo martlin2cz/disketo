@@ -22,14 +22,15 @@ sub run_program($) {
 	my ($program) = @_;
 	
 	compute_actual_methods($program);
-	run_the_program_or_dry($program);
+	run_the_program_or_dry($program, 0);
 }
 
 # Dry-runs the given program. Prints all as usual, but no work is done.
 sub dry_run_program($) {
 	my ($program) = @_;
 	
-	run_the_program_or_dry($program);
+	compute_actual_methods($program);
+	run_the_program_or_dry($program, 1);
 }
 
 ########################################################################
@@ -91,8 +92,8 @@ sub compute_actual_methods($) {
 
 # Runs (or dry runs) the given program. 
 # Dry runs if the instructions has no "actual method" field specified.
-sub run_the_program_or_dry($) {
-	my ($program) = @_;
+sub run_the_program_or_dry($$) {
+	my ($program, $dry_run) = @_;
 
 	my $context = Disketo_Engine::create_context();
 	
@@ -107,7 +108,7 @@ sub run_the_program_or_dry($) {
 		}
 				
 		my $actual_method = $instruction->{"actual method"};
-		if ($actual_method) {
+		if (not $dry_run) {
 			my @method_args = ($context);
 			$actual_method->(@method_args);
 		}

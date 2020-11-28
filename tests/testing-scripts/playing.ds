@@ -1,5 +1,5 @@
-compute for-each-dir count-files
+# some playing and testing
 print stats
 filter files having-extension $$
-print stats
+print debug-stats
 print files simply

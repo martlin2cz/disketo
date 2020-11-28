@@ -1,0 +1,30 @@
+# Tests the 'group ...' command(s)
+# prepare 
+load files-stats
+compute directories-subtree-sizes
+print stats
+
+# test group files by ...
+group files by-custom-groupper  sub {
+	my ($file, $context) = @_;
+
+	return length($file);
+} as-meta "files groupped by length"
+
+group files by-name-and-size
+group files by-name
+
+# test group dirs by ...
+group dirs by-custom-groupper sub {
+        my ($dir, $context) = @_;
+
+        return length($dir);
+} as-meta "dirs groupped by length"
+
+group dirs by-name-and-children-count
+group dirs by-name-and-subtree-count
+group dirs by-name-and-subtree-size
+group dirs by-name
+
+# print it
+print debug-stats
