@@ -8,7 +8,7 @@ my $VERSION=3.1.0;
 use constant VERSION => "3.1.0";
 
 # How offten (in seconds) tu print the current orogress?
-use constant PROGRESS_PERIOD => 60;
+use constant PROGRESS_PERIOD => 10;
 
 use DateTime;
 use Data::Dumper;
@@ -224,8 +224,7 @@ sub print_progress($$) {
 			my $remaining_seconds = int(($now - $time_spent) * (100.0 - $percent) / $percent);
 			my $remaining_minutes = int($remaining_seconds / 60);
 			my $minutes = int($remaining_minutes % 60);
-			my $hours = int($remaining_minutes / 60);
-			printf (STDERR "\t%4.2g%%, remaining approx. %d hours and %d minutes \r", $percent, $hours, $minutes);
+			printf (STDERR "\t%4.2g%%, remaining approx. %d minutes \r", $percent, $minutes);
 		} else {
 			printf (STDERR "\t%4.2g%% \r", $percent);
 		}
