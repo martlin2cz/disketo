@@ -1,0 +1,9 @@
+# Just prints all the files in the root dirs
+
+# Print the paths
+print files path
+
+## Print just the names
+# print files only-name
+
+

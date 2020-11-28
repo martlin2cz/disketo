@@ -2,14 +2,17 @@
 # to its destination
 # Usage [FILES_EXTENSION] [SOURCE_PATTERN] [SOURCE_DIR] [DESTINATION_DIR]
 
-# first exclude files we are NOT interrested in
+## first exclude files we are NOT interrested in
 filter files having-extension $$
 
 # than pick the ones, which are unique
-filter files having less-than 2 of-the-same name
+filter files having none of-the-same name
 
 # nextly, reduce to just only the ones in the source
 filter dirs matching-pattern $$ case-sensitive
+
+# but exclude dirs
+reduce files to-files-only
 
 # and finally print them
 print files simply
